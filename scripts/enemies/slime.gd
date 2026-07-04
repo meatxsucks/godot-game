@@ -23,6 +23,9 @@ var _health_bar: HealthBar3D
 var _material: StandardMaterial3D
 var _safe_zone: SafeZone
 var _attack_timer: float = 0.0
+var _repath_timer: float = 0.0
+
+@onready var _nav_agent: NavigationAgent3D = $NavAgent
 
 func _ready() -> void:
 	add_to_group("enemies")
@@ -108,6 +111,18 @@ func _pick_direction(delta: float) -> Vector3:
 	var direction = global_position.direction_to(player.global_position)
 	direction.y = 0
 	direction = direction.normalized()
+
+	# Navegación con navmesh: rodea muros hacia la puerta (repath throttled).
+	# Si el path aún no existe (bake en curso), queda el beeline directo.
+	_repath_timer -= delta
+	if _repath_timer <= 0.0:
+		_repath_timer = 0.25
+		_nav_agent.target_position = player.global_position
+	var next_point := _nav_agent.get_next_path_position()
+	var nav_dir := next_point - global_position
+	nav_dir.y = 0
+	if nav_dir.length_squared() > 0.01:
+		direction = nav_dir.normalized()
 
 	# Si el próximo paso entraría a la zona, rodearla por la tangente.
 	if _safe_zone and _safe_zone.contains(global_position + direction * speed * delta):

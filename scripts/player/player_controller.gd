@@ -318,6 +318,21 @@ func equip_from_inventory(index: int) -> void:
 	stats_changed.emit()
 	item_equipped.emit(item, displaced[0] if not displaced.is_empty() else null)
 
+## Reordena el inventario (drag & drop). Si `to` es una celda vacía (fuera
+## del rango actual), mueve el ítem al final.
+func swap_inventory(from: int, to: int) -> void:
+	if from < 0 or from >= inventory.size() or from == to:
+		return
+	if to < 0 or to >= inventory.size():
+		var item := inventory[from]
+		inventory.remove_at(from)
+		inventory.append(item)
+	else:
+		var tmp := inventory[from]
+		inventory[from] = inventory[to]
+		inventory[to] = tmp
+	inventory_changed.emit()
+
 ## Desequipa un slot hacia el inventario (si hay espacio).
 func unequip_slot(slot: StringName) -> void:
 	if inventory.size() >= INVENTORY_SIZE:

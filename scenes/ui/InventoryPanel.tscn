@@ -105,7 +105,63 @@ columns = 5
 [node name="Hint" type="Label" parent="HBox/RightCol"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 9
-text = "Click: equipar / usar / quitar
-I o Tab: cerrar"
+text = "Click o arrastra: equipar / usar / quitar
+Pasa el mouse para comparar — I o Tab: cerrar"
 horizontal_alignment = 1
 autowrap_mode = 2
+
+[node name="ComparePanel" type="PanelContainer" parent="."]
+unique_name_in_owner = true
+visible = false
+top_level = true
+theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
+
+[node name="CompareHBox" type="HBoxContainer" parent="ComparePanel"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="LeftBox" type="VBoxContainer" parent="ComparePanel/CompareHBox"]
+layout_mode = 2
+
+[node name="LeftTitle" type="Label" parent="ComparePanel/CompareHBox/LeftBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 10
+text = "Ítem"
+horizontal_alignment = 1
+
+[node name="CompareLeft" type="RichTextLabel" parent="ComparePanel/CompareHBox/LeftBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(185, 40)
+layout_mode = 2
+theme_override_font_sizes/normal_font_size = 9
+theme_override_font_sizes/bold_font_size = 9
+theme_override_font_sizes/italics_font_size = 9
+theme_override_font_sizes/bold_italics_font_size = 9
+bbcode_enabled = true
+fit_content = true
+scroll_active = false
+
+[node name="VSep" type="VSeparator" parent="ComparePanel/CompareHBox"]
+layout_mode = 2
+
+[node name="RightBox" type="VBoxContainer" parent="ComparePanel/CompareHBox"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="RightTitle" type="Label" parent="ComparePanel/CompareHBox/RightBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 10
+text = "Equipado"
+horizontal_alignment = 1
+
+[node name="CompareRight" type="RichTextLabel" parent="ComparePanel/CompareHBox/RightBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(185, 40)
+layout_mode = 2
+theme_override_font_sizes/normal_font_size = 9
+theme_override_font_sizes/bold_font_size = 9
+theme_override_font_sizes/italics_font_size = 9
+theme_override_font_sizes/bold_italics_font_size = 9
+bbcode_enabled = true
+fit_content = true
+scroll_active = false

@@ -1,4 +1,4 @@
-[gd_scene load_steps=14 format=3 uid="uid://darena1234567"]
+[gd_scene load_steps=16 format=3 uid="uid://darena1234567"]
 
 [ext_resource type="PackedScene" uid="uid://dplayer1234567" path="res://scenes/player/Player.tscn" id="1_player"]
 [ext_resource type="Script" path="res://scripts/levels/camera_rig.gd" id="2_camera"]
@@ -7,6 +7,7 @@
 [ext_resource type="PackedScene" uid="uid://cchest0000001" path="res://scenes/world/Chest.tscn" id="5_chest"]
 [ext_resource type="Script" path="res://scripts/levels/enemy_spawner.gd" id="6_spawner"]
 [ext_resource type="PackedScene" uid="uid://csafezone0001" path="res://scenes/world/SafeZone.tscn" id="7_zone"]
+[ext_resource type="Script" path="res://scripts/levels/nav_region.gd" id="8_nav"]
 
 [sub_resource type="PlaneMesh" id="PlaneMesh_floor"]
 size = Vector2(40, 40)
@@ -34,6 +35,10 @@ size = Vector3(17, 1.5, 1)
 [sub_resource type="BoxShape3D" id="BoxShape3D_wall"]
 size = Vector3(17, 1.5, 1)
 
+[sub_resource type="NavigationMesh" id="NavigationMesh_arena"]
+geometry_parsed_geometry_type = 1
+agent_radius = 0.5
+
 [node name="Arena" type="Node3D"]
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="."]
@@ -43,13 +48,17 @@ environment = SubResource("Environment_arena")
 transform = Transform3D(0.707107, -0.5, 0.5, 0, 0.707107, 0.707107, -0.707107, -0.5, 0.5, 0, 10, 0)
 shadow_enabled = true
 
-[node name="Floor" type="StaticBody3D" parent="."]
+[node name="NavRegion" type="NavigationRegion3D" parent="."]
+navigation_mesh = SubResource("NavigationMesh_arena")
+script = ExtResource("8_nav")
 
-[node name="MeshInstance3D" type="MeshInstance3D" parent="Floor"]
+[node name="Floor" type="StaticBody3D" parent="NavRegion"]
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="NavRegion/Floor"]
 mesh = SubResource("PlaneMesh_floor")
 surface_material_override/0 = SubResource("StandardMaterial3D_floor")
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="Floor"]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="NavRegion/Floor"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 0)
 shape = SubResource("BoxShape3D_floor")
 
@@ -57,22 +66,22 @@ shape = SubResource("BoxShape3D_floor")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 13.5)
 radius = 6.5
 
-[node name="WallLeft" type="StaticBody3D" parent="."]
+[node name="WallLeft" type="StaticBody3D" parent="NavRegion"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -11.5, 0.75, 8)
 
-[node name="Mesh" type="MeshInstance3D" parent="WallLeft"]
+[node name="Mesh" type="MeshInstance3D" parent="NavRegion/WallLeft"]
 mesh = SubResource("BoxMesh_wall")
 
-[node name="Collision" type="CollisionShape3D" parent="WallLeft"]
+[node name="Collision" type="CollisionShape3D" parent="NavRegion/WallLeft"]
 shape = SubResource("BoxShape3D_wall")
 
-[node name="WallRight" type="StaticBody3D" parent="."]
+[node name="WallRight" type="StaticBody3D" parent="NavRegion"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11.5, 0.75, 8)
 
-[node name="Mesh" type="MeshInstance3D" parent="WallRight"]
+[node name="Mesh" type="MeshInstance3D" parent="NavRegion/WallRight"]
 mesh = SubResource("BoxMesh_wall")
 
-[node name="Collision" type="CollisionShape3D" parent="WallRight"]
+[node name="Collision" type="CollisionShape3D" parent="NavRegion/WallRight"]
 shape = SubResource("BoxShape3D_wall")
 
 [node name="Player" parent="." instance=ExtResource("1_player")]
