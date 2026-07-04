@@ -2,6 +2,10 @@
 .godot/
 /android/
 
+# Documentación de contexto para la IA (solo local, no va al repo)
+IMPLEMENTED_FEATURES.md
+GDD_Claude_Context.md
+
 # Imported translations (automatically generated from CSV files)
 *.translation
 
