@@ -1,0 +1,31 @@
+[gd_scene load_steps=5 format=3 uid="uid://dfireball123"]
+
+[ext_resource type="Script" path="res://scripts/magic/fireball.gd" id="1_fireball"]
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_fireball"]
+radius = 0.3
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_fire"]
+albedo_color = Color(1, 0.4, 0.1, 1)
+emission_enabled = true
+emission = Color(1, 0.2, 0, 1)
+emission_energy_multiplier = 2.0
+
+[sub_resource type="SphereMesh" id="SphereMesh_fireball"]
+material = SubResource("StandardMaterial3D_fire")
+radius = 0.3
+height = 0.6
+
+[node name="Fireball" type="Area3D"]
+script = ExtResource("1_fireball")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+shape = SubResource("SphereShape3D_fireball")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+mesh = SubResource("SphereMesh_fireball")
+
+[node name="OmniLight3D" type="OmniLight3D" parent="."]
+light_color = Color(1, 0.5, 0.2, 1)
+light_energy = 2.0
+omni_range = 5.0
