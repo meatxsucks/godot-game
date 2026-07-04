@@ -130,7 +130,7 @@ scripts/
 
 | Asset | Escena | Placeholder actual | Qué RESPETAR al reemplazar |
 |-------|--------|--------------------|-----------------------------|
-| **Mago** (jugador) | `scenes/player/Player.tscn` | Cápsula azul + caja como varita | El nodo `Visual` (rota para apuntar al mouse — tu modelo va adentro). `Visual/Body`: el script tinta/flashea su material al recibir daño. `Visual/Wand`: **punto de spawn de proyectiles** — colócalo en la mano del modelo. |
+| **Jugador (3 clases)** | `scenes/player/Player.tscn` | ✅ **Ya usa KayKit Adventurers** (CC0): Mage/Knight/Rogue con animaciones Idle/Run/Attack/Death (`assets/kaykit/`, mapeo en `game_state.gd → CLASSES.model/anims`) | El modelo se instancia bajo `Visual` en runtime (rotado 180°: KayKit mira +Z). `Visual/Wand` sigue siendo el **punto de spawn de proyectiles** (invisible). Para cambiar un modelo: reemplaza el GLB y ajusta los nombres de animación en `game_state.gd`. |
 | **Slime** (enemigo) | `scenes/enemies/Slime.tscn` | Esfera verde | La ruta `Visual/Mesh` (el script tinta su material por variante y lo flashea en blanco al recibir daño). El nodo raíz escala `Visual` según la variante (`size_scale`). |
 | **Bola de Fuego** | `scenes/magic/Fireball.tscn` | Esfera emisiva + OmniLight | Es un `Area3D` que avanza por su `-Z`. Cambia mesh/luz libremente; ideal punto para `GPUParticles3D` (estela). |
 | **Descarga Arcana** | `scenes/magic/ArcBolt.tscn` | Esfera celeste chica | Igual que Fireball (comparten script). |
@@ -150,8 +150,11 @@ scripts/
 - Colores oficiales por rareza: ver `scripts/loot/rarity.gd` (`COLORS`). Pociones: rojo vida / azul maná (`loot_item.gd → ui_color()`).
 
 ### Animaciones
-- Aún **no hay `AnimationPlayer`** en ningún personaje: los "gamefeel" actuales son tweens por código (flash de daño, tapa del cofre, caída al morir).
-- Sugerencia de integración: agregar `AnimationPlayer` dentro de `Visual` (Player/Slime) con clips `idle`, `run`, `attack`, `hit`, `death` — programación los engancha a los estados existentes.
+- **El jugador ya está animado** (KayKit): idle/correr según velocidad, ataque al castear y muerte — manejado en `player_controller.gd` (`_update_animation`/`_play_attack_animation`). Los enemigos siguen con tweens por código.
+- Para animar enemigos: mismo patrón — modelo con `AnimationPlayer` bajo `Visual` y clips `idle/run/attack/death` (los KayKit Skeletons calzan perfecto como enemigos).
+
+### Créditos de assets
+- Personajes: **KayKit Character Pack: Adventurers** de [Kay Lousberg](https://kaylousberg.itch.io/kaykit-adventurers) (CC0). Licencia incluida en `assets/kaykit/LICENSE.txt`.
 
 ### Reglas de oro
 1. **No renombres ni muevas** los nodos mencionados en la tabla (`Visual`, `Visual/Mesh`, `Wand`, `LidPivot`...): los scripts los buscan por ruta.

@@ -23,6 +23,9 @@ var mana_cost: float = 0.0
 var hold_to_cast: bool = false
 ## Elemento que entrena esta habilidad (skill estilo Tibia). &"" = ninguno.
 var element: StringName = &""
+## true = es el SUPER de la clase (usa la barra de stamina, no cooldown).
+## El HUD lo usa para mostrar el círculo de carga en cualquier kit.
+var is_super: bool = false
 
 ## Descuento de cooldown generado por el último casteo (ej. legendario
 ## "Cascada Crítica"). El player lo consume al armar el timer del slot.

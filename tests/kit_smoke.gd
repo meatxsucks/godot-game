@@ -10,6 +10,8 @@ func _ready() -> void:
 		for ability in kit:
 			assert(ability.display_name != "", "habilidad con nombre en %s" % cls)
 			assert(ability.key_label != "", "habilidad con tecla en %s" % cls)
+		# El slot 5 es el SUPER en TODOS los kits (el HUD muestra su carga).
+		assert(kit[4].is_super, "el slot 5 de %s es el super" % cls)
 
 	# El kit del Guerrero entrena melee y sus stats de clase aplican.
 	Game.selected_class = &"warrior"

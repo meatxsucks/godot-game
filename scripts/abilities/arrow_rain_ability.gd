@@ -13,6 +13,7 @@ func _init() -> void:
 	cooldown = 1.0
 	mana_cost = 0.0
 	element = &"ranged"
+	is_super = true
 
 func _can_cast(player) -> bool:
 	return player.super_charge >= player.SUPER_MAX

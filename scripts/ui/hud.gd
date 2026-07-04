@@ -65,7 +65,7 @@ func _build_slots() -> void:
 		slot.ability_color = ability.color
 		slot.key_label = ability.key_label
 		slot.tooltip_text = ability.display_name
-		if ability.id == &"meteor_storm":
+		if ability.is_super:
 			slot.charge_ratio = 0.0
 			slot.custom_minimum_size = Vector2(54, 54)
 		ability_bar.add_child(slot)

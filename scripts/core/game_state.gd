@@ -8,6 +8,8 @@ const CLASSES := {
 		"name": "Mago",
 		"desc": "Cañón de cristal: hechizos potentes y mucho maná, pero poca vida. Kit de 5 poderes propio.",
 		"color": Color(0.45, 0.6, 1.0),
+		"model": "res://assets/kaykit/Mage.glb",
+		"anims": {"idle": "Idle", "run": "Running_A", "attack": "Spellcast_Shoot", "death": "Death_A"},
 		"stats": {
 			&"max_health": 80.0,
 			&"max_mana": 130.0,
@@ -20,6 +22,8 @@ const CLASSES := {
 		"name": "Guerrero",
 		"desc": "Tanque cuerpo a cuerpo: tajos, embestida que atraviesa y gritos de guerra. Aguanta de todo.",
 		"color": Color(1.0, 0.5, 0.3),
+		"model": "res://assets/kaykit/Knight.glb",
+		"anims": {"idle": "Idle", "run": "Running_A", "attack": "1H_Melee_Attack_Slice_Horizontal", "death": "Death_A"},
 		"stats": {
 			&"max_health": 170.0,
 			&"max_mana": 60.0,
@@ -35,6 +39,8 @@ const CLASSES := {
 		"name": "Explorador",
 		"desc": "Arquero ágil: flechas rápidas, abanicos, perforantes y lluvia mortal. Crítico y velocidad.",
 		"color": Color(0.4, 0.9, 0.5),
+		"model": "res://assets/kaykit/Rogue.glb",
+		"anims": {"idle": "Idle", "run": "Running_A", "attack": "1H_Ranged_Shoot", "death": "Death_A"},
 		"stats": {
 			&"max_health": 110.0,
 			&"max_mana": 90.0,

@@ -52,6 +52,11 @@ var _dead: bool = false
 var _body_material: StandardMaterial3D
 var _body_color: Color
 
+## Modelo KayKit de la clase (si cargó) y sus animaciones.
+var _model_anim: AnimationPlayer = null
+var _anims: Dictionary = {}
+var _attack_lock: float = 0.0
+
 ## UI / HUD puede conectarse a estas señales.
 signal stats_changed
 signal health_changed(current: float, maximum: float)
@@ -77,8 +82,29 @@ func _ready() -> void:
 	_body_color = _body_material.albedo_color
 	body_mesh.set_surface_override_material(0, _body_material)
 
+	_setup_model()
 	_emit_resource_signals()
 	stats_changed.emit()
+
+## Modelo KayKit animado de la clase. Si no carga, queda la cápsula placeholder.
+func _setup_model() -> void:
+	var def: Dictionary = Game.class_def(Game.selected_class)
+	var path: String = def.get("model", "")
+	if path == "" or not ResourceLoader.exists(path):
+		return
+	var scene = load(path)
+	if scene == null:
+		return
+	var model: Node3D = scene.instantiate()
+	visual.add_child(model)
+	model.rotation.y = PI # KayKit mira +Z; nuestro Visual apunta -Z al cursor
+	_model_anim = model.find_child("AnimationPlayer", true, false)
+	_anims = def.get("anims", {})
+	# Placeholders fuera (el Wand queda invisible como marcador de spawn).
+	$Visual/Body.visible = false
+	wand.visible = false
+	if _model_anim and _anims.has("idle"):
+		_model_anim.play(_anims["idle"])
 
 func _physics_process(delta: float) -> void:
 	if _dead:
@@ -87,6 +113,28 @@ func _physics_process(delta: float) -> void:
 	_move(delta)
 	_aim_at_mouse()
 	_update_abilities(delta)
+	_update_animation(delta)
+
+## Idle/correr según la velocidad; el ataque tiene prioridad breve.
+func _update_animation(delta: float) -> void:
+	if _model_anim == null or _dead:
+		return
+	if _attack_lock > 0.0:
+		_attack_lock -= delta
+		return
+	var moving := Vector2(velocity.x, velocity.z).length() > 0.5
+	var target: String = _anims.get("run", "") if moving else _anims.get("idle", "")
+	if target != "" and _model_anim.current_animation != target:
+		_model_anim.play(target, 0.15)
+
+func _play_attack_animation() -> void:
+	if _model_anim == null:
+		return
+	var attack: String = _anims.get("attack", "")
+	if attack == "":
+		return
+	_model_anim.play(attack, 0.1)
+	_attack_lock = minf(_model_anim.current_animation_length, 0.45)
 
 # --- Movimiento -----------------------------------------------------------
 
@@ -207,6 +255,7 @@ func _try_cast(slot: int) -> void:
 	if not ability.execute(self):
 		return
 	_emit_resource_signals()
+	_play_attack_animation()
 	# Entrenamiento estilo Tibia: cada casteo da XP a su elemento y a Magia.
 	if ability.element != &"":
 		stats.skills.add_xp(ability.element, 2.0)
@@ -305,10 +354,13 @@ func take_damage(amount: float) -> void:
 
 func _die() -> void:
 	_dead = true
-	# Caída dramática del mago; el HUD muestra el Game Over (señal died).
-	var tween := create_tween()
-	tween.tween_property(visual, "rotation:x", -PI / 2.0, 0.5) \
-		.set_trans(Tween.TRANS_BOUNCE).set_ease(Tween.EASE_OUT)
+	# Animación de muerte del modelo; caída con tween como fallback.
+	if _model_anim and _anims.has("death"):
+		_model_anim.play(_anims["death"], 0.1)
+	else:
+		var tween := create_tween()
+		tween.tween_property(visual, "rotation:x", -PI / 2.0, 0.5) \
+			.set_trans(Tween.TRANS_BOUNCE).set_ease(Tween.EASE_OUT)
 	died.emit()
 
 # --- Loteo / inventario -----------------------------------------------------
