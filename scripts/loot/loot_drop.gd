@@ -34,11 +34,10 @@ func _process(delta: float) -> void:
 func _on_body_entered(body: Node3D) -> void:
 	if not body.is_in_group("player") or item == null:
 		return
-	print("--- LOOT RECOGIDO ---")
-	print(item.to_text())
-	# Equipar de verdad: aplica los stats del ítem al mago.
-	if body.has_method("equip"):
-		var previous: LootItem = body.equip(item)
-		if previous:
-			print("(reemplaza: %s)" % previous.display_name)
+	# Al inventario: la decisión de equipar es del jugador (estilo Tibia).
+	if not body.has_method("pick_up"):
+		return
+	if not body.pick_up(item):
+		return # inventario lleno: el drop queda en el suelo
+	print("[Loot] recogido: %s" % item.display_name)
 	queue_free()

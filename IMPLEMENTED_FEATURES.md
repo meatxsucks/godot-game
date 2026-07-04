@@ -7,7 +7,7 @@ Inspirado en *Diablo* y *Borderlands*. Genera ítems procedurales con rarezas y 
 - **Autoloads**: `Loot` (Lógica de generación) y `LootDB` (Base de datos de afijos, nombres base y poderes).
 - **Rarezas**: Común (Blanco), Raro (Verde), Épico (Morado), Legendario (Naranja). Las rarezas más altas garantizan más afijos.
 - **Items (`LootItem`)**: Estructura de datos generada que contiene un nombre, daño/defensa, tipo, rareza, y un array de *Afijos* (ej: "+10% Daño Fuego").
-- **Drops en el Mundo (`LootDrop.tscn`)**: Un prisma 3D interactivo (`Area3D`) que aparece cuando muere un enemigo. Ajusta su color y brillo dependiendo de la rareza del ítem. Al colisionar con el jugador, actualmente imprime las estadísticas en consola.
+- **Drops en el Mundo (`LootDrop.tscn`)**: Un prisma 3D interactivo (`Area3D`) que aparece cuando muere un enemigo. Ajusta su color y brillo dependiendo de la rareza del ítem. Al colisionar con el jugador, el ítem va al **inventario** (ver sección 9); si está lleno, el drop queda en el suelo.
 
 ## 2. Controlador del Jugador (Mago)
 - **Script**: `scripts/player/player_controller.gd`
@@ -36,10 +36,10 @@ Inspirado en *Diablo* y *Borderlands*. Genera ítems procedurales con rarezas y 
 - **Muerte**: Al llegar su vida a 0, instancia un `LootDrop.tscn` (con probabilidad `drop_chance`), le inyecta un `LootItem` de nivel `loot_level` (configurable por el spawner según la oleada), y luego hace `queue_free()`.
 
 ## 4b. Loteo y Equipamiento (loop cerrado)
-- **Recogida (`LootDrop.gd`)**: al entrar el jugador, si el cuerpo está en el grupo `"player"` y expone `equip()`, **equipa el ítem** (antes solo hacía `print`).
-- **Equipar (`Player.equip(item)`)**: delega en `PlayerStats.equip()`, recalcula stats, re-clampa vida/maná a los nuevos máximos y emite `item_equipped` / `stats_changed`. Devuelve el ítem reemplazado.
-- **Loop ARPG**: enemigo muere → dropea loot por rareza → el jugador lo equipa → sube `spell_damage`/crit/maná → la siguiente Bola de Fuego pega más fuerte.
-- **Señales para HUD** (en `player_controller.gd`): `health_changed`, `mana_changed`, `stats_changed`, `item_equipped`.
+- **Recogida (`LootDrop.gd`)**: al entrar el jugador llama `pick_up(item)` → el ítem va al **inventario** (ya no auto-equipa). Si el inventario está lleno, el drop no desaparece.
+- **Equipar (`Player.equip_from_inventory(index)`)**: delega en `PlayerStats.equip()` (que devuelve los ítems **desplazados**, 0–2 por conflictos de slot/dos manos), los desplazados vuelven al inventario, recalcula stats, re-clampa vida/maná y emite `item_equipped` / `stats_changed`.
+- **Loop ARPG**: enemigo muere → dropea loot por rareza → el jugador lo recoge, lo compara y lo equipa → sube `spell_damage`/crit/maná → la siguiente Bola de Fuego pega más fuerte.
+- **Señales para HUD** (en `player_controller.gd`): `health_changed`, `mana_changed`, `stats_changed`, `item_equipped`, `inventory_changed`, `super_charge_changed`.
 
 ## 5. Cámara y Gestión de Escenas
 - **SceneManager (Autoload)**: Gestiona transiciones fluidas de fundido a negro entre pantallas usando un `CanvasLayer` persistente y un `AnimationPlayer`.
@@ -55,7 +55,7 @@ Inspirado en *Diablo* y *Borderlands*. Genera ítems procedurales con rarezas y 
 - **Los 5 poderes de la demo** (una subclase de `Ability` cada uno, en `scripts/abilities/`):
   1. **Bola de Fuego** — Click izq, 2.0s, 15 maná. El proyectil principal; escala con `spell_damage + fire_damage`.
   2. **Descarga Arcana** — Click der, 0.6s, 6 maná. Proyectil rápido y débil para spamear (40% de daño); escala con `lightning_damage`. **Reutiliza `fireball.gd`** con otros exports (`ArcBolt.tscn`).
-  3. **Dash Arcano** — Espacio, 1.5s, gratis. Impulso de 0.15s a velocidad x4 hacia el input de movimiento (o hacia el cursor si el mago está quieto). El estado del dash vive en `_move()` del player (`start_dash()`).
+  3. **Dash Arcano** — Espacio, 1.5s, gratis. Impulso de 0.15s a velocidad x4 hacia el input de movimiento (o hacia el cursor si el mago está quieto). El estado del dash vive en `_move()` del player (`start_dash()`). Al terminar el impulso la velocidad **se corta en seco** a velocidad de caminata (sin deslizamiento).
   4. **Nova de Escarcha** — Q, 5.0s, 25 maná. `Area3D` que crece de 0→4m en 0.4s dañando **una sola vez** a cada enemigo; escala con `cold_damage` (`FrostNova.tscn` + `frost_nova.gd`).
   5. **SUPER: Tormenta de Meteoros** — R, sin cooldown: requiere la **stamina llena**. 8 meteoros caen en radio 5m sobre el punto del cursor (`get_aim_point()`), 150% de daño cada uno con AoE de impacto vía query física (`MeteorStorm.tscn` + `meteor_storm.gd`).
 - **Stamina del super** (`super_charge` 0–100 en el player): **+4 por impacto** de habilidad (proyectiles y nova acreditan a su `source` con `add_super_charge`) y **+12 por kill** (el slime acredita al morir). `MeteorStormAbility` consume la barra entera (`consume_super_charge()`).
@@ -69,11 +69,21 @@ Inspirado en *Diablo* y *Borderlands*. Genera ítems procedurales con rarezas y 
 - El **slot del super** es más grande, se rellena con la carga de stamina (señal `super_charge_changed`) y **parpadea** cuando está listo para soltar.
 - Los cooldowns se polean cada frame (`_process`) para que el relleno radial sea suave; vida/maná/super van por señales.
 
+## 9. Inventario y Equipamiento (estilo Tibia)
+- **Inventario del player** (`player_controller.gd`): `inventory` de **20 casillas**. `pick_up(item)` (lo llama `LootDrop`), `equip_from_inventory(index)`, `unequip_slot(slot)` y señal `inventory_changed`.
+- **6 slots de equipo** en `PlayerStats.equipment`: `head` (cabeza), `armor` (torso), `weapon` (mano principal), `offhand` (escudo/orbe), `ring` (anillo), `boots` (zapatos).
+- **Armas a dos manos** (`ItemBase.two_handed`): equipar una 2H desplaza el offhand al inventario, y equipar un offhand con 2H puesta desplaza el arma. `PlayerStats.equip()` devuelve `Array[LootItem]` con los desplazados. Smoke test headless en `tests/LootSmoke.tscn`.
+- **Bases nuevas en LootDB**: Sombrero de tela (`head`), Botas de cuero (`boots`), Escudo de madera (`offhand`) y **Bastón de guerra** (arma 2H, spell_damage alto).
+- **Stat nuevo `move_speed`** (%): lo aplica `current_speed()` al caminar y al dash. Afijo "del Viento" (3–8%, solo botas) — las botas rolean velocidad.
+- **UI (`InventoryPanel.tscn` + `inventory_panel.gd`)**: panel a la derecha, toggle con **I** o **Tab** (acción `toggle_inventory`, la maneja el HUD). Cruz de equipo 3×3 estilo Tibia (cabeza arriba; arma|torso|escudo; anillo|botas) + grilla de inventario 5×4 con contador.
+- **`ItemSlotUI`** (`item_slot_ui.gd`, Button 40×40): abreviatura de 3 letras y borde coloreados por **rareza**, tooltip con la ficha completa (`LootItem.to_text()`: stats, afijos, legendarios). Click en inventario = equipar; click en slot de equipo = quitar. Sin drag & drop (v1).
+- Con el inventario abierto `combat_input_enabled = false`: los clicks en la UI **no disparan** hechizos (los cooldowns siguen corriendo).
+
 ## Próximos Pasos (Pendientes)
 - Sistema de oleadas (spawner) que escale `loot_level` y dificultad de los slimes.
 - Que los slimes ataquen al jugador (ahora el jugador tiene `take_damage`, pero nadie se lo aplica todavía) — con el dash ya hay herramienta para esquivar.
 - Enganchar los demás poderes legendarios (`fireball_chain`, `on_hit_frost_nova`, `mana_to_shield`) en la capa de combate.
 - Añadir navegación compleja con `NavigationRegion3D` (Navmesh) para los enemigos.
-- Inventario visual (el HUD ya muestra vida/maná; falta ver el equipo y comparar ítems).
+- Comparación de ítems lado a lado y drag & drop en el inventario (v2 de la UI).
 
-> ✅ **Hecho recientemente**: sistema de poderes de 5 slots (Bola de Fuego 2s, Descarga Arcana, Dash Arcano, Nova de Escarcha y SUPER Tormenta de Meteoros con stamina), y HUD con barras de vida/maná + círculos de recarga radial dibujados por código.
+> ✅ **Hecho recientemente**: inventario de 20 casillas + equipamiento estilo Tibia (cabeza/arma/escudo/anillo/torso/botas) con armas a dos manos, panel con toggle I/Tab, stat `move_speed` en botas, y fix del dash (corte en seco, sin resbalar).

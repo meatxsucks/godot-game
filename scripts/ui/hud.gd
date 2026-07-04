@@ -8,6 +8,7 @@ extends CanvasLayer
 @onready var mana_bar: ProgressBar = %ManaBar
 @onready var mana_label: Label = %ManaLabel
 @onready var ability_bar: HBoxContainer = %AbilityBar
+@onready var inventory_panel: PanelContainer = %InventoryPanel
 
 var player: Node = null
 var _slots: Array[AbilitySlot] = []
@@ -21,9 +22,21 @@ func _ready() -> void:
 	player.mana_changed.connect(_on_mana_changed)
 	player.super_charge_changed.connect(_on_super_changed)
 	_build_slots()
+	inventory_panel.setup(player)
 	_on_health_changed(player.stats.health, player.stats.get_stat(&"max_health"))
 	_on_mana_changed(player.stats.mana, player.stats.get_stat(&"max_mana"))
 	_on_super_changed(player.super_charge, player.SUPER_MAX)
+
+func _input(event: InputEvent) -> void:
+	if event.is_action_pressed("toggle_inventory"):
+		_toggle_inventory()
+
+## Abre/cierra el inventario. Mientras está abierto, el player no castea
+## (así el click en las casillas no dispara la Bola de Fuego).
+func _toggle_inventory() -> void:
+	inventory_panel.visible = not inventory_panel.visible
+	if player:
+		player.combat_input_enabled = not inventory_panel.visible
 
 func _build_slots() -> void:
 	for i in player.abilities.size():

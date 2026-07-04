@@ -19,12 +19,22 @@ const ABILITY_ACTIONS: Array[StringName] = [
 	&"ability_super",
 ]
 
+## Capacidad del inventario (loot recogido, aún no equipado).
+const INVENTORY_SIZE := 20
+
 ## Stats del mago (base + loot equipado). Fuente de verdad del combate.
 var stats := PlayerStats.new()
 
 ## Barra de poderes (5 slots) y el cooldown restante de cada uno.
 var abilities: Array[Ability] = []
 var cooldowns: Array[float] = []
+
+## Loot recogido. Se equipa a mano desde el panel de inventario.
+var inventory: Array[LootItem] = []
+
+## false mientras el inventario está abierto: no se castean poderes
+## (los cooldowns siguen corriendo).
+var combat_input_enabled: bool = true
 
 ## Stamina del super (0..SUPER_MAX). Se gana dañando y matando enemigos.
 var super_charge: float = 0.0
@@ -38,6 +48,7 @@ signal health_changed(current: float, maximum: float)
 signal mana_changed(current: float, maximum: float)
 signal item_equipped(item: LootItem, previous: LootItem)
 signal super_charge_changed(current: float, maximum: float)
+signal inventory_changed
 
 @onready var visual: Node3D = $Visual
 @onready var wand: MeshInstance3D = $Visual/Wand
@@ -64,12 +75,21 @@ func _physics_process(delta: float) -> void:
 
 # --- Movimiento -----------------------------------------------------------
 
+## Velocidad de caminata real: base + move_speed (%) de las botas/loot.
+func current_speed() -> float:
+	return speed * (1.0 + stats.get_stat(&"move_speed") / 100.0)
+
 func _move(delta: float) -> void:
 	# Durante el dash la velocidad está bloqueada al impulso.
 	if _dash_timer > 0.0:
 		_dash_timer -= delta
-		velocity.x = _dash_dir.x * speed * DASH_SPEED_MULT
-		velocity.z = _dash_dir.z * speed * DASH_SPEED_MULT
+		velocity.x = _dash_dir.x * current_speed() * DASH_SPEED_MULT
+		velocity.z = _dash_dir.z * current_speed() * DASH_SPEED_MULT
+		# Al terminar el impulso se corta en seco a velocidad de caminata:
+		# sin esto el mago "resbala" mientras desacelera desde x4.
+		if _dash_timer <= 0.0:
+			velocity.x = _dash_dir.x * current_speed()
+			velocity.z = _dash_dir.z * current_speed()
 		if not is_on_floor():
 			velocity.y -= 9.8 * delta
 		move_and_slide()
@@ -78,8 +98,8 @@ func _move(delta: float) -> void:
 	var direction := _camera_aligned_input()
 
 	if direction:
-		velocity.x = move_toward(velocity.x, direction.x * speed, acceleration * delta)
-		velocity.z = move_toward(velocity.z, direction.z * speed, acceleration * delta)
+		velocity.x = move_toward(velocity.x, direction.x * current_speed(), acceleration * delta)
+		velocity.z = move_toward(velocity.z, direction.z * current_speed(), acceleration * delta)
 	else:
 		velocity.x = move_toward(velocity.x, 0, acceleration * delta)
 		velocity.z = move_toward(velocity.z, 0, acceleration * delta)
@@ -148,6 +168,8 @@ func _aim_at_mouse() -> void:
 func _update_abilities(delta: float) -> void:
 	for i in abilities.size():
 		cooldowns[i] = maxf(0.0, cooldowns[i] - delta)
+		if not combat_input_enabled:
+			continue
 		var action := ABILITY_ACTIONS[i]
 		var pressed := Input.is_action_pressed(action) if abilities[i].hold_to_cast \
 				else Input.is_action_just_pressed(action)
@@ -211,13 +233,52 @@ func _die() -> void:
 	# Placeholder: aquí iría game over / respawn. Por ahora solo log.
 	print("[Player] derrotado")
 
-# --- Loteo ----------------------------------------------------------------
+# --- Loteo / inventario -----------------------------------------------------
 
-## Equipa un ítem recogido y propaga el cambio de stats. Devuelve el ítem previo.
-func equip(item: LootItem) -> LootItem:
-	var previous := stats.equip(item)
+## Recoge un ítem del suelo al inventario. false = inventario lleno.
+func pick_up(item: LootItem) -> bool:
+	if item == null or inventory.size() >= INVENTORY_SIZE:
+		return false
+	inventory.append(item)
+	inventory_changed.emit()
+	return true
+
+## Equipa el ítem en `index` del inventario. Los desplazados (slot ocupado,
+## conflicto a dos manos) vuelven al inventario.
+func equip_from_inventory(index: int) -> void:
+	if index < 0 or index >= inventory.size():
+		return
+	var item := inventory[index]
+	inventory.remove_at(index)
+	var displaced := stats.equip(item)
+	inventory.append_array(displaced)
+	inventory_changed.emit()
 	_emit_resource_signals()
 	stats_changed.emit()
+	item_equipped.emit(item, displaced[0] if not displaced.is_empty() else null)
+
+## Desequipa un slot hacia el inventario (si hay espacio).
+func unequip_slot(slot: StringName) -> void:
+	if inventory.size() >= INVENTORY_SIZE:
+		return
+	var item := stats.unequip(slot)
+	if item == null:
+		return
+	inventory.append(item)
+	inventory_changed.emit()
+	_emit_resource_signals()
+	stats_changed.emit()
+
+## Equipa un ítem directamente (sin pasar por el inventario); los desplazados
+## sí van al inventario. Devuelve el primero desplazado (o null).
+func equip(item: LootItem) -> LootItem:
+	var displaced := stats.equip(item)
+	inventory.append_array(displaced)
+	if not displaced.is_empty():
+		inventory_changed.emit()
+	_emit_resource_signals()
+	stats_changed.emit()
+	var previous: LootItem = displaced[0] if not displaced.is_empty() else null
 	item_equipped.emit(item, previous)
 	return previous
 

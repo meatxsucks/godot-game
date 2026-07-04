@@ -16,13 +16,14 @@ func _ready() -> void:
 
 # --- Constructores helper -------------------------------------------------
 
-func _base(id: StringName, name: String, type: StringName, slot: StringName, base_stats: Dictionary) -> ItemBase:
+func _base(id: StringName, name: String, type: StringName, slot: StringName, base_stats: Dictionary, two_handed := false) -> ItemBase:
 	var b := ItemBase.new()
 	b.id = id
 	b.name = name
 	b.type = type
 	b.slot = slot
 	b.base_stats = base_stats
+	b.two_handed = two_handed
 	return b
 
 func _affix(id: StringName, word: String, kind: int, stat: StringName, label: String,
@@ -64,6 +65,11 @@ func _build_item_bases() -> void:
 		_base(&"wand_bone", "Varita de hueso", &"wand", &"weapon", {&"spell_damage": 5.0, &"cast_speed": 5.0}),
 		_base(&"ring_copper", "Anillo de cobre", &"ring", &"ring", {&"crit_chance": 2.0}),
 		_base(&"robe_linen", "Túnica de lino", &"armor", &"armor", {&"max_health": 25.0}),
+		# Equipo estilo Tibia: cabeza, botas, escudo y arma a dos manos.
+		_base(&"hat_cloth", "Sombrero de tela", &"helmet", &"head", {&"max_mana": 12.0, &"max_health": 8.0}),
+		_base(&"boots_leather", "Botas de cuero", &"boots", &"boots", {&"max_health": 10.0, &"move_speed": 3.0}),
+		_base(&"shield_wood", "Escudo de madera", &"shield", &"offhand", {&"max_health": 20.0, &"res_fire": 5.0}),
+		_base(&"staff_war", "Bastón de guerra", &"staff", &"weapon", {&"spell_damage": 14.0}, true),
 	]
 
 func _build_affixes() -> void:
@@ -90,6 +96,8 @@ func _build_affixes() -> void:
 		_affix(&"res_cold", "del Invierno", K.SUFFIX, &"res_cold", "Resist. al hielo", M.PERCENT, 5, 15, 0.3, 55, T.UNCOMMON, [], [&"defense", &"cold"]),
 		_affix(&"res_light", "de la Tormenta", K.SUFFIX, &"res_lightning", "Resist. al rayo", M.PERCENT, 5, 15, 0.3, 55, T.UNCOMMON, [], [&"defense", &"lightning"]),
 		_affix(&"area", "del Coloso", K.SUFFIX, &"area", "Área de efecto", M.PERCENT, 4, 10, 0.2, 35, T.EPIC, [], [&"utility"]),
+		# Solo botas: velocidad de movimiento (FLAT = puntos de % directos).
+		_affix(&"move_speed", "del Viento", K.SUFFIX, &"move_speed", "Vel. de movimiento", M.FLAT, 3, 8, 0.2, 50, T.UNCOMMON, [&"boots"], [&"utility"]),
 	]
 
 func _build_legendaries() -> void:

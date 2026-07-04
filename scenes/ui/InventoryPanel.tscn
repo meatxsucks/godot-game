@@ -1,0 +1,79 @@
+[gd_scene load_steps=3 format=3 uid="uid://cinvpanel0001"]
+
+[ext_resource type="Script" path="res://scripts/ui/inventory_panel.gd" id="1_inv"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
+content_margin_left = 10.0
+content_margin_top = 10.0
+content_margin_right = 10.0
+content_margin_bottom = 10.0
+bg_color = Color(0.07, 0.07, 0.11, 0.92)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0, 0, 0, 0.9)
+
+[node name="InventoryPanel" type="PanelContainer"]
+visible = false
+layout_mode = 1
+anchors_preset = 6
+anchor_left = 1.0
+anchor_top = 0.5
+anchor_right = 1.0
+anchor_bottom = 0.5
+offset_left = -252.0
+offset_top = -215.0
+offset_right = -8.0
+offset_bottom = 215.0
+grow_horizontal = 0
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
+script = ExtResource("1_inv")
+
+[node name="VBox" type="VBoxContainer" parent="."]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="EquipTitle" type="Label" parent="VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 11
+text = "Equipo"
+horizontal_alignment = 1
+
+[node name="EquipCenter" type="CenterContainer" parent="VBox"]
+layout_mode = 2
+
+[node name="EquipGrid" type="GridContainer" parent="VBox/EquipCenter"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/h_separation = 4
+theme_override_constants/v_separation = 4
+columns = 3
+
+[node name="HSep" type="HSeparator" parent="VBox"]
+layout_mode = 2
+
+[node name="InvCounter" type="Label" parent="VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 11
+text = "Inventario 0/20"
+horizontal_alignment = 1
+
+[node name="InvCenter" type="CenterContainer" parent="VBox"]
+layout_mode = 2
+
+[node name="InvGrid" type="GridContainer" parent="VBox/InvCenter"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/h_separation = 4
+theme_override_constants/v_separation = 4
+columns = 5
+
+[node name="Hint" type="Label" parent="VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 9
+text = "Click: equipar / quitar — I o Tab: cerrar"
+horizontal_alignment = 1
+autowrap_mode = 2

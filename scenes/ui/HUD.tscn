@@ -1,6 +1,7 @@
-[gd_scene load_steps=5 format=3 uid="uid://chudingame001"]
+[gd_scene load_steps=6 format=3 uid="uid://chudingame001"]
 
 [ext_resource type="Script" path="res://scripts/ui/hud.gd" id="1_hud"]
+[ext_resource type="PackedScene" uid="uid://cinvpanel0001" path="res://scenes/ui/InventoryPanel.tscn" id="2_invpanel"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_bar_bg"]
 bg_color = Color(0.06, 0.06, 0.1, 0.85)
@@ -96,3 +97,6 @@ grow_vertical = 0
 mouse_filter = 2
 theme_override_constants/separation = 10
 alignment = 1
+
+[node name="InventoryPanel" parent="Root" instance=ExtResource("2_invpanel")]
+unique_name_in_owner = true

@@ -19,13 +19,14 @@ var base_stats := {
 	&"crit_damage": 50.0,      # % de daño extra al critear
 	&"cast_speed": 0.0,        # % (reduce el cooldown de lanzamiento)
 	&"cooldown_reduction": 0.0,# %
+	&"move_speed": 0.0,        # % de velocidad de movimiento (botas)
 	&"area": 0.0,              # %
 	&"res_fire": 0.0,
 	&"res_cold": 0.0,
 	&"res_lightning": 0.0,
 }
 
-## slot (&"weapon", &"offhand", &"ring", &"armor") -> LootItem
+## slot (&"head", &"armor", &"weapon", &"offhand", &"ring", &"boots") -> LootItem
 var equipment := {}
 
 var health: float = 0.0
@@ -39,18 +40,47 @@ func _init() -> void:
 	health = get_stat(&"max_health")
 	mana = get_stat(&"max_mana")
 
-## Equipa un ítem en su slot. Devuelve el ítem que estaba antes (o null).
-func equip(item: LootItem) -> LootItem:
+## Equipa un ítem en su slot. Devuelve los ítems desplazados (0-2: el que
+## ocupaba el slot, más el offhand/arma si hay conflicto a dos manos).
+func equip(item: LootItem) -> Array[LootItem]:
+	var displaced: Array[LootItem] = []
 	if item == null or item.base == null:
-		return null
+		return displaced
 	var slot: StringName = item.base.slot
-	var previous = equipment.get(slot, null)
+
+	# Arma a dos manos: ocupa también la mano secundaria.
+	if slot == &"weapon" and item.base.two_handed and equipment.get(&"offhand") != null:
+		displaced.append(equipment[&"offhand"])
+		equipment.erase(&"offhand")
+	# Equipar offhand con un arma 2H puesta: el arma sale.
+	if slot == &"offhand":
+		var weapon: LootItem = equipment.get(&"weapon", null)
+		if weapon and weapon.base.two_handed:
+			displaced.append(weapon)
+			equipment.erase(&"weapon")
+
+	var previous: LootItem = equipment.get(slot, null)
+	if previous:
+		displaced.append(previous)
 	equipment[slot] = item
 	recompute()
-	# Re-clampear recursos a los nuevos máximos.
+	_clamp_resources()
+	return displaced
+
+## Saca el ítem de un slot. Devuelve el ítem (o null si estaba vacío).
+func unequip(slot: StringName) -> LootItem:
+	var item: LootItem = equipment.get(slot, null)
+	if item == null:
+		return null
+	equipment.erase(slot)
+	recompute()
+	_clamp_resources()
+	return item
+
+## Re-clampea vida/maná a los máximos actuales (tras cambiar el equipo).
+func _clamp_resources() -> void:
 	health = minf(health, get_stat(&"max_health"))
 	mana = minf(mana, get_stat(&"max_mana"))
-	return previous
 
 ## Recalcula el cache combinando base + planos + porcentajes de cada ítem.
 func recompute() -> void:
