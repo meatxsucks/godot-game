@@ -12,11 +12,19 @@ extends CanvasLayer
 @onready var game_over: CenterContainer = %GameOver
 @onready var btn_retry: Button = %BtnRetry
 @onready var btn_menu: Button = %BtnMenu
+@onready var wave_label: Label = %WaveLabel
 
 var player: Node = null
+var wave_manager: Node = null
 var _slots: Array[AbilitySlot] = []
 
 func _ready() -> void:
+	wave_manager = get_tree().get_first_node_in_group("wave_manager")
+	if wave_manager:
+		wave_manager.wave_started.connect(_on_wave_started)
+		wave_manager.wave_cleared.connect(_on_wave_cleared)
+		wave_manager.intermission_tick.connect(_on_intermission_tick)
+
 	player = get_tree().get_first_node_in_group("player")
 	if player == null:
 		push_warning("[HUD] no se encontró un nodo en el grupo 'player'")
@@ -58,6 +66,12 @@ func _build_slots() -> void:
 		_slots.append(slot)
 
 func _process(_delta: float) -> void:
+	# Durante la oleada, mostrar cuántos enemigos quedan (vivos + por venir).
+	if wave_manager and wave_manager.current_wave() > 0:
+		var left: int = wave_manager.enemies_left()
+		if left > 0:
+			wave_label.text = "Oleada %d — quedan %d" % [wave_manager.current_wave(), left]
+
 	if player == null:
 		return
 	for i in _slots.size():
@@ -81,6 +95,19 @@ func _on_super_changed(current: float, maximum: float) -> void:
 	for slot in _slots:
 		if slot.charge_ratio >= 0.0:
 			slot.charge_ratio = current / maximum
+
+# --- Oleadas -------------------------------------------------------------------
+
+func _on_wave_started(n: int) -> void:
+	wave_label.text = "Oleada %d" % n
+
+func _on_wave_cleared(n: int) -> void:
+	wave_label.text = "¡Oleada %d superada!" % n
+
+func _on_intermission_tick(next_n: int, seconds_left: int) -> void:
+	# Los primeros segundos se deja el "¡superada!" en pantalla.
+	if seconds_left <= 7 or next_n == 1:
+		wave_label.text = "Oleada %d en %d s..." % [next_n, seconds_left]
 
 # --- Game Over ---------------------------------------------------------------
 

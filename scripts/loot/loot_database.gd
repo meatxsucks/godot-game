@@ -88,12 +88,16 @@ func _build_affixes() -> void:
 	var T := Rarity.Tier
 	# Tipos de arma mágica (para afijos de daño ofensivo).
 	var weapons: Array[StringName] = [&"staff", &"wand"]
+	var melee_types: Array[StringName] = [&"staff", &"wand", &"shield"]
 	affixes = [
 		# Ofensivos
 		_affix(&"flat_spell_dmg", "Arcano", K.PREFIX, &"spell_damage", "Daño mágico", M.FLAT, 3, 9, 0.8, 100, T.COMMON, weapons, [&"offense"]),
 		_affix(&"pct_spell_dmg", "Devastador", K.PREFIX, &"spell_damage", "Daño mágico", M.PERCENT, 5, 12, 0.4, 70, T.RARE, weapons, [&"offense"]),
 		_affix(&"fire_dmg", "Flamígero", K.PREFIX, &"fire_damage", "Daño de fuego", M.FLAT, 4, 12, 1.0, 60, T.UNCOMMON, weapons, [&"offense", &"fire"]),
 		_affix(&"cold_dmg", "Glacial", K.PREFIX, &"cold_damage", "Daño de hielo", M.FLAT, 4, 12, 1.0, 60, T.UNCOMMON, weapons, [&"offense", &"cold"]),
+		# Daño por clase: Guerrero (melee) y Explorador (distancia).
+		_affix(&"melee_dmg", "Feroz", K.PREFIX, &"melee_damage", "Daño melee", M.FLAT, 4, 12, 1.0, 60, T.UNCOMMON, melee_types, [&"offense"]),
+		_affix(&"ranged_dmg", "Certero", K.PREFIX, &"ranged_damage", "Daño distancia", M.FLAT, 4, 12, 1.0, 60, T.UNCOMMON, weapons, [&"offense"]),
 		_affix(&"crit_chance", "Letal", K.PREFIX, &"crit_chance", "Prob. crítico", M.PERCENT, 2, 6, 0.1, 55, T.UNCOMMON, [], [&"offense"]),
 		_affix(&"crit_dmg", "Brutal", K.PREFIX, &"crit_damage", "Daño crítico", M.PERCENT, 8, 20, 0.6, 45, T.RARE, [], [&"offense"]),
 		_affix(&"cast_speed", "Veloz", K.PREFIX, &"cast_speed", "Vel. de lanzamiento", M.PERCENT, 3, 8, 0.1, 50, T.UNCOMMON, [], [&"utility"]),

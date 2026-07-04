@@ -17,8 +17,19 @@ var _opened := false
 @onready var prompt: Label3D = $Prompt
 
 func _ready() -> void:
+	add_to_group("chest")
 	$InteractArea.body_entered.connect(_on_body_entered)
 	$InteractArea.body_exited.connect(_on_body_exited)
+
+## Reabastecimiento entre oleadas: el cofre se cierra y puede volver a
+## abrirse, con botín del nivel de la oleada actual.
+func restock(new_loot_level: int) -> void:
+	loot_level = new_loot_level
+	_opened = false
+	var tween := create_tween()
+	tween.tween_property(lid_pivot, "rotation:x", 0.0, 0.3) \
+		.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	prompt.visible = _player_in_range
 
 func _physics_process(_delta: float) -> void:
 	if _player_in_range and not _opened and Input.is_action_just_pressed("interact"):

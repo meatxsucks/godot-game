@@ -53,7 +53,8 @@ ARPG isométrico *wave-based* hecho en **Godot 4.4** (Forward+). Mezcla el comba
 
 ### El mundo
 - Empiezas en una **base segura amurallada** (zona cian): los enemigos no pueden entrar, el **cofre** con equipo inicial y pociones de vida está adentro. Cruza la **puerta** para pelear; retrocede a la base si te ves apretado.
-- **Enemigos**: slimes en 3 variantes — normal (8 dmg), rápido (5 dmg, veloz) y tanque (15 dmg, 75 HP). Pegan por contacto y un spawner mantiene el campo poblado.
+- **Oleadas**: rondas anunciadas con **10s de descanso** entre medio (vuelve a la base, toma pociones, compara tu loot). Cada oleada trae más enemigos, con más vida y daño, y **botín de mayor nivel**. Los **cofres se reabastecen cada 3 oleadas** — tu única fuente de vida si aguantas.
+- **Enemigos**: slimes en 3 variantes — normal (8 dmg), rápido (5 dmg, veloz) y tanque (15 dmg, 75 HP); las rondas avanzadas traen más rápidos y tanques. Pegan por contacto y navegan con navmesh (rodean los muros hasta la puerta).
 - **Muerte**: a 0 de vida → Game Over (Reintentar con la misma clase, o volver al Menú).
 
 ---
