@@ -26,6 +26,10 @@ func _ready() -> void:
 	assert(stats.unequip(&"weapon") == staff, "unequip devuelve el ítem")
 	assert(stats.unequip(&"weapon") == null, "unequip de slot vacío devuelve null")
 
+	# Rareza forzada (el boss garantiza legendarios).
+	var legendary_item := Loot.generate_random_item(5, &"", Rarity.Tier.LEGENDARY)
+	assert(legendary_item.rarity == Rarity.Tier.LEGENDARY, "rareza forzada a legendario")
+
 	print("SMOKE OK")
 	get_tree().quit(0)
 

@@ -42,7 +42,7 @@ ARPG isométrico *wave-based* hecho en **Godot 4.4** (Forward+). Mezcla el comba
 - Las pociones son **consumibles de un solo uso**: van al inventario y se usan con click.
 
 ### Loot y equipo (estilo Tibia)
-- 5 rarezas: **Común** (blanco) → **Poco común** (verde) → **Raro** (azul) → **Épico** (morado) → **Legendario** (naranja, con poder único). Más rareza = más afijos y mejores valores.
+- 5 rarezas: **Común** (blanco) → **Poco común** (verde) → **Raro** (azul) → **Épico** (morado) → **Legendario** (naranja, con poder único **activo**: bolas de fuego que rebotan en cadena, nova de hielo defensiva al recibir golpes, maná que absorbe daño como escudo, o críticos que recortan cooldowns). Más rareza = más afijos y mejores valores.
 - Los drops van al **inventario (20 casillas)**; equipas a mano (click o **arrastrando**) en **6 slots**: cabeza, torso, arma, escudo/orbe, anillo, botas. Pasa el mouse sobre un ítem para **compararlo lado a lado** con el que llevas equipado.
 - Las **armas a dos manos** (ej. Bastón de guerra) ocupan también la mano del escudo.
 - El equipo sube tus stats **en vivo** (visible en el panel con I/Tab).
@@ -57,6 +57,7 @@ ARPG isométrico *wave-based* hecho en **Godot 4.4** (Forward+). Mezcla el comba
 - Empiezas en una **base segura amurallada** (zona cian) al borde sur: los enemigos no pueden entrar, el **cofre** con equipo inicial y pociones de vida está adentro. Cruza la **puerta** para pelear; retrocede a la base si te ves apretado.
 - **Oleadas**: rondas anunciadas con **10s de descanso** entre medio (vuelve a la base, toma pociones, compara tu loot). Cada oleada trae más enemigos, con más vida y daño, y **botín de mayor nivel**. Los **cofres se reabastecen cada 3 oleadas** — tu única fuente de vida si aguantas.
 - **Enemigos**: slimes en 3 variantes — normal (8 dmg), rápido (5 dmg, veloz) y tanque (15 dmg, 75 HP); las rondas avanzadas traen más rápidos y tanques. Pegan por contacto y navegan con navmesh (rodean los muros hasta la puerta).
+- **Boss final**: en la **oleada 10** llega el **Rey Slime** — 600 HP, corona dorada, golpe sísmico telegrafiado (¡sal del círculo rojo!) e invocación de secuaces. Derrotarlo = **¡NIVEL SUPERADO!** con **legendario garantizado**; puedes seguir en modo endless.
 - **Muerte**: a 0 de vida → Game Over (Reintentar con la misma clase, o volver al Menú).
 
 ---

@@ -39,6 +39,10 @@ var combat_input_enabled: bool = true
 ## Stamina del super (0..SUPER_MAX). Se gana dañando y matando enemigos.
 var super_charge: float = 0.0
 
+## Cooldown del legendario "Corazón de Escarcha" (nova al recibir un golpe).
+const FROST_GUARD_SCENE := preload("res://scenes/magic/FrostNova.tscn")
+var _frost_guard_timer: float = 0.0
+
 var _dash_timer: float = 0.0
 var _dash_dir := Vector3.ZERO
 ## Daño del dash (Embestida del Guerrero; 0 = dash sin daño) y ya golpeados.
@@ -79,6 +83,7 @@ func _ready() -> void:
 func _physics_process(delta: float) -> void:
 	if _dead:
 		return
+	_frost_guard_timer = maxf(0.0, _frost_guard_timer - delta)
 	_move(delta)
 	_aim_at_mouse()
 	_update_abilities(delta)
@@ -268,8 +273,27 @@ func take_damage(amount: float) -> void:
 	# Durante el dash eres intangible (i-frames estilo Wizard of Legend).
 	if _dead or _dash_timer > 0.0:
 		return
+
+	# Legendario "Desborde Arcano": el maná es tu escudo — la mitad del daño
+	# se absorbe con maná (1:1) mientras tengas.
+	if stats.has_legendary(&"mana_to_shield") and stats.mana > 0.0:
+		var absorbed := minf(amount * 0.5, stats.mana)
+		stats.mana -= absorbed
+		amount -= absorbed
+		mana_changed.emit(stats.mana, stats.get_stat(&"max_mana"))
+
 	stats.health = maxf(0.0, stats.health - amount)
 	health_changed.emit(stats.health, stats.get_stat(&"max_health"))
+
+	# Legendario "Corazón de Escarcha": nova de hielo defensiva (cd 6s).
+	if _frost_guard_timer <= 0.0 and stats.has_legendary(&"on_hit_frost_nova"):
+		_frost_guard_timer = 6.0
+		var result := stats.roll_spell_damage(&"cold_damage", 1.0)
+		var nova := FROST_GUARD_SCENE.instantiate()
+		get_parent().add_child(nova)
+		nova.global_position = global_position
+		if nova.has_method("setup"):
+			nova.setup(result[0], self, result[1])
 
 	# Flash rojo al recibir daño.
 	_body_material.albedo_color = Color(1.0, 0.25, 0.25)

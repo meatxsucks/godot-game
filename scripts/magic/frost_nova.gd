@@ -4,6 +4,9 @@ extends Area3D
 
 @export var max_radius: float = 4.0
 @export var expand_time: float = 0.4
+## Ralentización aplicada a los golpeados (hielo). 1.0 = sin efecto.
+@export var slow_factor: float = 1.0
+@export var slow_time: float = 0.0
 
 var damage: float = 10.0
 var source: Node = null
@@ -40,5 +43,7 @@ func _on_body_entered(body: Node3D) -> void:
 	_already_hit[body] = true
 	if body.has_method("take_damage"):
 		body.take_damage(damage)
+		if slow_factor < 1.0 and body.has_method("apply_slow"):
+			body.apply_slow(slow_factor, slow_time)
 		if source and source.has_method("add_super_charge"):
 			source.add_super_charge(4.0)

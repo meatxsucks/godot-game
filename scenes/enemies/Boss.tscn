@@ -1,0 +1,41 @@
+[gd_scene load_steps=5 format=3 uid="uid://cboss00000001"]
+
+[ext_resource type="Script" path="res://scripts/enemies/boss.gd" id="1_boss"]
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_boss"]
+radius = 0.5
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_boss"]
+diffuse_mode = 3
+albedo_color = Color(0.85, 0.65, 0.15, 1)
+roughness = 0.2
+
+[sub_resource type="SphereMesh" id="SphereMesh_boss"]
+material = SubResource("StandardMaterial3D_boss")
+radius = 0.5
+height = 0.8
+
+[node name="Boss" type="CharacterBody3D"]
+script = ExtResource("1_boss")
+max_health = 600.0
+speed = 2.2
+loot_level = 5
+drop_chance = 0.0
+mana_drop_chance = 0.0
+body_color = Color(0.9, 0.7, 0.15, 1)
+size_scale = 2.5
+attack_damage = 25.0
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.4, 0)
+shape = SubResource("SphereShape3D_boss")
+
+[node name="NavAgent" type="NavigationAgent3D" parent="."]
+path_desired_distance = 0.8
+target_desired_distance = 1.4
+
+[node name="Visual" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.4, 0)
+
+[node name="Mesh" type="MeshInstance3D" parent="Visual"]
+mesh = SubResource("SphereMesh_boss")

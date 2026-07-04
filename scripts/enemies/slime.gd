@@ -24,6 +24,8 @@ var _material: StandardMaterial3D
 var _safe_zone: SafeZone
 var _attack_timer: float = 0.0
 var _repath_timer: float = 0.0
+var _slow_mult: float = 1.0
+var _slow_timer: float = 0.0
 
 @onready var _nav_agent: NavigationAgent3D = $NavAgent
 
@@ -52,12 +54,22 @@ func _ready() -> void:
 	add_child(_health_bar)
 	_health_bar.position.y = 1.25 * size_scale
 
+## Ralentización de hielo. factor 0.65 = 35% más lento durante `duration`.
+func apply_slow(factor: float, duration: float) -> void:
+	_slow_mult = minf(_slow_mult, factor)
+	_slow_timer = maxf(_slow_timer, duration)
+
 func _physics_process(delta: float) -> void:
+	if _slow_timer > 0.0:
+		_slow_timer -= delta
+		if _slow_timer <= 0.0:
+			_slow_mult = 1.0
+
 	var direction := _pick_direction(delta)
 
 	if direction != Vector3.ZERO:
-		velocity.x = direction.x * speed
-		velocity.z = direction.z * speed
+		velocity.x = direction.x * speed * _slow_mult
+		velocity.z = direction.z * speed * _slow_mult
 		# Girar suavemente hacia donde se mueve
 		var target_look := global_position + direction
 		# Evitar errores de look_at cuando target == global_position

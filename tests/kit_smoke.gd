@@ -31,5 +31,12 @@ func _ready() -> void:
 	assert(skills.damage_multiplier(&"melee_damage") > 1.0, "el skill melee potencia el daño")
 
 	Game.selected_class = &"mage"
+
+	# El Boss se instancia sin errores (hereda del slime; corona en _ready).
+	var boss = load("res://scenes/enemies/Boss.tscn").instantiate()
+	add_child(boss)
+	assert(boss.max_health == 600.0, "boss con 600 HP")
+	boss.queue_free()
+
 	print("KIT SMOKE OK")
 	get_tree().quit(0)

@@ -22,6 +22,10 @@ func _cast(player) -> bool:
 	if projectile.has_method("setup"):
 		projectile.setup(result[0], player, result[1])
 
+	# Poder legendario "Pira en Cadena": la bola rebota a enemigos cercanos.
+	if player.stats.has_legendary(&"fireball_chain"):
+		projectile.chains_left = 2
+
 	# Poder legendario "Cascada Crítica": cada crítico recorta el cooldown.
 	if result[1] and player.stats.has_legendary(&"crit_cdr"):
 		_cooldown_refund = 0.5

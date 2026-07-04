@@ -6,6 +6,9 @@ extends Node3D
 signal wave_started(n: int)
 signal wave_cleared(n: int)
 signal intermission_tick(next_n: int, seconds_left: int)
+signal boss_defeated
+
+const BOSS_SCENE := preload("res://scenes/enemies/Boss.tscn")
 
 const PORTAL_SCENE := preload("res://scenes/world/SpawnPortal.tscn")
 
@@ -23,6 +26,9 @@ const PORTAL_SCENE := preload("res://scenes/world/SpawnPortal.tscn")
 @export var spawn_radius_max: float = 12.0
 ## Cada cuántas oleadas superadas se reabastecen los cofres.
 @export var chest_restock_every: int = 3
+## Oleada del boss: aparece el Rey Slime; superarla = nivel completado
+## (después el modo sigue endless).
+@export var boss_wave: int = 10
 
 ## Variantes base (escalan por oleada): vida, velocidad, escala, daño, color.
 const VARIANTS := {
@@ -77,6 +83,9 @@ func _physics_process(delta: float) -> void:
 			if get_tree().get_nodes_in_group("enemies").is_empty():
 				print("[Waves] oleada %d superada" % wave)
 				wave_cleared.emit(wave)
+				if wave == boss_wave:
+					print("[Waves] ¡NIVEL SUPERADO!")
+					boss_defeated.emit()
 				if chest_restock_every > 0 and wave % chest_restock_every == 0:
 					_restock_chests()
 				_state = State.INTERMISSION
@@ -88,11 +97,30 @@ func _physics_process(delta: float) -> void:
 
 func _start_wave() -> void:
 	wave += 1
-	_to_spawn = 3 + 2 * wave
 	_state = State.SPAWNING
 	_timer = 0.0
-	print("[Waves] oleada %d: %d enemigos" % [wave, _to_spawn])
+	if wave == boss_wave:
+		# Oleada final: el Rey Slime + una escolta reducida.
+		_to_spawn = 4
+		_spawn_boss()
+		print("[Waves] ¡OLEADA FINAL %d: EL REY SLIME!" % wave)
+	else:
+		_to_spawn = 3 + 2 * wave
+		print("[Waves] oleada %d: %d enemigos" % [wave, _to_spawn])
 	wave_started.emit(wave)
+
+func _spawn_boss() -> void:
+	var boss := BOSS_SCENE.instantiate()
+	boss.loot_level = _loot_level() + 2
+	# Escalar también al boss si la oleada final se configura más tarde.
+	boss.max_health = boss.max_health * (1.0 + 0.05 * (wave - boss_wave if wave > boss_wave else 0))
+	add_child(boss)
+	var pos: Vector3
+	if _portals.is_empty():
+		pos = _random_spawn_pos()
+	else:
+		pos = (_portals.pick_random() as Node3D).global_position
+	boss.global_position = pos
 
 ## Nivel del botín de la oleada actual (sube cada 2 rondas).
 func _loot_level() -> int:

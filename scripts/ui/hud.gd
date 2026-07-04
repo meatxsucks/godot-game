@@ -13,6 +13,9 @@ extends CanvasLayer
 @onready var btn_retry: Button = %BtnRetry
 @onready var btn_menu: Button = %BtnMenu
 @onready var wave_label: Label = %WaveLabel
+@onready var victory: CenterContainer = %Victory
+@onready var btn_continue: Button = %BtnContinue
+@onready var btn_victory_menu: Button = %BtnVictoryMenu
 
 var player: Node = null
 var wave_manager: Node = null
@@ -24,6 +27,9 @@ func _ready() -> void:
 		wave_manager.wave_started.connect(_on_wave_started)
 		wave_manager.wave_cleared.connect(_on_wave_cleared)
 		wave_manager.intermission_tick.connect(_on_intermission_tick)
+		wave_manager.boss_defeated.connect(_on_boss_defeated)
+	btn_continue.pressed.connect(_on_continue_pressed)
+	btn_victory_menu.pressed.connect(_on_menu_pressed)
 
 	player = get_tree().get_first_node_in_group("player")
 	if player == null:
@@ -99,7 +105,16 @@ func _on_super_changed(current: float, maximum: float) -> void:
 # --- Oleadas -------------------------------------------------------------------
 
 func _on_wave_started(n: int) -> void:
-	wave_label.text = "Oleada %d" % n
+	if wave_manager and n == wave_manager.boss_wave:
+		wave_label.text = "¡OLEADA FINAL — EL REY SLIME!"
+	else:
+		wave_label.text = "Oleada %d" % n
+
+func _on_boss_defeated() -> void:
+	victory.visible = true
+
+func _on_continue_pressed() -> void:
+	victory.visible = false
 
 func _on_wave_cleared(n: int) -> void:
 	wave_label.text = "¡Oleada %d superada!" % n

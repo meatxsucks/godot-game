@@ -3,12 +3,13 @@
 extends Node
 
 ## `type` opcional restringe la base (ej. &"staff" para cofres temáticos).
-func generate_random_item(level: int = 1, type: StringName = &"") -> LootItem:
+## `forced_rarity` >= 0 fuerza el tier (ej. legendario garantizado del boss).
+func generate_random_item(level: int = 1, type: StringName = &"", forced_rarity: int = -1) -> LootItem:
 	var item = LootItem.new()
 	item.item_level = level
 
-	# 1. Tirar rareza (basado en pesos)
-	item.rarity = _roll_rarity()
+	# 1. Tirar rareza (basado en pesos, o forzada)
+	item.rarity = forced_rarity if forced_rarity >= 0 else _roll_rarity()
 
 	# 2. Elegir base aleatoria
 	var bases = LootDB.bases_of_type(type)
