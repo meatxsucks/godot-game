@@ -15,10 +15,4 @@ func _init() -> void:
 	element = &"cold"
 
 func _cast(player) -> bool:
-	var result: Array = player.stats.roll_spell_damage(&"cold_damage", 1.0)
-	var nova = SCENE.instantiate()
-	player.get_parent().add_child(nova)
-	nova.global_position = player.global_position
-	if nova.has_method("setup"):
-		nova.setup(result[0], player, result[1])
-	return true
+	return _spawn_nova(player, SCENE, &"cold_damage", 1.0)

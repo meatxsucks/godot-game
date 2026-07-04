@@ -18,13 +18,14 @@ const CLASSES := {
 	},
 	&"warrior": {
 		"name": "Guerrero",
-		"desc": "Tanque: aguanta de todo con vida y resistencias altas. Su kit propio llega pronto (usa el del Mago).",
+		"desc": "Tanque cuerpo a cuerpo: tajos, embestida que atraviesa y gritos de guerra. Aguanta de todo.",
 		"color": Color(1.0, 0.5, 0.3),
 		"stats": {
 			&"max_health": 170.0,
 			&"max_mana": 60.0,
 			&"mana_regen": 5.0,
 			&"spell_damage": 8.0,
+			&"melee_damage": 8.0,
 			&"res_fire": 10.0,
 			&"res_cold": 10.0,
 			&"res_lightning": 10.0,
@@ -32,13 +33,14 @@ const CLASSES := {
 	},
 	&"ranger": {
 		"name": "Explorador",
-		"desc": "Ágil y letal: crítico y velocidad de movimiento. Su kit propio llega pronto (usa el del Mago).",
+		"desc": "Arquero ágil: flechas rápidas, abanicos, perforantes y lluvia mortal. Crítico y velocidad.",
 		"color": Color(0.4, 0.9, 0.5),
 		"stats": {
 			&"max_health": 110.0,
 			&"max_mana": 90.0,
 			&"mana_regen": 7.0,
 			&"spell_damage": 9.0,
+			&"ranged_damage": 8.0,
 			&"crit_chance": 12.0,
 			&"crit_damage": 70.0,
 			&"move_speed": 12.0,
@@ -55,3 +57,31 @@ func class_def(id: StringName) -> Dictionary:
 ## Overrides de stats base de la clase seleccionada (los aplica PlayerStats).
 func selected_stats() -> Dictionary:
 	return class_def(selected_class).get("stats", {})
+
+## Kit de poderes de la clase seleccionada (5 slots: LMB/RMB/SPC/Q/R-super).
+func build_kit() -> Array[Ability]:
+	match selected_class:
+		&"warrior":
+			return [
+				SlashAbility.new(),
+				AxeThrowAbility.new(),
+				ChargeAbility.new(),
+				WarCryAbility.new(),
+				WhirlwindAbility.new(),
+			]
+		&"ranger":
+			return [
+				ArrowAbility.new(),
+				MultiShotAbility.new(),
+				DashAbility.new(),
+				PiercingArrowAbility.new(),
+				ArrowRainAbility.new(),
+			]
+		_:
+			return [
+				FireballAbility.new(),
+				ArcBoltAbility.new(),
+				DashAbility.new(),
+				FrostNovaAbility.new(),
+				MeteorStormAbility.new(),
+			]

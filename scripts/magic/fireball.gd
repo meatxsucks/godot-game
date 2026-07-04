@@ -5,6 +5,8 @@ extends Area3D
 @export var lifetime: float = 3.0
 ## Stamina de super que gana el lanzador por cada impacto conectado.
 @export var super_charge_on_hit: float = 4.0
+## true = atraviesa enemigos (Flecha Perforante); contra muros siempre muere.
+@export var pierces: bool = false
 
 ## Quién lanzó el proyectil (para evitar fuego amigo / auto-impacto).
 var source: Node = null
@@ -38,6 +40,8 @@ func _on_body_entered(body: Node3D) -> void:
 		body.take_damage(damage)
 		if source and source.has_method("add_super_charge"):
 			source.add_super_charge(super_charge_on_hit)
+		if pierces:
+			return # sigue de largo a través del enemigo
 
 	# Muere al impactar contra cualquier cuerpo físico (enemigo o pared).
 	queue_free()

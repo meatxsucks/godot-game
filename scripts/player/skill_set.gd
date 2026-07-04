@@ -3,13 +3,15 @@
 class_name SkillSet
 extends RefCounted
 
-const SKILLS: Array[StringName] = [&"magic", &"fire", &"lightning", &"cold"]
+const SKILLS: Array[StringName] = [&"magic", &"fire", &"lightning", &"cold", &"melee", &"ranged"]
 
 const NAMES := {
 	&"magic": "Magia",
 	&"fire": "Fuego",
 	&"lightning": "Rayo",
 	&"cold": "Hielo",
+	&"melee": "Cuerpo a cuerpo",
+	&"ranged": "Distancia",
 }
 
 var levels := {}

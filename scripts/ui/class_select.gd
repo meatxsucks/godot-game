@@ -10,6 +10,8 @@ const STAT_LABELS := {
 	&"max_mana": "Maná",
 	&"mana_regen": "Maná por kill",
 	&"spell_damage": "Daño mágico",
+	&"melee_damage": "Daño melee",
+	&"ranged_damage": "Daño distancia",
 	&"crit_chance": "Crítico %",
 	&"crit_damage": "Daño crít. %",
 	&"move_speed": "Vel. mov. %",

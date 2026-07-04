@@ -1,0 +1,14 @@
+[gd_scene load_steps=2 format=3 uid="uid://carrowrain001"]
+
+[ext_resource type="Script" path="res://scripts/magic/meteor_storm.gd" id="1_rain"]
+
+[node name="ArrowRain" type="Node3D"]
+script = ExtResource("1_rain")
+meteor_count = 12
+spawn_radius = 4.5
+duration = 1.2
+impact_radius = 1.4
+fall_height = 10.0
+fall_time = 0.25
+meteor_color = Color(0.55, 0.95, 0.5, 1)
+meteor_size = 0.25

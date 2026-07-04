@@ -10,6 +10,9 @@ extends Node3D
 @export var impact_radius: float = 1.8
 @export var fall_height: float = 12.0
 @export var fall_time: float = 0.35
+## Tematización: color y tamaño de los proyectiles (meteoro vs flecha).
+@export var meteor_color: Color = Color(1.0, 0.35, 0.1)
+@export var meteor_size: float = 0.5
 
 var damage: float = 30.0
 var source: Node = null
@@ -40,12 +43,12 @@ func _physics_process(_delta: float) -> void:
 func _drop_meteor(target: Vector3) -> void:
 	var ball := MeshInstance3D.new()
 	var sphere := SphereMesh.new()
-	sphere.radius = 0.5
-	sphere.height = 1.0
+	sphere.radius = meteor_size
+	sphere.height = meteor_size * 2.0
 	var mat := StandardMaterial3D.new()
-	mat.albedo_color = Color(1.0, 0.35, 0.1)
+	mat.albedo_color = meteor_color
 	mat.emission_enabled = true
-	mat.emission = Color(1.0, 0.2, 0.0)
+	mat.emission = meteor_color
 	mat.emission_energy_multiplier = 2.0
 	sphere.material = mat
 	ball.mesh = sphere
@@ -77,7 +80,7 @@ func _do_impact(target: Vector3) -> void:
 
 func _flash(target: Vector3) -> void:
 	var light := OmniLight3D.new()
-	light.light_color = Color(1.0, 0.5, 0.2)
+	light.light_color = meteor_color
 	light.light_energy = 4.0
 	light.omni_range = impact_radius * 2.0
 	add_child(light)

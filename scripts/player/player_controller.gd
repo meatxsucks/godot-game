@@ -41,6 +41,9 @@ var super_charge: float = 0.0
 
 var _dash_timer: float = 0.0
 var _dash_dir := Vector3.ZERO
+## Daño del dash (Embestida del Guerrero; 0 = dash sin daño) y ya golpeados.
+var _dash_damage: float = 0.0
+var _dash_hit := {}
 var _dead: bool = false
 var _body_material: StandardMaterial3D
 var _body_color: Color
@@ -60,13 +63,7 @@ signal died
 
 func _ready() -> void:
 	add_to_group("player")
-	abilities = [
-		FireballAbility.new(),
-		ArcBoltAbility.new(),
-		DashAbility.new(),
-		FrostNovaAbility.new(),
-		MeteorStormAbility.new(),
-	]
+	abilities = Game.build_kit()
 	cooldowns.resize(abilities.size())
 	cooldowns.fill(0.0)
 
@@ -106,6 +103,14 @@ func _move(delta: float) -> void:
 		if not is_on_floor():
 			velocity.y -= 9.8 * delta
 		move_and_slide()
+		# Embestida: daña una vez a cada cuerpo que atraviesa.
+		if _dash_damage > 0.0:
+			for i in get_slide_collision_count():
+				var collider: Object = get_slide_collision(i).get_collider()
+				if collider and collider.has_method("take_damage") and not _dash_hit.has(collider):
+					_dash_hit[collider] = true
+					collider.take_damage(_dash_damage)
+					add_super_charge(4.0)
 		return
 
 	var direction := _camera_aligned_input()
@@ -140,9 +145,10 @@ func _camera_aligned_input() -> Vector3:
 
 	return direction
 
-## Impulso del Dash Arcano: hacia el input de movimiento, o hacia el cursor
-## si el mago está quieto. Devuelve false si no hay dirección válida.
-func start_dash() -> bool:
+## Impulso del dash: hacia el input de movimiento, o hacia el cursor si el
+## personaje está quieto. `damage` > 0 = Embestida (daña lo que atraviesa).
+## Devuelve false si no hay dirección válida.
+func start_dash(damage: float = 0.0) -> bool:
 	var dir := _camera_aligned_input()
 	if dir == Vector3.ZERO:
 		dir = get_aim_point() - global_position
@@ -152,6 +158,8 @@ func start_dash() -> bool:
 		return false
 	_dash_dir = dir
 	_dash_timer = DASH_TIME
+	_dash_damage = damage
+	_dash_hit.clear()
 	return true
 
 # --- Apuntado -------------------------------------------------------------

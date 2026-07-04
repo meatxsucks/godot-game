@@ -15,6 +15,8 @@ var base_stats := {
 	&"fire_damage": 0.0,
 	&"cold_damage": 0.0,
 	&"lightning_damage": 0.0,
+	&"melee_damage": 0.0,      # Guerrero
+	&"ranged_damage": 0.0,     # Explorador
 	&"crit_chance": 5.0,       # %
 	&"crit_damage": 50.0,      # % de daño extra al critear
 	&"cast_speed": 0.0,        # % (reduce el cooldown de lanzamiento)

@@ -45,14 +45,25 @@ func consume_cooldown_refund() -> float:
 	_cooldown_refund = 0.0
 	return refund
 
-## Helper compartido: instancia un proyectil en la varita del mago con daño
-## rodado desde sus stats. `element` decide qué daño elemental del loot suma.
-func _spawn_projectile(player, scene: PackedScene, element: StringName, multiplier: float) -> bool:
+## Helper compartido: instancia un proyectil en la varita/mano del personaje
+## con daño rodado desde sus stats. `stat` decide qué daño del loot suma.
+func _spawn_projectile(player, scene: PackedScene, stat: StringName, multiplier: float) -> bool:
 	var projectile = scene.instantiate()
 	player.get_parent().add_child(projectile)
 	projectile.global_transform = player.wand.global_transform
 
-	var result: Array = player.stats.roll_spell_damage(element, multiplier)
+	var result: Array = player.stats.roll_spell_damage(stat, multiplier)
 	if projectile.has_method("setup"):
 		projectile.setup(result[0], player, result[1])
+	return true
+
+## Helper compartido: AoE expansivo centrado en el personaje (novas, tajos,
+## gritos, torbellinos — todos usan frost_nova.gd con otra escena).
+func _spawn_nova(player, scene: PackedScene, stat: StringName, multiplier: float) -> bool:
+	var result: Array = player.stats.roll_spell_damage(stat, multiplier)
+	var nova = scene.instantiate()
+	player.get_parent().add_child(nova)
+	nova.global_position = player.global_position
+	if nova.has_method("setup"):
+		nova.setup(result[0], player, result[1])
 	return true

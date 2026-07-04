@@ -18,22 +18,22 @@ ARPG isométrico *wave-based* hecho en **Godot 4.4** (Forward+). Mezcla el comba
 |-------|--------|
 | **WASD** | Moverse (relativo a cámara) |
 | **Mouse** | Apuntar (el mago mira al cursor) |
-| **Click izquierdo** | Bola de Fuego (2s de cooldown, 15 maná) |
-| **Click derecho** | Descarga Arcana (spam rápido, 6 maná) |
-| **Espacio** | Dash Arcano (impulso con **i-frames**: eres intangible mientras dura) |
-| **Q** | Nova de Escarcha (AoE alrededor tuyo, 25 maná) |
-| **R** | SUPER: Tormenta de Meteoros (requiere barra de stamina llena) |
+| **Click izquierdo** | Ataque principal de tu clase |
+| **Click derecho** | Ataque secundario |
+| **Espacio** | Movilidad: dash/embestida/voltereta (impulso con **i-frames**: eres intangible mientras dura) |
+| **Q** | Habilidad de área de tu clase |
+| **R** | SUPER de tu clase (requiere barra de stamina llena) |
 | **E** | Interactuar (abrir cofres) |
 | **I / Tab** | Inventario y equipo (bloquea el casteo mientras está abierto) |
 
 ## Reglas del juego
 
-### Clases (elige antes de empezar)
-| Clase | Perfil | Nota |
-|-------|--------|------|
-| 🔵 **Mago** | Cañón de cristal: daño y maná altos, poca vida | Kit de 5 poderes propio (el actual) |
-| 🟠 **Guerrero** | Tanque: mucha vida y resistencias | Kit propio en desarrollo (usa el del Mago) |
-| 🟢 **Explorador** | Ágil: crítico y velocidad de movimiento | Kit propio en desarrollo |
+### Clases (elige antes de empezar) — cada una con su kit de 5 poderes
+| Clase | Perfil | Kit (LMB · RMB · Espacio · Q · R) |
+|-------|--------|-----------------------------------|
+| 🔵 **Mago** | Cañón de cristal: daño y maná altos, poca vida | Bola de Fuego · Descarga Arcana · Dash Arcano · Nova de Escarcha · ☄️ Tormenta de Meteoros |
+| 🟠 **Guerrero** | Tanque melee: mucha vida y resistencias | Tajo Circular · Hacha Arrojadiza · **Embestida** (daña lo que atraviesa) · Grito de Guerra · 🌪️ Torbellino |
+| 🟢 **Explorador** | Arquero ágil: crítico y velocidad | Flecha · Disparo Múltiple (abanico ×3) · Voltereta · **Flecha Perforante** (atraviesa filas) · 🏹 Lluvia de Flechas |
 
 ### Recursos limitados (¡no hay regeneración!)
 - La **vida** y el **maná no se regeneran solos**. Son recursos que se administran.
@@ -48,8 +48,8 @@ ARPG isométrico *wave-based* hecho en **Godot 4.4** (Forward+). Mezcla el comba
 - El equipo sube tus stats **en vivo** (visible en el panel con I/Tab).
 
 ### Skills (entrenan con el uso, estilo Tibia)
-- **Magia**, **Fuego**, **Rayo** y **Hielo**: cada casteo da XP al elemento del poder.
-- Cada nivel elemental = **+3% de daño de ese tipo** (+1% por nivel de Magia). Especialízate o reparte.
+- **Magia** (general), **Fuego**, **Rayo**, **Hielo**, **Cuerpo a cuerpo** y **Distancia**: cada casteo da XP al skill del poder usado.
+- Cada nivel = **+3% de daño de ese tipo** (+1% por nivel de Magia). El Mago entrena elementos, el Guerrero cuerpo a cuerpo, el Explorador distancia.
 
 ### El mundo
 - Empiezas en una **base segura amurallada** (zona cian): los enemigos no pueden entrar, el **cofre** con equipo inicial y pociones de vida está adentro. Cruza la **puerta** para pelear; retrocede a la base si te ves apretado.
@@ -73,7 +73,9 @@ scripts/
 │   └── skill_set.gd         # SkillSet: skills Magia/Fuego/Rayo/Hielo (XP por uso)
 ├── abilities/
 │   ├── ability.gd           # Clase base: id, tecla, color, cooldown, coste, elemento
-│   └── *_ability.gd         # Fireball, ArcBolt, Dash, FrostNova, MeteorStorm (super)
+│   │                        #   + helpers _spawn_projectile / _spawn_nova
+│   └── *_ability.gd         # 15 poderes: kits de Mago, Guerrero y Explorador
+│                            #   (Game.build_kit() arma el kit según la clase)
 ├── magic/
 │   ├── fireball.gd          # Proyectil GENÉRICO (lo usan Fireball y ArcBolt con otros exports)
 │   ├── frost_nova.gd        # Area3D que crece y daña una vez a cada enemigo
@@ -157,8 +159,9 @@ scripts/
 # Validar el proyecto sin abrir el editor
 godot --headless --path . --editor --quit-after 200
 
-# Smoke test del sistema de equipo (armas 2H)
+# Smoke tests (equipo 2H y kits por clase)
 godot --headless --path . res://tests/LootSmoke.tscn   # imprime "SMOKE OK"
+godot --headless --path . res://tests/KitSmoke.tscn    # imprime "KIT SMOKE OK"
 ```
 
 Hecho con Godot 4.4 · Proyecto en desarrollo activo 🚧
