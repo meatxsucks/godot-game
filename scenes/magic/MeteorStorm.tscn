@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://cmeteorstorm1"]
+
+[ext_resource type="Script" path="res://scripts/magic/meteor_storm.gd" id="1_storm"]
+
+[node name="MeteorStorm" type="Node3D"]
+script = ExtResource("1_storm")

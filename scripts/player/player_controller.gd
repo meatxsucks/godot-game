@@ -2,28 +2,57 @@ extends CharacterBody3D
 
 @export var speed: float = 6.0
 @export var acceleration: float = 10.0
-@export var fireball_scene: PackedScene = preload("res://scenes/magic/Fireball.tscn")
-## Cooldown base de la Bola de Fuego (segundos), antes de cast_speed/CDR.
-@export var fire_cooldown: float = 0.5
-## Coste de maná por lanzamiento.
-@export var fireball_mana_cost: float = 15.0
+
+## Dash Arcano: multiplicador de velocidad y duración del impulso.
+const DASH_SPEED_MULT := 4.0
+const DASH_TIME := 0.15
+
+## Carga máxima de stamina del super.
+const SUPER_MAX := 100.0
+
+## Acción de input de cada slot de la barra (mismo orden que `abilities`).
+const ABILITY_ACTIONS: Array[StringName] = [
+	&"attack_primary",
+	&"attack_secondary",
+	&"ability_dash",
+	&"ability_nova",
+	&"ability_super",
+]
 
 ## Stats del mago (base + loot equipado). Fuente de verdad del combate.
 var stats := PlayerStats.new()
 
-var fire_timer: float = 0.0
+## Barra de poderes (5 slots) y el cooldown restante de cada uno.
+var abilities: Array[Ability] = []
+var cooldowns: Array[float] = []
+
+## Stamina del super (0..SUPER_MAX). Se gana dañando y matando enemigos.
+var super_charge: float = 0.0
+
+var _dash_timer: float = 0.0
+var _dash_dir := Vector3.ZERO
 
 ## UI / HUD puede conectarse a estas señales.
 signal stats_changed
 signal health_changed(current: float, maximum: float)
 signal mana_changed(current: float, maximum: float)
 signal item_equipped(item: LootItem, previous: LootItem)
+signal super_charge_changed(current: float, maximum: float)
 
 @onready var visual: Node3D = $Visual
 @onready var wand: MeshInstance3D = $Visual/Wand
 
 func _ready() -> void:
 	add_to_group("player")
+	abilities = [
+		FireballAbility.new(),
+		ArcBoltAbility.new(),
+		DashAbility.new(),
+		FrostNovaAbility.new(),
+		MeteorStormAbility.new(),
+	]
+	cooldowns.resize(abilities.size())
+	cooldowns.fill(0.0)
 	_emit_resource_signals()
 	stats_changed.emit()
 
@@ -31,27 +60,22 @@ func _physics_process(delta: float) -> void:
 	_move(delta)
 	_aim_at_mouse()
 	_regen_mana(delta)
-
-	fire_timer -= delta
-	if Input.is_action_pressed("attack_primary") and fire_timer <= 0.0:
-		_cast_fireball()
+	_update_abilities(delta)
 
 # --- Movimiento -----------------------------------------------------------
 
 func _move(delta: float) -> void:
-	var input_dir := Input.get_vector("move_left", "move_right", "move_up", "move_down")
-	var direction := Vector3(input_dir.x, 0, input_dir.y).normalized()
+	# Durante el dash la velocidad está bloqueada al impulso.
+	if _dash_timer > 0.0:
+		_dash_timer -= delta
+		velocity.x = _dash_dir.x * speed * DASH_SPEED_MULT
+		velocity.z = _dash_dir.z * speed * DASH_SPEED_MULT
+		if not is_on_floor():
+			velocity.y -= 9.8 * delta
+		move_and_slide()
+		return
 
-	# Alinear con la cámara: "W" siempre mueve hacia "arriba" en pantalla.
-	var camera := get_viewport().get_camera_3d()
-	if camera and direction != Vector3.ZERO:
-		var cam_forward := -camera.global_transform.basis.z
-		var cam_right := camera.global_transform.basis.x
-		cam_forward.y = 0
-		cam_right.y = 0
-		cam_forward = cam_forward.normalized()
-		cam_right = cam_right.normalized()
-		direction = (cam_right * direction.x + cam_forward * -direction.z).normalized()
+	var direction := _camera_aligned_input()
 
 	if direction:
 		velocity.x = move_toward(velocity.x, direction.x * speed, acceleration * delta)
@@ -65,53 +89,111 @@ func _move(delta: float) -> void:
 
 	move_and_slide()
 
+## Dirección del input WASD alineada a la cámara: "W" siempre mueve hacia
+## "arriba" en pantalla.
+func _camera_aligned_input() -> Vector3:
+	var input_dir := Input.get_vector("move_left", "move_right", "move_up", "move_down")
+	var direction := Vector3(input_dir.x, 0, input_dir.y).normalized()
+
+	var camera := get_viewport().get_camera_3d()
+	if camera and direction != Vector3.ZERO:
+		var cam_forward := -camera.global_transform.basis.z
+		var cam_right := camera.global_transform.basis.x
+		cam_forward.y = 0
+		cam_right.y = 0
+		cam_forward = cam_forward.normalized()
+		cam_right = cam_right.normalized()
+		direction = (cam_right * direction.x + cam_forward * -direction.z).normalized()
+
+	return direction
+
+## Impulso del Dash Arcano: hacia el input de movimiento, o hacia el cursor
+## si el mago está quieto. Devuelve false si no hay dirección válida.
+func start_dash() -> bool:
+	var dir := _camera_aligned_input()
+	if dir == Vector3.ZERO:
+		dir = get_aim_point() - global_position
+		dir.y = 0.0
+		dir = dir.normalized()
+	if dir == Vector3.ZERO:
+		return false
+	_dash_dir = dir
+	_dash_timer = DASH_TIME
+	return true
+
 # --- Apuntado -------------------------------------------------------------
 
-func _aim_at_mouse() -> void:
+## Punto del suelo (plano Y=0) bajo el cursor. Lo usan el apuntado del mago
+## y las habilidades dirigidas (super).
+func get_aim_point() -> Vector3:
 	var camera := get_viewport().get_camera_3d()
 	if not camera:
-		return
+		return global_position
 	var mouse_pos := get_viewport().get_mouse_position()
-	var ray_origin := camera.project_ray_origin(mouse_pos)
-	var ray_dir := camera.project_ray_normal(mouse_pos)
-	var plane := Plane(Vector3.UP, 0.0)
-	var hit = plane.intersects_ray(ray_origin, ray_dir)
-	if hit:
-		hit.y = visual.global_position.y
-		if hit.distance_squared_to(visual.global_position) > 0.1:
-			visual.look_at(hit, Vector3.UP)
+	var hit = Plane(Vector3.UP, 0.0).intersects_ray(
+		camera.project_ray_origin(mouse_pos),
+		camera.project_ray_normal(mouse_pos))
+	if hit == null:
+		return global_position
+	return hit
 
-# --- Combate / Magia ------------------------------------------------------
+func _aim_at_mouse() -> void:
+	var hit := get_aim_point()
+	hit.y = visual.global_position.y
+	if hit.distance_squared_to(visual.global_position) > 0.1:
+		visual.look_at(hit, Vector3.UP)
 
-## Cooldown real tras aplicar cast_speed y reducción de enfriamiento.
-func _effective_cooldown() -> float:
+# --- Barra de poderes -------------------------------------------------------
+
+func _update_abilities(delta: float) -> void:
+	for i in abilities.size():
+		cooldowns[i] = maxf(0.0, cooldowns[i] - delta)
+		var action := ABILITY_ACTIONS[i]
+		var pressed := Input.is_action_pressed(action) if abilities[i].hold_to_cast \
+				else Input.is_action_just_pressed(action)
+		if pressed and cooldowns[i] <= 0.0:
+			_try_cast(i)
+
+func _try_cast(slot: int) -> void:
+	var ability := abilities[slot]
+	if not ability.execute(self):
+		return
+	_emit_resource_signals()
+	cooldowns[slot] = maxf(0.0, effective_cooldown(ability.cooldown) - ability.consume_cooldown_refund())
+
+## Cooldown real tras aplicar cast_speed y reducción de enfriamiento del loot.
+func effective_cooldown(base: float) -> float:
 	var cast_speed := stats.get_stat(&"cast_speed")
 	var cdr := stats.get_stat(&"cooldown_reduction")
-	var cd := fire_cooldown * (1.0 - cdr / 100.0) / (1.0 + cast_speed / 100.0)
+	var cd := base * (1.0 - cdr / 100.0) / (1.0 + cast_speed / 100.0)
 	return maxf(0.05, cd)
 
-func _cast_fireball() -> void:
-	if stats.mana < fireball_mana_cost:
-		return
-	stats.mana -= fireball_mana_cost
-	_emit_resource_signals()
-	fire_timer = _effective_cooldown()
+## Helpers para el HUD.
+func get_ability(slot: int) -> Ability:
+	return abilities[slot]
 
-	if not fireball_scene:
-		return
-	var fireball := fireball_scene.instantiate()
-	get_parent().add_child(fireball)
-	fireball.global_transform = wand.global_transform
+func get_cooldown_left(slot: int) -> float:
+	return cooldowns[slot]
 
-	var result := stats.roll_spell_damage()
-	var dmg: float = result[0]
-	var is_crit: bool = result[1]
-	if fireball.has_method("setup"):
-		fireball.setup(dmg, self, is_crit)
+func get_cooldown_total(slot: int) -> float:
+	return effective_cooldown(abilities[slot].cooldown)
 
-	# Poder legendario "Cascada Crítica": cada crítico recorta el cooldown.
-	if is_crit and stats.has_legendary(&"crit_cdr"):
-		fire_timer = maxf(0.0, fire_timer - 0.5)
+# --- Super (stamina) --------------------------------------------------------
+
+## Acredita stamina del super (impactos de habilidades, kills).
+func add_super_charge(amount: float) -> void:
+	super_charge = clampf(super_charge + amount, 0.0, SUPER_MAX)
+	super_charge_changed.emit(super_charge, SUPER_MAX)
+
+## Gasta la barra entera para lanzar el super; false si aún no está llena.
+func consume_super_charge() -> bool:
+	if super_charge < SUPER_MAX:
+		return false
+	super_charge = 0.0
+	super_charge_changed.emit(super_charge, SUPER_MAX)
+	return true
+
+# --- Recursos ---------------------------------------------------------------
 
 func _regen_mana(delta: float) -> void:
 	var max_mana := stats.get_stat(&"max_mana")

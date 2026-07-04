@@ -3,6 +3,8 @@ extends Area3D
 @export var speed: float = 15.0
 @export var damage: float = 10.0
 @export var lifetime: float = 3.0
+## Stamina de super que gana el lanzador por cada impacto conectado.
+@export var super_charge_on_hit: float = 4.0
 
 ## Quién lanzó el proyectil (para evitar fuego amigo / auto-impacto).
 var source: Node = null
@@ -34,6 +36,8 @@ func _on_body_entered(body: Node3D) -> void:
 
 	if body.has_method("take_damage"):
 		body.take_damage(damage)
+		if source and source.has_method("add_super_charge"):
+			source.add_super_charge(super_charge_on_hit)
 
 	# Muere al impactar contra cualquier cuerpo físico (enemigo o pared).
 	queue_free()

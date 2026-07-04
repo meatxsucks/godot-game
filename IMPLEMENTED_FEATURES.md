@@ -49,11 +49,31 @@ Inspirado en *Diablo* y *Borderlands*. Genera ítems procedurales con rarezas y 
 - **Resolución Interna**: En `project.godot`, el `viewport_width` es 854 y `viewport_height` es 480 (480p panorámico). El `stretch_mode` es "viewport", logrando un efecto de bajo pixelado nítido (crunchy) típico de la PS2.
 - **Cel-Shading (Toon)**: Los materiales del Mago, su varita y los enemigos tienen la propiedad `diffuse_mode` establecida en `3` (`DIFFUSE_TOON`), dándoles sombras duras estilo anime que contrastan con el entorno realista.
 
+## 7. Sistema de Poderes — barra de 5 slots (estilo Wizard of Legend)
+- **Clase base `Ability`** (`scripts/abilities/ability.gd`, `RefCounted`): define `id`, nombre, tecla (`key_label`), color, `cooldown` y `mana_cost`; valida recursos y castea (`execute(player)`). El player mantiene el array de 5 slots y sus timers de cooldown (`_update_abilities` en `player_controller.gd`).
+- **Cooldowns**: `effective_cooldown(base)` aplica `cast_speed`/`cooldown_reduction` del loot a **todos** los poderes. El legendario `crit_cdr` ("Cascada Crítica") sigue recortando el cooldown de la Bola de Fuego al critear (vía `_cooldown_refund`).
+- **Los 5 poderes de la demo** (una subclase de `Ability` cada uno, en `scripts/abilities/`):
+  1. **Bola de Fuego** — Click izq, 2.0s, 15 maná. El proyectil principal; escala con `spell_damage + fire_damage`.
+  2. **Descarga Arcana** — Click der, 0.6s, 6 maná. Proyectil rápido y débil para spamear (40% de daño); escala con `lightning_damage`. **Reutiliza `fireball.gd`** con otros exports (`ArcBolt.tscn`).
+  3. **Dash Arcano** — Espacio, 1.5s, gratis. Impulso de 0.15s a velocidad x4 hacia el input de movimiento (o hacia el cursor si el mago está quieto). El estado del dash vive en `_move()` del player (`start_dash()`).
+  4. **Nova de Escarcha** — Q, 5.0s, 25 maná. `Area3D` que crece de 0→4m en 0.4s dañando **una sola vez** a cada enemigo; escala con `cold_damage` (`FrostNova.tscn` + `frost_nova.gd`).
+  5. **SUPER: Tormenta de Meteoros** — R, sin cooldown: requiere la **stamina llena**. 8 meteoros caen en radio 5m sobre el punto del cursor (`get_aim_point()`), 150% de daño cada uno con AoE de impacto vía query física (`MeteorStorm.tscn` + `meteor_storm.gd`).
+- **Stamina del super** (`super_charge` 0–100 en el player): **+4 por impacto** de habilidad (proyectiles y nova acreditan a su `source` con `add_super_charge`) y **+12 por kill** (el slime acredita al morir). `MeteorStormAbility` consume la barra entera (`consume_super_charge()`).
+- `PlayerStats.roll_spell_damage(element, multiplier)` ahora es paramétrico: cada poder suma su daño elemental del loot, así los afijos de fuego/rayo/frío potencian poderes distintos.
+- Acciones de input nuevas en `project.godot`: `attack_secondary` (click der), `ability_dash` (Espacio), `ability_nova` (Q), `ability_super` (R).
+
+## 8. HUD in-game
+- **`HUD.tscn`** (`CanvasLayer` + `scripts/ui/hud.gd`) instanciado en la Arena; encuentra al player por el grupo `"player"`.
+- **Barras de vida (roja) y maná (azul)** arriba-izquierda con números (`82/100`), conectadas a las señales `health_changed`/`mana_changed`.
+- **5 círculos de habilidad** abajo-centro: `AbilitySlot` (`scripts/ui/ability_slot.gd`), un `Control` dibujado 100% por código con `_draw()` (sin assets, acorde a la estética PS2). Muestra la recarga radial tipo "pastel", la tecla del poder, y el color identitario de cada habilidad al estar lista.
+- El **slot del super** es más grande, se rellena con la carga de stamina (señal `super_charge_changed`) y **parpadea** cuando está listo para soltar.
+- Los cooldowns se polean cada frame (`_process`) para que el relleno radial sea suave; vida/maná/super van por señales.
+
 ## Próximos Pasos (Pendientes)
-- Implementar una UI/HUD en pantalla para Vida, Maná e Inventario (las señales ya existen en `player_controller.gd`).
 - Sistema de oleadas (spawner) que escale `loot_level` y dificultad de los slimes.
-- Que los slimes ataquen al jugador (ahora el jugador tiene `take_damage`, pero nadie se lo aplica todavía).
+- Que los slimes ataquen al jugador (ahora el jugador tiene `take_damage`, pero nadie se lo aplica todavía) — con el dash ya hay herramienta para esquivar.
 - Enganchar los demás poderes legendarios (`fireball_chain`, `on_hit_frost_nova`, `mana_to_shield`) en la capa de combate.
 - Añadir navegación compleja con `NavigationRegion3D` (Navmesh) para los enemigos.
+- Inventario visual (el HUD ya muestra vida/maná; falta ver el equipo y comparar ítems).
 
-> ✅ **Hecho recientemente**: integración de stats del botín equipado al combate (daño/crit/maná/cooldown), maná con coste+regen, fix de fuego amigo en la Bola de Fuego, y loteo que equipa de verdad.
+> ✅ **Hecho recientemente**: sistema de poderes de 5 slots (Bola de Fuego 2s, Descarga Arcana, Dash Arcano, Nova de Escarcha y SUPER Tormenta de Meteoros con stamina), y HUD con barras de vida/maná + círculos de recarga radial dibujados por código.

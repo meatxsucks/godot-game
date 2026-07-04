@@ -77,8 +77,11 @@ func get_stat(name: StringName) -> float:
 	return float(_cache.get(name, 0.0))
 
 ## Daño de un golpe de hechizo con tirada de crítico. Devuelve [daño, es_critico].
-func roll_spell_damage() -> Array:
-	var dmg := get_stat(&"spell_damage") + get_stat(&"fire_damage")
+## `element` es el stat elemental del loot que suma al daño base (fuego para
+## la Bola de Fuego, rayo para la Descarga, frío para la Nova...) y
+## `multiplier` escala el golpe (proyectil spam más débil, super más fuerte).
+func roll_spell_damage(element: StringName = &"fire_damage", multiplier: float = 1.0) -> Array:
+	var dmg := (get_stat(&"spell_damage") + get_stat(element)) * multiplier
 	var is_crit := randf() * 100.0 < get_stat(&"crit_chance")
 	if is_crit:
 		dmg *= 1.0 + get_stat(&"crit_damage") / 100.0
