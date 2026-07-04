@@ -9,6 +9,9 @@ extends CanvasLayer
 @onready var mana_label: Label = %ManaLabel
 @onready var ability_bar: HBoxContainer = %AbilityBar
 @onready var inventory_panel: PanelContainer = %InventoryPanel
+@onready var game_over: CenterContainer = %GameOver
+@onready var btn_retry: Button = %BtnRetry
+@onready var btn_menu: Button = %BtnMenu
 
 var player: Node = null
 var _slots: Array[AbilitySlot] = []
@@ -21,6 +24,9 @@ func _ready() -> void:
 	player.health_changed.connect(_on_health_changed)
 	player.mana_changed.connect(_on_mana_changed)
 	player.super_charge_changed.connect(_on_super_changed)
+	player.died.connect(_on_player_died)
+	btn_retry.pressed.connect(_on_retry_pressed)
+	btn_menu.pressed.connect(_on_menu_pressed)
 	_build_slots()
 	inventory_panel.setup(player)
 	_on_health_changed(player.stats.health, player.stats.get_stat(&"max_health"))
@@ -75,3 +81,17 @@ func _on_super_changed(current: float, maximum: float) -> void:
 	for slot in _slots:
 		if slot.charge_ratio >= 0.0:
 			slot.charge_ratio = current / maximum
+
+# --- Game Over ---------------------------------------------------------------
+
+func _on_player_died() -> void:
+	if inventory_panel.visible:
+		_toggle_inventory()
+	game_over.visible = true
+
+func _on_retry_pressed() -> void:
+	# Misma clase, arena fresca.
+	SceneManager.change_scene("res://scenes/levels/Arena.tscn")
+
+func _on_menu_pressed() -> void:
+	SceneManager.change_scene("res://scenes/ui/MainMenu.tscn")

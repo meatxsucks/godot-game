@@ -14,11 +14,15 @@ extends CharacterBody3D
 @export var body_color: Color = Color(0.2, 0.8, 0.2)
 ## Escala de la variante (rápido chico, tanque grande). Ajusta visual y colisión.
 @export var size_scale: float = 1.0
+## Daño por contacto al jugador y cadencia entre golpes.
+@export var attack_damage: float = 8.0
+@export var attack_interval: float = 1.0
 
 var current_health: float
 var _health_bar: HealthBar3D
 var _material: StandardMaterial3D
 var _safe_zone: SafeZone
+var _attack_timer: float = 0.0
 
 func _ready() -> void:
 	add_to_group("enemies")
@@ -65,6 +69,24 @@ func _physics_process(delta: float) -> void:
 		velocity.y -= 9.8 * delta
 
 	move_and_slide()
+
+	_attack_timer -= delta
+	_try_attack()
+
+## Golpe por contacto: si el jugador está al alcance, le pega y espera
+## `attack_interval` antes del próximo golpe.
+func _try_attack() -> void:
+	if _attack_timer > 0.0:
+		return
+	var player = get_tree().get_first_node_in_group("player")
+	if player == null or not player.has_method("take_damage"):
+		return
+	var reach := 0.6 + 0.6 * size_scale
+	var to_player: Vector3 = player.global_position - global_position
+	to_player.y = 0
+	if to_player.length_squared() <= reach * reach:
+		player.take_damage(attack_damage)
+		_attack_timer = attack_interval
 
 ## Decide hacia dónde moverse respetando la zona segura: si el slime está
 ## dentro sale por el camino más corto; si el jugador está a salvo, espera

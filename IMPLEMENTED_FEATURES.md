@@ -31,6 +31,7 @@ Inspirado en *Diablo* y *Borderlands*. Genera ítems procedurales con rarezas y 
 ## 4. Enemigos (Slime + variantes)
 - **Script y Escena**: `Slime.tscn` (`CharacterBody3D`), en el grupo `"enemies"`.
 - **IA**: Busca el primer nodo en el grupo `"player"` en la escena y se mueve hacia él usando físicas y un vector direccional.
+- **Ataque por contacto**: si el jugador está al alcance (según su escala), le pega `attack_damage` (normal 8 / rápido 5 / tanque 15) con cadencia `attack_interval` (1s por slime). El player recibe el golpe con flash rojo.
 - **Barra de vida flotante** (`HealthBar3D`, `scripts/enemies/health_bar_3d.gd`): dos quads sin assets sobre la cabeza, anclada a la izquierda, va de verde a rojo y mira a la cámara cada frame — se ve claramente cómo van perdiendo vida con cada golpe.
 - **Variantes por exports** (`body_color`, `size_scale`, `max_health`, `speed`): normal (verde), **rápido** (chico, celeste, 16 HP, veloz) y **tanque** (grande, verde oscuro, 75 HP, lento). El tint usa material propio por instancia; la escala ajusta visual + colisión.
 - **Gamefeel**: parpadeo blanco 0.2s al recibir daño (vuelve al color de la variante, no al color leído — fix del flash encadenado).
@@ -57,7 +58,7 @@ Inspirado en *Diablo* y *Borderlands*. Genera ítems procedurales con rarezas y 
 - **Los 5 poderes de la demo** (una subclase de `Ability` cada uno, en `scripts/abilities/`):
   1. **Bola de Fuego** — Click izq, 2.0s, 15 maná. El proyectil principal; escala con `spell_damage + fire_damage`.
   2. **Descarga Arcana** — Click der, 0.6s, 6 maná. Proyectil rápido y débil para spamear (40% de daño); escala con `lightning_damage`. **Reutiliza `fireball.gd`** con otros exports (`ArcBolt.tscn`).
-  3. **Dash Arcano** — Espacio, 1.5s, gratis. Impulso de 0.15s a velocidad x4 hacia el input de movimiento (o hacia el cursor si el mago está quieto). El estado del dash vive en `_move()` del player (`start_dash()`). Al terminar el impulso la velocidad **se corta en seco** a velocidad de caminata (sin deslizamiento).
+  3. **Dash Arcano** — Espacio, 1.5s, gratis. Impulso de 0.15s a velocidad x4 hacia el input de movimiento (o hacia el cursor si el mago está quieto). El estado del dash vive en `_move()` del player (`start_dash()`). Al terminar el impulso la velocidad **se corta en seco** (sin deslizamiento). Durante el dash eres **intangible** (i-frames): `take_damage` ignora los golpes — esquivar es real.
   4. **Nova de Escarcha** — Q, 5.0s, 25 maná. `Area3D` que crece de 0→4m en 0.4s dañando **una sola vez** a cada enemigo; escala con `cold_damage` (`FrostNova.tscn` + `frost_nova.gd`).
   5. **SUPER: Tormenta de Meteoros** — R, sin cooldown: requiere la **stamina llena**. 8 meteoros caen en radio 5m sobre el punto del cursor (`get_aim_point()`), 150% de daño cada uno con AoE de impacto vía query física (`MeteorStorm.tscn` + `meteor_storm.gd`).
 - **Stamina del super** (`super_charge` 0–100 en el player): **+4 por impacto** de habilidad (proyectiles y nova acreditan a su `source` con `add_super_charge`) y **+12 por kill** (el slime acredita al morir). `MeteorStormAbility` consume la barra entera (`consume_super_charge()`).
@@ -98,12 +99,16 @@ Inspirado en *Diablo* y *Borderlands*. Genera ítems procedurales con rarezas y 
 - **Base inicial / Zona Segura** (`SafeZone.tscn` + `safe_zone.gd`, grupo `"safe_zone"`): la partida empieza en una **base al borde sur del mapa** (disco cian radio 6.5, cofre adentro, spawn del player), separada del campo de batalla por **dos muros con una puerta central**. Te equipas en paz y cruzas la puerta para enfrentar a los enemigos. Los slimes nunca entran a la zona (salen si quedan dentro), esperan afuera si el jugador está a salvo y la rodean por la tangente; el spawner tampoco spawnea dentro.
 - **Panel de inventario a 2 columnas**: izquierda equipo + bloque de **Stats** (vida, maná, daño, crít, vel. lanzamiento/movimiento) y **Skills** (nivel + % de progreso); derecha la grilla 5×4. Refresca en vivo con `stats_changed`/`skills_changed` — se ve cómo el equipo y el entrenamiento suben los números.
 
+## 12. Muerte y Game Over
+- El player muere al llegar a 0 de vida: cae de espaldas (tween), `_dead` bloquea input/físicas y emite la señal `died`.
+- El **HUD muestra el Game Over** ("HAS MUERTO") con **Reintentar** (recarga la Arena con la misma clase) y **Menú** (vuelve al menú principal).
+- Feedback de daño recibido: flash rojo del cuerpo del mago (material propio por instancia).
+
 ## Próximos Pasos (Pendientes)
 - **Poderes por clase**: kits propios de Guerrero (melee) y Explorador (distancia); hoy usan el del Mago.
 - Oleadas con escalado: subir `loot_level`, `max_alive` y dificultad del spawner con el tiempo/rondas.
-- Que los slimes ataquen al jugador (ahora el jugador tiene `take_damage`, pero nadie se lo aplica todavía) — con el dash ya hay herramienta para esquivar.
 - Enganchar los demás poderes legendarios (`fireball_chain`, `on_hit_frost_nova`, `mana_to_shield`) en la capa de combate.
 - Añadir navegación compleja con `NavigationRegion3D` (Navmesh) para los enemigos.
 - Comparación de ítems lado a lado y drag & drop en el inventario (v2 de la UI).
 
-> ✅ **Hecho recientemente**: sin regeneración pasiva de vida/maná (recursos limitados: pociones + maná por kill), y la base segura se movió al inicio del mapa — amurallada, con puerta al campo de batalla y el cofre adentro.
+> ✅ **Hecho recientemente**: combate con riesgo real — los slimes pegan por contacto (daño por variante), el dash tiene i-frames, y hay muerte con Game Over (Reintentar/Menú).

@@ -41,6 +41,9 @@ var super_charge: float = 0.0
 
 var _dash_timer: float = 0.0
 var _dash_dir := Vector3.ZERO
+var _dead: bool = false
+var _body_material: StandardMaterial3D
+var _body_color: Color
 
 ## UI / HUD puede conectarse a estas señales.
 signal stats_changed
@@ -50,6 +53,7 @@ signal item_equipped(item: LootItem, previous: LootItem)
 signal super_charge_changed(current: float, maximum: float)
 signal inventory_changed
 signal skills_changed
+signal died
 
 @onready var visual: Node3D = $Visual
 @onready var wand: MeshInstance3D = $Visual/Wand
@@ -65,10 +69,19 @@ func _ready() -> void:
 	]
 	cooldowns.resize(abilities.size())
 	cooldowns.fill(0.0)
+
+	# Material propio del cuerpo para el flash de daño recibido.
+	var body_mesh: MeshInstance3D = $Visual/Body
+	_body_material = body_mesh.mesh.surface_get_material(0).duplicate()
+	_body_color = _body_material.albedo_color
+	body_mesh.set_surface_override_material(0, _body_material)
+
 	_emit_resource_signals()
 	stats_changed.emit()
 
 func _physics_process(delta: float) -> void:
+	if _dead:
+		return
 	_move(delta)
 	_aim_at_mouse()
 	_update_abilities(delta)
@@ -244,14 +257,27 @@ func restore_mana(amount: float) -> void:
 	mana_changed.emit(stats.mana, stats.get_stat(&"max_mana"))
 
 func take_damage(amount: float) -> void:
+	# Durante el dash eres intangible (i-frames estilo Wizard of Legend).
+	if _dead or _dash_timer > 0.0:
+		return
 	stats.health = maxf(0.0, stats.health - amount)
 	health_changed.emit(stats.health, stats.get_stat(&"max_health"))
+
+	# Flash rojo al recibir daño.
+	_body_material.albedo_color = Color(1.0, 0.25, 0.25)
+	var tween := create_tween()
+	tween.tween_property(_body_material, "albedo_color", _body_color, 0.25)
+
 	if stats.health <= 0.0:
 		_die()
 
 func _die() -> void:
-	# Placeholder: aquí iría game over / respawn. Por ahora solo log.
-	print("[Player] derrotado")
+	_dead = true
+	# Caída dramática del mago; el HUD muestra el Game Over (señal died).
+	var tween := create_tween()
+	tween.tween_property(visual, "rotation:x", -PI / 2.0, 0.5) \
+		.set_trans(Tween.TRANS_BOUNCE).set_ease(Tween.EASE_OUT)
+	died.emit()
 
 # --- Loteo / inventario -----------------------------------------------------
 

@@ -12,11 +12,11 @@ extends Node3D
 ## Nivel del loot que dropean los spawneados.
 @export var loot_level: int = 1
 
-## Variantes: vida, velocidad, escala y color del cuerpo.
+## Variantes: vida, velocidad, escala, daño por contacto y color del cuerpo.
 const VARIANTS := [
-	{"hp": 30.0, "speed": 3.0, "scale": 1.0, "color": Color(0.2, 0.8, 0.2)},    # normal
-	{"hp": 16.0, "speed": 4.6, "scale": 0.75, "color": Color(0.4, 0.9, 0.75)},  # rápido
-	{"hp": 75.0, "speed": 1.9, "scale": 1.5, "color": Color(0.1, 0.45, 0.15)},  # tanque
+	{"hp": 30.0, "speed": 3.0, "scale": 1.0, "dmg": 8.0, "color": Color(0.2, 0.8, 0.2)},    # normal
+	{"hp": 16.0, "speed": 4.6, "scale": 0.75, "dmg": 5.0, "color": Color(0.4, 0.9, 0.75)},  # rápido
+	{"hp": 75.0, "speed": 1.9, "scale": 1.5, "dmg": 15.0, "color": Color(0.1, 0.45, 0.15)}, # tanque
 ]
 
 var _timer: float = 1.0
@@ -40,6 +40,7 @@ func _spawn() -> void:
 	slime.max_health = variant["hp"]
 	slime.speed = variant["speed"]
 	slime.size_scale = variant["scale"]
+	slime.attack_damage = variant["dmg"]
 	slime.body_color = variant["color"]
 	slime.loot_level = loot_level
 	add_child(slime)
