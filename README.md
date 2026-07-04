@@ -2,7 +2,7 @@
 
 ARPG isométrico *wave-based* hecho en **Godot 4.4** (Forward+). Mezcla el combate top-down de **Diablo**, el loot procedural por rareza de **Borderlands**, los poderes con dash de **Wizard of Legend** y el equipamiento/skills de **Tibia** — todo con estética **"PS2 bonito"**: low-poly, 854×480 con pixel crunch y cel-shading.
 
-> 🎨 **¿Eres artista o animador?** Salta directo a [Guía para artistas](#-guía-para-artistas-y-animadores): todos los visuales actuales son placeholders diseñados para ser reemplazados sin tocar código.
+> 🎨 **¿Eres artista o animador?** Salta directo a [Guía para artistas](#-guía-para-artistas-y-animadores): el jugador ya usa personajes **KayKit** animados con equipo visible (paper-doll); el resto son placeholders diseñados para ser reemplazados sin tocar código.
 
 ---
 
@@ -17,7 +17,7 @@ ARPG isométrico *wave-based* hecho en **Godot 4.4** (Forward+). Mezcla el comba
 | Input | Acción |
 |-------|--------|
 | **WASD** | Moverse (relativo a cámara) |
-| **Mouse** | Apuntar (el mago mira al cursor) |
+| **Mouse** | Apuntar (el personaje mira al cursor) |
 | **Click izquierdo** | Ataque principal de tu clase (**gratis**, sin maná) |
 | **Click derecho** | Ataque secundario |
 | **Espacio** | Movilidad: dash/embestida/voltereta (impulso con **i-frames**: eres intangible mientras dura) |
@@ -32,7 +32,7 @@ ARPG isométrico *wave-based* hecho en **Godot 4.4** (Forward+). Mezcla el comba
 | Clase | Perfil | Kit (LMB · RMB · Espacio · Q · R) |
 |-------|--------|-----------------------------------|
 | 🔵 **Mago** | Cañón de cristal: daño y maná altos, poca vida | Bola de Fuego · Descarga Arcana · Dash Arcano · Nova de Escarcha · ☄️ Tormenta de Meteoros |
-| 🟠 **Guerrero** | Tanque melee: mucha vida y resistencias | Tajo Circular · Hacha Arrojadiza · **Embestida** (daña lo que atraviesa) · Grito de Guerra · 🌪️ Torbellino |
+| 🟠 **Guerrero** | Tanque melee: mucha vida y resistencias | Tajo de Espada (barrido visible) · Hacha Arrojadiza · **Embestida** (daña lo que atraviesa) · Grito de Guerra · 🌪️ Torbellino |
 | 🟢 **Explorador** | Arquero ágil: crítico y velocidad | Flecha · Disparo Múltiple (abanico ×3) · Voltereta · **Flecha Perforante** (atraviesa filas) · 🏹 Lluvia de Flechas |
 
 ### Recursos limitados (¡no hay regeneración!)
@@ -69,47 +69,57 @@ ARPG isométrico *wave-based* hecho en **Godot 4.4** (Forward+). Mezcla el comba
 ```
 scripts/
 ├── core/
-│   ├── game_state.gd        # Autoload "Game": clase elegida + definiciones de clases
+│   ├── game_state.gd        # Autoload "Game": clase elegida, stats/kit/modelo por clase
 │   └── scene_manager.gd     # Autoload "SceneManager": transiciones con fade
 ├── player/
 │   ├── player_controller.gd # CharacterBody3D: movimiento twin-stick, dash (i-frames),
-│   │                        #   slots de poderes, inventario, super, muerte
+│   │                        #   slots de poderes, inventario, super, animaciones, muerte
 │   ├── player_stats.gd      # PlayerStats: base de clase + agregado del equipo (flat/%),
-│   │                        #   crítico, roll de daño por elemento
-│   └── skill_set.gd         # SkillSet: skills Magia/Fuego/Rayo/Hielo (XP por uso)
+│   │                        #   crítico, roll de daño por elemento × skills
+│   ├── skill_set.gd         # SkillSet: Magia/Fuego/Rayo/Hielo/Cuerpo a cuerpo/Distancia
+│   └── equipment_visuals.gd # Paper-doll: muestra el equipo puesto en el modelo KayKit
 ├── abilities/
-│   ├── ability.gd           # Clase base: id, tecla, color, cooldown, coste, elemento
-│   │                        #   + helpers _spawn_projectile / _spawn_nova
+│   ├── ability.gd           # Clase base: id, tecla, color, cooldown, coste, elemento,
+│   │                        #   is_super + helpers _spawn_projectile / _spawn_nova
 │   └── *_ability.gd         # 15 poderes: kits de Mago, Guerrero y Explorador
 │                            #   (Game.build_kit() arma el kit según la clase)
 ├── magic/
-│   ├── fireball.gd          # Proyectil GENÉRICO (lo usan Fireball y ArcBolt con otros exports)
-│   ├── frost_nova.gd        # Area3D que crece y daña una vez a cada enemigo
-│   └── meteor_storm.gd      # Genera meteoros por código + AoE por query física
+│   ├── fireball.gd          # Proyectil GENÉRICO con barrido anti-túnel, perforación
+│   │                        #   opcional y cadena legendaria (lo usan 6 escenas)
+│   ├── frost_nova.gd        # AoE expansivo genérico (novas, tajos, gritos; slow opcional)
+│   ├── sword_slash.gd       # Hoja que barre un arco frontal (ataque básico del Guerrero)
+│   └── meteor_storm.gd      # Lluvia de impactos tematizable (Meteoros / Lluvia de Flechas)
 ├── enemies/
-│   ├── slime.gd             # IA de persecución, ataque por contacto, variantes por exports,
-│   │                        #   drop de loot/maná, respeta la zona segura
+│   ├── slime.gd             # Navega con navmesh, ataque por contacto, variantes por
+│   │                        #   exports, slow de hielo, drop de loot/maná, zona segura
+│   ├── boss.gd              # Rey Slime (extends slime): golpe sísmico telegrafiado,
+│   │                        #   invoca secuaces, botín legendario garantizado
 │   └── health_bar_3d.gd     # Barra de vida flotante (2 quads, mira a cámara)
 ├── levels/
 │   ├── camera_rig.gd        # Cámara isométrica que sigue al player con lerp
-│   └── enemy_spawner.gd     # Spawner continuo con variantes (nunca en zona segura)
+│   ├── enemy_spawner.gd     # Sistema de OLEADAS: descanso→spawn→combate, escalado,
+│   │                        #   portales procedurales, boss en la oleada 5, restock
+│   ├── world_generator.gd   # Mundo procedural por semilla (rocas/pilares/árboles)
+│   └── nav_region.gd        # Bakea el navmesh en runtime (piso+muros+obstáculos)
 ├── loot/
-│   ├── rarity.gd            # Tiers, COLORES por rareza, pesos de drop
+│   ├── rarity.gd            # Tiers, colores, STAT_MULT (la rareza multiplica stats)
 │   ├── item_base.gd         # Plantilla de ítem (tipo, slot, 2H, stats base, icon)
 │   ├── affix.gd / affix_instance.gd / legendary_power.gd
-│   ├── loot_item.gd         # Ítem generado (afijos, ficha to_text, color de UI)
+│   ├── loot_item.gd         # Ítem generado (ficha to_bbcode, color de UI, consumibles)
 │   ├── loot_database.gd     # Autoload "LootDB": bases, afijos, legendarios, pociones
-│   ├── loot_generator.gd    # Autoload "Loot": rareza→base→afijos; make_potion()
+│   ├── loot_generator.gd    # Autoload "Loot": generación (type y rareza forzables)
 │   └── loot_drop.gd         # Drop en el mundo (color por rareza, pickup al inventario)
 ├── world/
-│   ├── chest.gd             # Cofre accionable con E: derrama su contenido al suelo
-│   └── safe_zone.gd         # Zona donde los enemigos no entran
+│   ├── chest.gd             # Cofre accionable con E + restock entre oleadas
+│   ├── safe_zone.gd         # Zona donde los enemigos no entran
+│   └── spawn_portal.gd      # Portal de oleada (telegrafiado, pulso emisivo)
 └── ui/
     ├── main_menu.gd / class_select.gd
-    ├── hud.gd               # Barras vida/maná, barra de poderes, Game Over, toggle inventario
+    ├── hud.gd               # Barras, poderes, label de oleada, Game Over y Victoria
     ├── ability_slot.gd      # Círculo de poder con recarga radial (dibujado por código)
-    ├── inventory_panel.gd   # Equipo estilo Tibia + inventario + stats + skills
-    └── item_slot_ui.gd      # Casilla de ítem (borde por rareza + tooltip)
+    ├── minimap.gd           # Minimapa con niebla de guerra (se revela al explorar)
+    ├── inventory_panel.gd   # Equipo Tibia + inventario + stats/skills + comparador
+    └── item_slot_ui.gd      # Casilla de ítem (borde por rareza + drag & drop)
 ```
 
 **Autoloads** (orden en `project.godot`): `Game`, `LootDB`, `Loot`, `SceneManager`.
@@ -120,7 +130,7 @@ scripts/
 
 ## 🎨 Guía para artistas y animadores
 
-**Todos los visuales actuales son primitivas placeholder** (cápsulas, esferas, cajas). El código depende de **rutas de nodos**, no de los meshes — si respetas la estructura de nodos indicada, puedes reemplazar cualquier visual sin tocar scripts.
+**El jugador ya usa personajes KayKit animados con paper-doll** (el equipo se ve puesto). El resto de los visuales son primitivas placeholder (esferas, cajas). El código depende de **rutas de nodos**, no de los meshes — si respetas la estructura indicada, puedes reemplazar cualquier visual sin tocar scripts.
 
 ### Dirección de arte
 - Estética **PS2**: low-poly limpio, texturas pequeñas **sin filtro** (pixel crunch), paleta saturada.
@@ -131,11 +141,14 @@ scripts/
 
 | Asset | Escena | Placeholder actual | Qué RESPETAR al reemplazar |
 |-------|--------|--------------------|-----------------------------|
-| **Jugador (3 clases)** | `scenes/player/Player.tscn` | ✅ **Ya usa KayKit Adventurers** (CC0): Mage/Knight/Rogue con animaciones Idle/Run/Attack/Death (`assets/kaykit/`, mapeo en `game_state.gd → CLASSES.model/anims`) | El modelo se instancia bajo `Visual` en runtime (rotado 180°: KayKit mira +Z). `Visual/Wand` sigue siendo el **punto de spawn de proyectiles** (invisible). Para cambiar un modelo: reemplaza el GLB y ajusta los nombres de animación en `game_state.gd`. |
+| **Jugador (3 clases)** | `scenes/player/Player.tscn` | ✅ **Ya usa KayKit Adventurers** (CC0): Mage/Knight/Rogue animados (`assets/kaykit/`, mapeo en `game_state.gd → CLASSES.model/anims`) | El modelo se instancia bajo `Visual` en runtime (rotado 180°: KayKit mira +Z). `Visual/Wand` = **punto de spawn de proyectiles** (invisible). **Paper-doll**: los accesorios integrados del GLB (armas/escudos/sombreros) los gestiona `equipment_visuals.gd` (mapa `VISUALS`: clase → ítem → mesh) — si agregas un modelo con accesorios, respeta ese mapa. |
 | **Slime** (enemigo) | `scenes/enemies/Slime.tscn` | Esfera verde | La ruta `Visual/Mesh` (el script tinta su material por variante y lo flashea en blanco al recibir daño). El nodo raíz escala `Visual` según la variante (`size_scale`). |
+| **Rey Slime** (boss) | `scenes/enemies/Boss.tscn` | Esfera dorada + corona (cono EN CÓDIGO en `boss.gd → _make_crown`) | Misma estructura que Slime (hereda su script). El disco rojo del golpe sísmico se genera por código (`_telegraph_slam`). |
 | **Bola de Fuego** | `scenes/magic/Fireball.tscn` | Esfera emisiva + OmniLight | Es un `Area3D` que avanza por su `-Z`. Cambia mesh/luz libremente; ideal punto para `GPUParticles3D` (estela). |
 | **Descarga Arcana** | `scenes/magic/ArcBolt.tscn` | Esfera celeste chica | Igual que Fireball (comparten script). |
-| **Nova de Escarcha** | `scenes/magic/FrostNova.tscn` | Esfera transparente | El script escala `MeshInstance3D` de 0 al radio — el visual debe verse bien escalando. |
+| **Novas / AoE** | `FrostNova.tscn`, `WarCry.tscn`, `Whirlwind.tscn` | Esferas transparentes | Comparten `frost_nova.gd`: el script escala el `MeshInstance3D` de 0 al radio — el visual debe verse bien escalando. |
+| **Tajo de Espada** | `scripts/magic/sword_slash.gd` | Hoja blanca EN CÓDIGO que barre un arco | Punto ideal para un trail/estela de espada. |
+| **Flechas / Hacha** | `Arrow.tscn`, `PiercingArrow.tscn`, `ThrowingAxe.tscn` | Cajas emisivas | Igual que Fireball (comparten script; avanzan por su `-Z`). |
 | **Meteoros (super)** | `scripts/magic/meteor_storm.gd` | Esferas creadas EN CÓDIGO | Único caso sin escena: el visual se construye en `_drop_meteor()`. Para assets propios, conviene extraer un `Meteor.tscn` (avisar a programación). |
 | **Drop de loot** | `scenes/loot/LootDrop.tscn` | Prisma flotante que rota | `Visual/Mesh` (el script pinta el material según rareza) y `OmniLight3D` (brillo del color de rareza). La animación de flote/rotación es por código en `loot_drop.gd`. |
 | **Cofre** | `scenes/world/Chest.tscn` | Cajas de madera | `LidPivot` es la **bisagra**: la apertura rota ese nodo con tween. La tapa nueva debe colgar de él. `Prompt` es el Label3D "[E] Abrir". |
@@ -170,9 +183,10 @@ scripts/
 # Validar el proyecto sin abrir el editor
 godot --headless --path . --editor --quit-after 200
 
-# Smoke tests (equipo 2H y kits por clase)
+# Smoke tests (equipo 2H/rareza, kits por clase, y colisión de proyectiles)
 godot --headless --path . res://tests/LootSmoke.tscn   # imprime "SMOKE OK"
 godot --headless --path . res://tests/KitSmoke.tscn    # imprime "KIT SMOKE OK"
+godot --headless --path . res://tests/HitSmoke.tscn    # imprime "HIT SMOKE OK"
 ```
 
 Hecho con Godot 4.4 · Proyecto en desarrollo activo 🚧
