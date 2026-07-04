@@ -1,7 +1,8 @@
-[gd_scene load_steps=8 format=3 uid="uid://chudingame001"]
+[gd_scene load_steps=9 format=3 uid="uid://chudingame001"]
 
 [ext_resource type="Script" path="res://scripts/ui/hud.gd" id="1_hud"]
 [ext_resource type="PackedScene" uid="uid://cinvpanel0001" path="res://scenes/ui/InventoryPanel.tscn" id="2_invpanel"]
+[ext_resource type="Script" path="res://scripts/ui/minimap.gd" id="3_minimap"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_victory"]
 content_margin_left = 24.0
@@ -139,6 +140,22 @@ grow_vertical = 0
 mouse_filter = 2
 theme_override_constants/separation = 10
 alignment = 1
+
+[node name="Minimap" type="Control" parent="Root"]
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -148.0
+offset_top = -148.0
+offset_right = -8.0
+offset_bottom = -8.0
+grow_horizontal = 0
+grow_vertical = 0
+mouse_filter = 2
+script = ExtResource("3_minimap")
 
 [node name="InventoryPanel" parent="Root" instance=ExtResource("2_invpanel")]
 unique_name_in_owner = true

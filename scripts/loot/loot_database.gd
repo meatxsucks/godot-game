@@ -63,17 +63,19 @@ func _legendary(id: StringName, title: String, text: String, types: Array[String
 # --- Contenido ------------------------------------------------------------
 
 func _build_item_bases() -> void:
+	# Pocas bases con valores fuertes y claros (la rareza los multiplica:
+	# ver Rarity.STAT_MULT). Cada ítem tiene un propósito legible.
 	item_bases = [
-		_base(&"staff_oak", "Bastón de roble", &"staff", &"weapon", {&"spell_damage": 8.0}),
-		_base(&"orb_quartz", "Orbe de cuarzo", &"orb", &"offhand", {&"max_mana": 20.0}),
-		_base(&"wand_bone", "Varita de hueso", &"wand", &"weapon", {&"spell_damage": 5.0, &"cast_speed": 5.0}),
-		_base(&"ring_copper", "Anillo de cobre", &"ring", &"ring", {&"crit_chance": 2.0}),
-		_base(&"robe_linen", "Túnica de lino", &"armor", &"armor", {&"max_health": 25.0}),
-		# Equipo estilo Tibia: cabeza, botas, escudo y arma a dos manos.
-		_base(&"hat_cloth", "Sombrero de tela", &"helmet", &"head", {&"max_mana": 12.0, &"max_health": 8.0}),
-		_base(&"boots_leather", "Botas de cuero", &"boots", &"boots", {&"max_health": 10.0, &"move_speed": 3.0}),
-		_base(&"shield_wood", "Escudo de madera", &"shield", &"offhand", {&"max_health": 20.0, &"res_fire": 5.0}),
-		_base(&"staff_war", "Bastón de guerra", &"staff", &"weapon", {&"spell_damage": 14.0}, true),
+		_base(&"staff_oak", "Bastón de roble", &"staff", &"weapon", {&"spell_damage": 10.0}),
+		_base(&"orb_quartz", "Orbe de cuarzo", &"orb", &"offhand", {&"max_mana": 40.0, &"mana_regen": 4.0}),
+		_base(&"wand_bone", "Varita de hueso", &"wand", &"weapon", {&"spell_damage": 6.0, &"cast_speed": 10.0}),
+		_base(&"ring_copper", "Anillo de cobre", &"ring", &"ring", {&"crit_chance": 5.0, &"crit_damage": 15.0}),
+		_base(&"robe_linen", "Túnica de lino", &"armor", &"armor", {&"max_health": 35.0}),
+		_base(&"hat_cloth", "Sombrero de tela", &"helmet", &"head", {&"max_mana": 25.0, &"max_health": 10.0}),
+		_base(&"boots_leather", "Botas de cuero", &"boots", &"boots", {&"max_health": 10.0, &"move_speed": 6.0}),
+		_base(&"shield_wood", "Escudo de madera", &"shield", &"offhand", {&"max_health": 30.0, &"res_fire": 10.0, &"res_cold": 10.0, &"res_lightning": 10.0}),
+		# El arma universal: potencia el ataque de CUALQUIER clase (2 manos).
+		_base(&"staff_war", "Bastón de guerra", &"staff", &"weapon", {&"spell_damage": 16.0, &"melee_damage": 10.0, &"ranged_damage": 10.0}, true),
 	]
 
 func _build_potions() -> void:

@@ -28,7 +28,7 @@ const PORTAL_SCENE := preload("res://scenes/world/SpawnPortal.tscn")
 @export var chest_restock_every: int = 3
 ## Oleada del boss: aparece el Rey Slime; superarla = nivel completado
 ## (después el modo sigue endless).
-@export var boss_wave: int = 10
+@export var boss_wave: int = 5
 
 ## Variantes base (escalan por oleada): vida, velocidad, escala, daño, color.
 const VARIANTS := {

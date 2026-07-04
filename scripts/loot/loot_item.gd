@@ -30,9 +30,13 @@ func ui_color() -> Color:
 			return Color(0.25, 0.5, 1.0)
 	return rarity_color()
 
-## Combina base_stats + afijos en `stats` (planos) y `percent_mods` (%).
+## Combina base_stats (escalados por rareza) + afijos en `stats` (planos)
+## y `percent_mods` (%).
 func recompute_stats() -> void:
-	stats = base.base_stats.duplicate(true)
+	stats = {}
+	var mult := Rarity.stat_mult(rarity)
+	for k in base.base_stats:
+		stats[k] = float(base.base_stats[k]) * mult
 	percent_mods = {}
 	for inst in affixes:
 		var key := inst.stat()

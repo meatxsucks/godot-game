@@ -7,6 +7,9 @@ var _time := 0.0
 @onready var disc: MeshInstance3D = $Disc
 @onready var light: OmniLight3D = $Light
 
+func _ready() -> void:
+	add_to_group("spawn_portal") # el minimapa los dibuja siempre
+
 func _process(delta: float) -> void:
 	_time += delta
 	var pulse := 0.6 + 0.4 * sin(_time * 5.0)

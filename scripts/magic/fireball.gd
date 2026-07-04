@@ -14,6 +14,9 @@ var is_crit: bool = false
 ## Rebotes restantes (legendario "Pira en Cadena"): al impactar salta al
 ## enemigo más cercano con el 60% del daño.
 var chains_left: int = 0
+## Cuerpos ya procesados (el rayo de barrido y body_entered pueden ver al
+## mismo enemigo).
+var _hit_bodies := {}
 
 func _ready() -> void:
 	body_entered.connect(_on_body_entered)
@@ -32,14 +35,23 @@ func setup(p_damage: float, p_source: Node = null, p_crit: bool = false) -> void
 	is_crit = p_crit
 
 func _physics_process(delta: float) -> void:
+	var from := global_position
 	global_position -= global_transform.basis.z * speed * delta
+	# Barrido anti-túnel: los proyectiles rápidos avanzan ~0.5m por frame y
+	# podían saltarse la colisión de enemigos chicos. El rayo entre la
+	# posición anterior y la nueva no se salta nada.
+	var query := PhysicsRayQueryParameters3D.create(from, global_position)
+	var hit := get_world_3d().direct_space_state.intersect_ray(query)
+	if hit and hit.get("collider") is Node3D:
+		_on_body_entered(hit["collider"])
 
 func _on_body_entered(body: Node3D) -> void:
-	# Ignorar al propio lanzador y al jugador (sin fuego amigo).
-	if body == source or body.is_in_group("player"):
+	# Ignorar al lanzador, al jugador (sin fuego amigo) y a los ya golpeados.
+	if body == source or body.is_in_group("player") or _hit_bodies.has(body):
 		return
 
 	if body.has_method("take_damage"):
+		_hit_bodies[body] = true
 		body.take_damage(damage)
 		if source and source.has_method("add_super_charge"):
 			source.add_super_charge(super_charge_on_hit)

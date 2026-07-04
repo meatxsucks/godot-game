@@ -25,13 +25,24 @@ const COLORS := {
 	Tier.LEGENDARY: Color(1.00, 0.54, 0.12),
 }
 
-## Rango [min, max] de afijos por rareza.
+## Rango [min, max] de afijos por rareza. Pocos y legibles: el poder del
+## ítem viene de sus stats base × STAT_MULT, no de una sopa de sufijos.
 const AFFIX_RANGE := {
-	Tier.COMMON: Vector2i(0, 1),
-	Tier.UNCOMMON: Vector2i(1, 2),
-	Tier.RARE: Vector2i(2, 3),
-	Tier.EPIC: Vector2i(3, 4),
-	Tier.LEGENDARY: Vector2i(4, 5),
+	Tier.COMMON: Vector2i(0, 0),
+	Tier.UNCOMMON: Vector2i(0, 1),
+	Tier.RARE: Vector2i(1, 1),
+	Tier.EPIC: Vector2i(1, 2),
+	Tier.LEGENDARY: Vector2i(1, 2),
+}
+
+## Multiplicador de los stats BASE del ítem por rareza: un épico se lee al
+## instante (×2 de lo que hace la base).
+const STAT_MULT := {
+	Tier.COMMON: 1.0,
+	Tier.UNCOMMON: 1.3,
+	Tier.RARE: 1.6,
+	Tier.EPIC: 2.0,
+	Tier.LEGENDARY: 2.5,
 }
 
 ## Multiplicador de calidad: rarezas altas tiran valores más cerca del techo.
@@ -54,6 +65,9 @@ const DROP_WEIGHT := {
 
 static func color(tier: int) -> Color:
 	return COLORS.get(tier, Color.WHITE)
+
+static func stat_mult(tier: int) -> float:
+	return STAT_MULT.get(tier, 1.0)
 
 static func display_name(tier: int) -> String:
 	return NAMES.get(tier, "?")

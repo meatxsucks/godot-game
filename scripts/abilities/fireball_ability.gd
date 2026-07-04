@@ -10,7 +10,7 @@ func _init() -> void:
 	key_label = "LMB"
 	color = Color(1.0, 0.45, 0.1)
 	cooldown = 2.0
-	mana_cost = 15.0
+	mana_cost = 0.0 # el ataque básico (click) es gratis en todas las clases
 	hold_to_cast = true
 	element = &"fire"
 
