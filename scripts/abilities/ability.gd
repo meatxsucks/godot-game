@@ -5,6 +5,11 @@
 class_name Ability
 extends RefCounted
 
+## Altura de vuelo de los proyectiles: a la cintura. La varita está a 1.2m
+## y un slime normal mide ~0.9m — spawneando a esa altura los proyectiles
+## pasaban POR ENCIMA de los enemigos chicos.
+const PROJECTILE_HEIGHT := 0.55
+
 var id: StringName = &""
 var display_name: String = ""
 ## Texto del input mostrado en el círculo del HUD ("LMB", "SPC", "Q"...).
@@ -51,6 +56,7 @@ func _spawn_projectile(player, scene: PackedScene, stat: StringName, multiplier:
 	var projectile = scene.instantiate()
 	player.get_parent().add_child(projectile)
 	projectile.global_transform = player.wand.global_transform
+	projectile.global_position.y = PROJECTILE_HEIGHT
 
 	var result: Array = player.stats.roll_spell_damage(stat, multiplier)
 	if projectile.has_method("setup"):

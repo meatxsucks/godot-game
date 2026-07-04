@@ -19,6 +19,7 @@ func _cast(player) -> bool:
 	var projectile = SCENE.instantiate()
 	player.get_parent().add_child(projectile)
 	projectile.global_transform = player.wand.global_transform
+	projectile.global_position.y = PROJECTILE_HEIGHT
 	if projectile.has_method("setup"):
 		projectile.setup(result[0], player, result[1])
 

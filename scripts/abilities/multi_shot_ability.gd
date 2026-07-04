@@ -22,6 +22,7 @@ func _cast(player) -> bool:
 		var arrow = SCENE.instantiate()
 		player.get_parent().add_child(arrow)
 		arrow.global_transform = player.wand.global_transform
+		arrow.global_position.y = PROJECTILE_HEIGHT
 		arrow.rotate_y(offset)
 		if arrow.has_method("setup"):
 			arrow.setup(result[0], player, result[1])
