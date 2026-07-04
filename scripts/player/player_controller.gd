@@ -106,6 +106,11 @@ func _setup_model() -> void:
 	if _model_anim and _anims.has("idle"):
 		_model_anim.play(_anims["idle"])
 
+	# Paper-doll: el equipo se ve puesto (arranca con las manos vacías).
+	var equipment_visuals := EquipmentVisuals.new()
+	add_child(equipment_visuals)
+	equipment_visuals.setup(self, model)
+
 func _physics_process(delta: float) -> void:
 	if _dead:
 		return

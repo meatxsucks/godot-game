@@ -44,6 +44,7 @@ ARPG isométrico *wave-based* hecho en **Godot 4.4** (Forward+). Mezcla el comba
 ### Loot y equipo (estilo Tibia)
 - 5 rarezas: **Común** (blanco) → **Poco común** (verde) → **Raro** (azul) → **Épico** (morado) → **Legendario** (naranja, con poder único **activo**: bolas de fuego que rebotan en cadena, nova de hielo defensiva al recibir golpes, maná que absorbe daño como escudo, o críticos que recortan cooldowns). Más rareza = más afijos y mejores valores.
 - Los drops van al **inventario (20 casillas)**; equipas a mano (click o **arrastrando**) en **6 slots**: cabeza, torso, arma, escudo/orbe, anillo, botas. Pasa el mouse sobre un ítem para **compararlo lado a lado** con el que llevas equipado.
+- **El equipo se ve puesto**: empiezas con las manos vacías y lo que equipas aparece en el personaje (arma en mano, escudo/libro en la otra, sombrero/casco) — cada clase con su versión del ítem.
 - Las **armas a dos manos** (ej. Bastón de guerra) ocupan también la mano del escudo.
 - El equipo sube tus stats **en vivo** (visible en el panel con I/Tab).
 
