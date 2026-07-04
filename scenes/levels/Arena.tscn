@@ -1,4 +1,4 @@
-[gd_scene load_steps=15 format=3 uid="uid://darena1234567"]
+[gd_scene load_steps=16 format=3 uid="uid://darena1234567"]
 
 [ext_resource type="PackedScene" uid="uid://dplayer1234567" path="res://scenes/player/Player.tscn" id="1_player"]
 [ext_resource type="Script" path="res://scripts/levels/camera_rig.gd" id="2_camera"]
@@ -7,15 +7,16 @@
 [ext_resource type="Script" path="res://scripts/levels/enemy_spawner.gd" id="6_spawner"]
 [ext_resource type="PackedScene" uid="uid://csafezone0001" path="res://scenes/world/SafeZone.tscn" id="7_zone"]
 [ext_resource type="Script" path="res://scripts/levels/nav_region.gd" id="8_nav"]
+[ext_resource type="Script" path="res://scripts/levels/world_generator.gd" id="9_world"]
 
 [sub_resource type="PlaneMesh" id="PlaneMesh_floor"]
-size = Vector2(40, 40)
+size = Vector2(64, 64)
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_floor"]
 albedo_color = Color(0.184314, 0.2, 0.239216, 1)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_floor"]
-size = Vector3(40, 1, 40)
+size = Vector3(64, 1, 64)
 
 [sub_resource type="Environment" id="Environment_arena"]
 background_mode = 1
@@ -29,10 +30,10 @@ roughness = 0.9
 
 [sub_resource type="BoxMesh" id="BoxMesh_wall"]
 material = SubResource("StandardMaterial3D_wall")
-size = Vector3(17, 1.5, 1)
+size = Vector3(29, 1.5, 1)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_wall"]
-size = Vector3(17, 1.5, 1)
+size = Vector3(29, 1.5, 1)
 
 [sub_resource type="NavigationMesh" id="NavigationMesh_arena"]
 geometry_parsed_geometry_type = 1
@@ -62,11 +63,14 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 0)
 shape = SubResource("BoxShape3D_floor")
 
 [node name="SafeZone" parent="." instance=ExtResource("7_zone")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 13.5)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 24)
 radius = 6.5
 
+[node name="WorldGen" type="Node3D" parent="NavRegion"]
+script = ExtResource("9_world")
+
 [node name="WallLeft" type="StaticBody3D" parent="NavRegion"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -11.5, 0.75, 8)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -17.5, 0.75, 18.5)
 
 [node name="Mesh" type="MeshInstance3D" parent="NavRegion/WallLeft"]
 mesh = SubResource("BoxMesh_wall")
@@ -75,7 +79,7 @@ mesh = SubResource("BoxMesh_wall")
 shape = SubResource("BoxShape3D_wall")
 
 [node name="WallRight" type="StaticBody3D" parent="NavRegion"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11.5, 0.75, 8)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 17.5, 0.75, 18.5)
 
 [node name="Mesh" type="MeshInstance3D" parent="NavRegion/WallRight"]
 mesh = SubResource("BoxMesh_wall")
@@ -84,7 +88,7 @@ mesh = SubResource("BoxMesh_wall")
 shape = SubResource("BoxShape3D_wall")
 
 [node name="Player" parent="." instance=ExtResource("1_player")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 14)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 24.5)
 
 [node name="CameraRig" type="Node3D" parent="."]
 script = ExtResource("2_camera")
@@ -96,11 +100,11 @@ projection = 0
 fov = 35.0
 
 [node name="EnemySpawner" type="Node3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -8)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -4)
 script = ExtResource("6_spawner")
 spawn_radius_max = 12.0
 
 [node name="Chest" parent="." instance=ExtResource("5_chest")]
-transform = Transform3D(0.866025, 0, -0.5, 0, 1, 0, 0.5, 0, 0.866025, 2.5, 0, 14.5)
+transform = Transform3D(0.866025, 0, -0.5, 0, 1, 0, 0.5, 0, 0.866025, 2.5, 0, 25)
 
 [node name="HUD" parent="." instance=ExtResource("4_hud")]

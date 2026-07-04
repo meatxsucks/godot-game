@@ -52,7 +52,9 @@ ARPG isométrico *wave-based* hecho en **Godot 4.4** (Forward+). Mezcla el comba
 - Cada nivel = **+3% de daño de ese tipo** (+1% por nivel de Magia). El Mago entrena elementos, el Guerrero cuerpo a cuerpo, el Explorador distancia.
 
 ### El mundo
-- Empiezas en una **base segura amurallada** (zona cian): los enemigos no pueden entrar, el **cofre** con equipo inicial y pociones de vida está adentro. Cruza la **puerta** para pelear; retrocede a la base si te ves apretado.
+- El mapa (64×64) se **genera proceduralmente** cada partida: rocas, pilares y árboles repartidos por semilla que sirven de cobertura — y los enemigos los rodean con navegación real.
+- Cada oleada emerge de **portales púrpura** ubicados proceduralmente por el mapa, visibles **durante el descanso**: sabes de dónde vendrá la ronda y puedes posicionarte (o embocarles una Lluvia de Flechas al salir).
+- Empiezas en una **base segura amurallada** (zona cian) al borde sur: los enemigos no pueden entrar, el **cofre** con equipo inicial y pociones de vida está adentro. Cruza la **puerta** para pelear; retrocede a la base si te ves apretado.
 - **Oleadas**: rondas anunciadas con **10s de descanso** entre medio (vuelve a la base, toma pociones, compara tu loot). Cada oleada trae más enemigos, con más vida y daño, y **botín de mayor nivel**. Los **cofres se reabastecen cada 3 oleadas** — tu única fuente de vida si aguantas.
 - **Enemigos**: slimes en 3 variantes — normal (8 dmg), rápido (5 dmg, veloz) y tanque (15 dmg, 75 HP); las rondas avanzadas traen más rápidos y tanques. Pegan por contacto y navegan con navmesh (rodean los muros hasta la puerta).
 - **Muerte**: a 0 de vida → Game Over (Reintentar con la misma clase, o volver al Menú).
@@ -136,6 +138,8 @@ scripts/
 | **Cofre** | `scenes/world/Chest.tscn` | Cajas de madera | `LidPivot` es la **bisagra**: la apertura rota ese nodo con tween. La tapa nueva debe colgar de él. `Prompt` es el Label3D "[E] Abrir". |
 | **Arena / entorno** | `scenes/levels/Arena.tscn` | Plano gris + muros caja | Piso con colisión (`Floor`), muros de la base (`WallLeft/WallRight` — la puerta es el hueco central). Luz direccional + WorldEnvironment configurados ahí. |
 | **Zona segura** | `scenes/world/SafeZone.tscn` | Disco cian plano | Solo visual: el gameplay usa el `radius` del script, no el mesh. |
+| **Obstáculos del mundo** | `scripts/levels/world_generator.gd` | Rocas/pilares/árboles EN CÓDIGO | El mundo es procedural: los 3 tipos se construyen en `_make_rock/_make_pillar/_make_tree`. Para assets propios conviene extraer escenas por tipo (avisar a programación). Los colliders alimentan el navmesh. |
+| **Portal de oleada** | `scenes/world/SpawnPortal.tscn` | Disco púrpura pulsante | El pulso/rotación es por código (`spawn_portal.gd`); ideal para partículas de portal. |
 | **Barra de vida enemiga** | `scripts/enemies/health_bar_3d.gd` | 2 quads por código | Reemplazable por sprites si se desea (hablar con programación). |
 
 ### Íconos de ítems y UI

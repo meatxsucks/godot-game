@@ -7,7 +7,12 @@ signal wave_started(n: int)
 signal wave_cleared(n: int)
 signal intermission_tick(next_n: int, seconds_left: int)
 
+const PORTAL_SCENE := preload("res://scenes/world/SpawnPortal.tscn")
+
 @export var slime_scene: PackedScene = preload("res://scenes/enemies/Slime.tscn")
+## Rectángulo del campo donde pueden aparecer los portales de oleada.
+@export var field_min := Vector2(-28, -28)
+@export var field_max := Vector2(28, 12)
 ## Máximo de enemigos vivos a la vez.
 @export var max_alive: int = 10
 ## Descanso entre oleadas: tiempo para volver a la base y equiparse.
@@ -35,11 +40,14 @@ var _timer: float = 0.0
 var _to_spawn: int = 0
 var _last_tick: int = -1
 var _safe_zone: SafeZone
+## Portales activos: la oleada emerge de ellos (telegrafiados en el descanso).
+var _portals: Array[Node3D] = []
 
 func _ready() -> void:
 	add_to_group("wave_manager")
 	_safe_zone = get_tree().get_first_node_in_group("safe_zone")
 	_timer = intermission_time
+	_make_portals.call_deferred(1)
 
 func current_wave() -> int:
 	return wave
@@ -74,6 +82,9 @@ func _physics_process(delta: float) -> void:
 				_state = State.INTERMISSION
 				_timer = intermission_time
 				_last_tick = -1
+				# Telegrafiar la siguiente oleada: portales nuevos ya visibles.
+				_clear_portals()
+				_make_portals(wave + 1)
 
 func _start_wave() -> void:
 	wave += 1
@@ -106,7 +117,13 @@ func _spawn_one() -> void:
 	var hp_mult := 1.0 + 0.15 * (wave - 1)
 	var dmg_mult := 1.0 + 0.10 * (wave - 1)
 
-	var pos := _random_spawn_pos()
+	# La oleada emerge de los portales (con jitter); anillo como fallback.
+	var pos: Vector3
+	if _portals.is_empty():
+		pos = _random_spawn_pos()
+	else:
+		var portal: Node3D = _portals.pick_random()
+		pos = portal.global_position + Vector3(randf_range(-1.5, 1.5), 0.0, randf_range(-1.5, 1.5))
 	# Nunca spawnear dentro de la zona segura (la base es sagrada).
 	if _safe_zone and _safe_zone.contains(pos):
 		return
@@ -126,6 +143,36 @@ func _random_spawn_pos() -> Vector3:
 	var angle := randf() * TAU
 	var dist := randf_range(spawn_radius_min, spawn_radius_max)
 	return global_position + Vector3(cos(angle) * dist, 0.0, sin(angle) * dist)
+
+# --- Portales (distribución procedural de la oleada) --------------------------
+
+## Elige 1 + N/2 posiciones (máx 4) repartidas por el campo, evitando la zona
+## segura, al jugador y otros portales (intentos con rechazo).
+func _make_portals(for_wave: int) -> void:
+	var count := clampi(1 + int(for_wave / 2.0), 1, 4)
+	var player = get_tree().get_first_node_in_group("player")
+	for i in count:
+		for attempt in 20:
+			var pos := Vector3(
+				randf_range(field_min.x, field_max.x),
+				0.0,
+				randf_range(field_min.y, field_max.y))
+			if _safe_zone and _safe_zone.contains(pos):
+				continue
+			if player and pos.distance_to(player.global_position) < 8.0:
+				continue
+			if _portals.any(func(p: Node3D) -> bool: return p.global_position.distance_to(pos) < 8.0):
+				continue
+			var portal := PORTAL_SCENE.instantiate()
+			add_child(portal)
+			portal.global_position = pos
+			_portals.append(portal)
+			break
+
+func _clear_portals() -> void:
+	for portal in _portals:
+		portal.queue_free()
+	_portals.clear()
 
 func _restock_chests() -> void:
 	for chest in get_tree().get_nodes_in_group("chest"):
