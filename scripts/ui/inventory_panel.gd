@@ -23,6 +23,7 @@ const SLOT_LABELS := {
 const STAT_ROWS := [
 	[&"max_health", "Vida"],
 	[&"max_mana", "Maná"],
+	[&"mana_regen", "Maná por kill"],
 	[&"spell_damage", "Daño mágico"],
 	[&"crit_chance", "Crítico %"],
 	[&"cast_speed", "Vel. lanz. %"],

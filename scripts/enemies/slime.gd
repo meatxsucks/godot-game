@@ -110,10 +110,10 @@ func take_damage(amount: float) -> void:
 		die()
 
 func die() -> void:
-	# El kill carga la stamina del super del jugador.
+	# Recompensa del kill: stamina del super + maná por kill.
 	var player = get_tree().get_first_node_in_group("player")
-	if player and player.has_method("add_super_charge"):
-		player.add_super_charge(12.0)
+	if player and player.has_method("on_enemy_killed"):
+		player.on_enemy_killed()
 
 	if loot_drop_scene and randf() <= drop_chance:
 		_spawn_drop(Loot.generate_random_item(loot_level), Vector3.ZERO)

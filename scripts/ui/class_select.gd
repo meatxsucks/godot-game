@@ -8,7 +8,7 @@ const ORDER: Array[StringName] = [&"mage", &"warrior", &"ranger"]
 const STAT_LABELS := {
 	&"max_health": "Vida",
 	&"max_mana": "Maná",
-	&"mana_regen": "Regen. maná",
+	&"mana_regen": "Maná por kill",
 	&"spell_damage": "Daño mágico",
 	&"crit_chance": "Crítico %",
 	&"crit_damage": "Daño crít. %",

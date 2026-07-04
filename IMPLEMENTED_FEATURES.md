@@ -24,7 +24,7 @@ Inspirado en *Diablo* y *Borderlands*. Genera ítems procedurales con rarezas y 
 - **Stats del Mago (`PlayerStats`, `scripts/player/player_stats.gd`)**: `RefCounted` que mantiene los stats base + el agregado del equipo.
   - Combina aportes **planos** (FLAT) y **porcentuales** (PERCENT) de cada ítem: `efectivo = plano * (1 + %/100)`.
   - `roll_spell_damage()` calcula el daño del hechizo con tirada de **crítico** (`crit_chance` / `crit_damage`).
-  - Gestiona **maná** (coste por lanzamiento + regeneración por segundo) y vida.
+  - Gestiona **maná** (coste por lanzamiento) y vida. **Sin regeneración pasiva**: ambos son recursos limitados — se recuperan con pociones y con el **maná por kill** (stat `mana_regen`, otorgado en `on_enemy_killed()`).
   - `has_legendary(effect_id)` permite que el combate consulte poderes legendarios equipados (ej. `crit_cdr` = "Cascada Crítica" recorta el cooldown al critear).
 - **Cooldown dinámico**: `cast_speed` y `cooldown_reduction` del equipo reducen el tiempo de recarga real (`_effective_cooldown()`).
 
@@ -95,7 +95,7 @@ Inspirado en *Diablo* y *Borderlands*. Genera ítems procedurales con rarezas y 
   - **Explorador** — ágil: vida 110, crít 12%, daño crít 70%, move_speed +12%. *Kit propio pendiente.*
 - **Selección de clase** (`ClassSelect.tscn` + `class_select.gd`): pantalla entre el menú y la Arena con tarjetas construidas por código desde `Game.CLASSES` (nombre, descripción, stats, botón Elegir). `PlayerStats._init` hace merge de los stats de la clase sobre los base.
 - **Skills estilo Tibia** (`SkillSet`, `scripts/player/skill_set.gd`, vive en `PlayerStats.skills`): **Magia** (general), **Fuego**, **Rayo**, **Hielo**. Cada casteo da +2 XP al elemento del poder (`Ability.element`) y +1 a Magia; umbral `10 + nivel*8`. Bonus de daño: **+3%/nivel del elemento, +1%/nivel de Magia**, aplicado en `roll_spell_damage()` — entrenar fuego hace pegar más fuerte a la Bola de Fuego y los Meteoros, el rayo a la Descarga, el hielo a la Nova. Dos ejes de progresión: loot (stats) + uso (skills).
-- **Zona Segura** (`SafeZone.tscn` + `safe_zone.gd`, grupo `"safe_zone"`): disco cian en el spawn (radio 5) con el **cofre adentro**. Los slimes nunca entran (salen si quedan dentro), esperan afuera si el jugador está a salvo, y la rodean por la tangente si les queda en el camino. Ideal para equiparse y usar pociones con calma.
+- **Base inicial / Zona Segura** (`SafeZone.tscn` + `safe_zone.gd`, grupo `"safe_zone"`): la partida empieza en una **base al borde sur del mapa** (disco cian radio 6.5, cofre adentro, spawn del player), separada del campo de batalla por **dos muros con una puerta central**. Te equipas en paz y cruzas la puerta para enfrentar a los enemigos. Los slimes nunca entran a la zona (salen si quedan dentro), esperan afuera si el jugador está a salvo y la rodean por la tangente; el spawner tampoco spawnea dentro.
 - **Panel de inventario a 2 columnas**: izquierda equipo + bloque de **Stats** (vida, maná, daño, crít, vel. lanzamiento/movimiento) y **Skills** (nivel + % de progreso); derecha la grilla 5×4. Refresca en vivo con `stats_changed`/`skills_changed` — se ve cómo el equipo y el entrenamiento suben los números.
 
 ## Próximos Pasos (Pendientes)
@@ -106,4 +106,4 @@ Inspirado en *Diablo* y *Borderlands*. Genera ítems procedurales con rarezas y 
 - Añadir navegación compleja con `NavigationRegion3D` (Navmesh) para los enemigos.
 - Comparación de ítems lado a lado y drag & drop en el inventario (v2 de la UI).
 
-> ✅ **Hecho recientemente**: giro a rol — selección de clase (Mago/Guerrero/Explorador) con stats propios, skills estilo Tibia que suben usando cada tipo de daño (+3%/nivel), zona segura con el cofre adentro, y panel con Stats y Skills visibles en vivo.
+> ✅ **Hecho recientemente**: sin regeneración pasiva de vida/maná (recursos limitados: pociones + maná por kill), y la base segura se movió al inicio del mapa — amurallada, con puerta al campo de batalla y el cofre adentro.

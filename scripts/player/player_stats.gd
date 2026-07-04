@@ -10,7 +10,7 @@ extends RefCounted
 var base_stats := {
 	&"max_health": 100.0,
 	&"max_mana": 100.0,
-	&"mana_regen": 8.0,        # por segundo
+	&"mana_regen": 8.0,        # maná recuperado POR KILL (no hay regen pasiva)
 	&"spell_damage": 10.0,
 	&"fire_damage": 0.0,
 	&"cold_damage": 0.0,

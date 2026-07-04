@@ -20,6 +20,10 @@ const VARIANTS := [
 ]
 
 var _timer: float = 1.0
+var _safe_zone: SafeZone
+
+func _ready() -> void:
+	_safe_zone = get_tree().get_first_node_in_group("safe_zone")
 
 func _physics_process(delta: float) -> void:
 	_timer -= delta
@@ -42,4 +46,9 @@ func _spawn() -> void:
 
 	var angle := randf() * TAU
 	var dist := randf_range(spawn_radius_min, spawn_radius_max)
-	slime.global_position = global_position + Vector3(cos(angle) * dist, 0.0, sin(angle) * dist)
+	var pos := global_position + Vector3(cos(angle) * dist, 0.0, sin(angle) * dist)
+	# Nunca spawnear dentro de la zona segura (la base es sagrada).
+	if _safe_zone and _safe_zone.contains(pos):
+		slime.queue_free()
+		return
+	slime.global_position = pos

@@ -71,7 +71,6 @@ func _ready() -> void:
 func _physics_process(delta: float) -> void:
 	_move(delta)
 	_aim_at_mouse()
-	_regen_mana(delta)
 	_update_abilities(delta)
 
 # --- Movimiento -----------------------------------------------------------
@@ -222,12 +221,13 @@ func consume_super_charge() -> bool:
 	return true
 
 # --- Recursos ---------------------------------------------------------------
+# Vida y maná NO se regeneran solos: son recursos limitados. Se recuperan con
+# pociones (vida solo de cofres) y con el maná por kill del stat mana_regen.
 
-func _regen_mana(delta: float) -> void:
-	var max_mana := stats.get_stat(&"max_mana")
-	if stats.mana < max_mana:
-		stats.mana = minf(max_mana, stats.mana + stats.get_stat(&"mana_regen") * delta)
-		mana_changed.emit(stats.mana, max_mana)
+## Recompensa por matar un enemigo: stamina del super + maná por kill.
+func on_enemy_killed() -> void:
+	add_super_charge(12.0)
+	restore_mana(stats.get_stat(&"mana_regen"))
 
 ## Cura instantánea (pociones). No supera el máximo.
 func heal(amount: float) -> void:

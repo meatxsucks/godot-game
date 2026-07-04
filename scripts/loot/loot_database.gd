@@ -100,7 +100,7 @@ func _build_affixes() -> void:
 		_affix(&"cdr", "Fluido", K.PREFIX, &"cooldown_reduction", "Reducción de enfriamiento", M.PERCENT, 3, 7, 0.1, 40, T.RARE, [], [&"utility"]),
 		# Recursos / defensa (sufijos)
 		_affix(&"max_mana", "del Mago", K.SUFFIX, &"max_mana", "Maná máximo", M.FLAT, 8, 25, 2.0, 90, T.COMMON, [], [&"resource"]),
-		_affix(&"mana_regen", "del Flujo", K.SUFFIX, &"mana_regen", "Regen. de maná", M.FLAT, 1, 4, 0.2, 60, T.UNCOMMON, [], [&"resource"]),
+		_affix(&"mana_regen", "del Flujo", K.SUFFIX, &"mana_regen", "Maná por kill", M.FLAT, 1, 4, 0.2, 60, T.UNCOMMON, [], [&"resource"]),
 		_affix(&"max_health", "del Titán", K.SUFFIX, &"max_health", "Vida máxima", M.FLAT, 15, 45, 3.0, 90, T.COMMON, [], [&"defense"]),
 		_affix(&"res_fire", "del Hogar", K.SUFFIX, &"res_fire", "Resist. al fuego", M.PERCENT, 5, 15, 0.3, 55, T.UNCOMMON, [], [&"defense", &"fire"]),
 		_affix(&"res_cold", "del Invierno", K.SUFFIX, &"res_cold", "Resist. al hielo", M.PERCENT, 5, 15, 0.3, 55, T.UNCOMMON, [], [&"defense", &"cold"]),
