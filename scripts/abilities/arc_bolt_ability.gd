@@ -13,6 +13,7 @@ func _init() -> void:
 	cooldown = 0.6
 	mana_cost = 6.0
 	hold_to_cast = true
+	element = &"lightning"
 
 func _cast(player) -> bool:
 	return _spawn_projectile(player, SCENE, &"lightning_damage", 0.4)

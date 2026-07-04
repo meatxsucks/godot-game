@@ -12,6 +12,7 @@ func _init() -> void:
 	color = Color(0.5, 0.85, 1.0)
 	cooldown = 5.0
 	mana_cost = 25.0
+	element = &"cold"
 
 func _cast(player) -> bool:
 	var result: Array = player.stats.roll_spell_damage(&"cold_damage", 1.0)

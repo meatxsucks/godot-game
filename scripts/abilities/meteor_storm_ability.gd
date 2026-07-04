@@ -13,6 +13,7 @@ func _init() -> void:
 	color = Color(1.0, 0.25, 0.15)
 	cooldown = 1.0
 	mana_cost = 0.0
+	element = &"fire"
 
 func _can_cast(player) -> bool:
 	return player.super_charge >= player.SUPER_MAX

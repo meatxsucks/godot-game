@@ -29,6 +29,9 @@ var base_stats := {
 ## slot (&"head", &"armor", &"weapon", &"offhand", &"ring", &"boots") -> LootItem
 var equipment := {}
 
+## Skills estilo Tibia: suben usando cada tipo de daño y potencian ese daño.
+var skills := SkillSet.new()
+
 var health: float = 0.0
 var mana: float = 0.0
 
@@ -36,6 +39,8 @@ var mana: float = 0.0
 var _cache := {}
 
 func _init() -> void:
+	# Overrides de la clase elegida (rol): el Guerrero arranca tanque, etc.
+	base_stats.merge(Game.selected_stats(), true)
 	recompute()
 	health = get_stat(&"max_health")
 	mana = get_stat(&"max_mana")
@@ -111,7 +116,8 @@ func get_stat(name: StringName) -> float:
 ## la Bola de Fuego, rayo para la Descarga, frío para la Nova...) y
 ## `multiplier` escala el golpe (proyectil spam más débil, super más fuerte).
 func roll_spell_damage(element: StringName = &"fire_damage", multiplier: float = 1.0) -> Array:
-	var dmg := (get_stat(&"spell_damage") + get_stat(element)) * multiplier
+	var dmg := (get_stat(&"spell_damage") + get_stat(element)) * multiplier \
+			* skills.damage_multiplier(element)
 	var is_crit := randf() * 100.0 < get_stat(&"crit_chance")
 	if is_crit:
 		dmg *= 1.0 + get_stat(&"crit_damage") / 100.0

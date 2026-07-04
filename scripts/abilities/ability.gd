@@ -16,6 +16,8 @@ var cooldown: float = 1.0
 var mana_cost: float = 0.0
 ## true = se puede mantener presionado para re-castear (proyectiles).
 var hold_to_cast: bool = false
+## Elemento que entrena esta habilidad (skill estilo Tibia). &"" = ninguno.
+var element: StringName = &""
 
 ## Descuento de cooldown generado por el último casteo (ej. legendario
 ## "Cascada Crítica"). El player lo consume al armar el timer del slot.

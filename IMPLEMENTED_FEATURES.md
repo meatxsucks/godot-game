@@ -88,11 +88,22 @@ Inspirado en *Diablo* y *Borderlands*. Genera ítems procedurales con rarezas y 
 - **Cofre accionable** (`Chest.tscn` + `scripts/world/chest.gd`, `StaticBody3D`): al acercarse muestra el prompt `[E] Abrir` (Label3D billboard); con **E** (acción `interact`) la tapa se abre con tween y el contenido **cae al suelo en anillo** alrededor (tween de derrame): **bastón, sombrero, zapatos y túnica** generados por tipo (`Loot.generate_random_item(level, type)`) + 2 pociones de vida. Un solo uso.
 - `Loot.generate_random_item()` ahora acepta un `type` opcional para restringir la base (cofres temáticos), y `Loot.make_potion(kind)` crea consumibles.
 
+## 11. Rol: Clases, Skills estilo Tibia y Zona Segura
+- **Autoload `Game`** (`scripts/core/game_state.gd`): `selected_class` (default `mage`) + `CLASSES` con 3 clases jugables:
+  - **Mago** — cañón de cristal: vida 80, maná 130, regen 10, daño 12, crít 6%. Kit de 5 poderes propio (el actual).
+  - **Guerrero** — tanque: vida 170, maná 60, resistencias +10%. *Kit propio pendiente (usa el del Mago).*
+  - **Explorador** — ágil: vida 110, crít 12%, daño crít 70%, move_speed +12%. *Kit propio pendiente.*
+- **Selección de clase** (`ClassSelect.tscn` + `class_select.gd`): pantalla entre el menú y la Arena con tarjetas construidas por código desde `Game.CLASSES` (nombre, descripción, stats, botón Elegir). `PlayerStats._init` hace merge de los stats de la clase sobre los base.
+- **Skills estilo Tibia** (`SkillSet`, `scripts/player/skill_set.gd`, vive en `PlayerStats.skills`): **Magia** (general), **Fuego**, **Rayo**, **Hielo**. Cada casteo da +2 XP al elemento del poder (`Ability.element`) y +1 a Magia; umbral `10 + nivel*8`. Bonus de daño: **+3%/nivel del elemento, +1%/nivel de Magia**, aplicado en `roll_spell_damage()` — entrenar fuego hace pegar más fuerte a la Bola de Fuego y los Meteoros, el rayo a la Descarga, el hielo a la Nova. Dos ejes de progresión: loot (stats) + uso (skills).
+- **Zona Segura** (`SafeZone.tscn` + `safe_zone.gd`, grupo `"safe_zone"`): disco cian en el spawn (radio 5) con el **cofre adentro**. Los slimes nunca entran (salen si quedan dentro), esperan afuera si el jugador está a salvo, y la rodean por la tangente si les queda en el camino. Ideal para equiparse y usar pociones con calma.
+- **Panel de inventario a 2 columnas**: izquierda equipo + bloque de **Stats** (vida, maná, daño, crít, vel. lanzamiento/movimiento) y **Skills** (nivel + % de progreso); derecha la grilla 5×4. Refresca en vivo con `stats_changed`/`skills_changed` — se ve cómo el equipo y el entrenamiento suben los números.
+
 ## Próximos Pasos (Pendientes)
+- **Poderes por clase**: kits propios de Guerrero (melee) y Explorador (distancia); hoy usan el del Mago.
 - Oleadas con escalado: subir `loot_level`, `max_alive` y dificultad del spawner con el tiempo/rondas.
 - Que los slimes ataquen al jugador (ahora el jugador tiene `take_damage`, pero nadie se lo aplica todavía) — con el dash ya hay herramienta para esquivar.
 - Enganchar los demás poderes legendarios (`fireball_chain`, `on_hit_frost_nova`, `mana_to_shield`) en la capa de combate.
 - Añadir navegación compleja con `NavigationRegion3D` (Navmesh) para los enemigos.
 - Comparación de ítems lado a lado y drag & drop en el inventario (v2 de la UI).
 
-> ✅ **Hecho recientemente**: pociones consumibles de un uso (vida solo de cofres, maná de enemigos), barras de vida flotantes en enemigos, variantes de slime (rápido/tanque) + spawner continuo, y cofre accionable con E que derrama bastón/sombrero/zapatos/túnica + pociones de vida.
+> ✅ **Hecho recientemente**: giro a rol — selección de clase (Mago/Guerrero/Explorador) con stats propios, skills estilo Tibia que suben usando cada tipo de daño (+3%/nivel), zona segura con el cofre adentro, y panel con Stats y Skills visibles en vivo.

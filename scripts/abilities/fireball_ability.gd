@@ -12,6 +12,7 @@ func _init() -> void:
 	cooldown = 2.0
 	mana_cost = 15.0
 	hold_to_cast = true
+	element = &"fire"
 
 func _cast(player) -> bool:
 	var result: Array = player.stats.roll_spell_damage(&"fire_damage", 1.0)

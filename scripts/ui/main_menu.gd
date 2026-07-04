@@ -13,7 +13,8 @@ func _ready() -> void:
 	btn_play.grab_focus()
 
 func _on_play_pressed() -> void:
-	SceneManager.change_scene("res://scenes/levels/Arena.tscn")
+	# Primero se elige clase (rol); la Arena se carga desde ahí.
+	SceneManager.change_scene("res://scenes/ui/ClassSelect.tscn")
 
 func _on_loot_pressed() -> void:
 	SceneManager.change_scene("res://scenes/LootDemo.tscn")

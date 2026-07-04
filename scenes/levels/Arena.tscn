@@ -1,4 +1,4 @@
-[gd_scene load_steps=10 format=3 uid="uid://darena1234567"]
+[gd_scene load_steps=11 format=3 uid="uid://darena1234567"]
 
 [ext_resource type="PackedScene" uid="uid://dplayer1234567" path="res://scenes/player/Player.tscn" id="1_player"]
 [ext_resource type="Script" path="res://scripts/levels/camera_rig.gd" id="2_camera"]
@@ -6,6 +6,7 @@
 [ext_resource type="PackedScene" uid="uid://chudingame001" path="res://scenes/ui/HUD.tscn" id="4_hud"]
 [ext_resource type="PackedScene" uid="uid://cchest0000001" path="res://scenes/world/Chest.tscn" id="5_chest"]
 [ext_resource type="Script" path="res://scripts/levels/enemy_spawner.gd" id="6_spawner"]
+[ext_resource type="PackedScene" uid="uid://csafezone0001" path="res://scenes/world/SafeZone.tscn" id="7_zone"]
 
 [sub_resource type="PlaneMesh" id="PlaneMesh_floor"]
 size = Vector2(40, 40)
@@ -40,6 +41,8 @@ surface_material_override/0 = SubResource("StandardMaterial3D_floor")
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Floor"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 0)
 shape = SubResource("BoxShape3D_floor")
+
+[node name="SafeZone" parent="." instance=ExtResource("7_zone")]
 
 [node name="Player" parent="." instance=ExtResource("1_player")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
@@ -82,6 +85,6 @@ size_scale = 0.75
 script = ExtResource("6_spawner")
 
 [node name="Chest" parent="." instance=ExtResource("5_chest")]
-transform = Transform3D(0.866025, 0, -0.5, 0, 1, 0, 0.5, 0, 0.866025, 6, 0, 4)
+transform = Transform3D(0.866025, 0, -0.5, 0, 1, 0, 0.5, 0, 0.866025, 3, 0, 2)
 
 [node name="HUD" parent="." instance=ExtResource("4_hud")]

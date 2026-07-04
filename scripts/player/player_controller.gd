@@ -49,6 +49,7 @@ signal mana_changed(current: float, maximum: float)
 signal item_equipped(item: LootItem, previous: LootItem)
 signal super_charge_changed(current: float, maximum: float)
 signal inventory_changed
+signal skills_changed
 
 @onready var visual: Node3D = $Visual
 @onready var wand: MeshInstance3D = $Visual/Wand
@@ -181,6 +182,11 @@ func _try_cast(slot: int) -> void:
 	if not ability.execute(self):
 		return
 	_emit_resource_signals()
+	# Entrenamiento estilo Tibia: cada casteo da XP a su elemento y a Magia.
+	if ability.element != &"":
+		stats.skills.add_xp(ability.element, 2.0)
+		stats.skills.add_xp(&"magic", 1.0)
+		skills_changed.emit()
 	cooldowns[slot] = maxf(0.0, effective_cooldown(ability.cooldown) - ability.consume_cooldown_refund())
 
 ## Cooldown real tras aplicar cast_speed y reducción de enfriamiento del loot.

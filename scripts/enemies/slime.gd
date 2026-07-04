@@ -18,10 +18,12 @@ extends CharacterBody3D
 var current_health: float
 var _health_bar: HealthBar3D
 var _material: StandardMaterial3D
+var _safe_zone: SafeZone
 
 func _ready() -> void:
 	add_to_group("enemies")
 	current_health = max_health
+	_safe_zone = get_tree().get_first_node_in_group("safe_zone")
 
 	# Material propio de la instancia, tintado por variante.
 	var mesh: MeshInstance3D = $Visual/Mesh
@@ -44,24 +46,16 @@ func _ready() -> void:
 	_health_bar.position.y = 1.25 * size_scale
 
 func _physics_process(delta: float) -> void:
-	# Búsqueda simple del jugador
-	var player = get_tree().get_first_node_in_group("player")
+	var direction := _pick_direction(delta)
 
-	if player:
-		# Mover hacia el jugador en el plano XZ
-		var direction = global_position.direction_to(player.global_position)
-		direction.y = 0
-		direction = direction.normalized()
-
+	if direction != Vector3.ZERO:
 		velocity.x = direction.x * speed
 		velocity.z = direction.z * speed
-
-		# Girar suavemente hacia el jugador
-		if direction != Vector3.ZERO:
-			var target_look = global_position + direction
-			# Evitar errores de look_at cuando target == global_position
-			if global_position.distance_squared_to(target_look) > 0.01:
-				look_at(target_look, Vector3.UP)
+		# Girar suavemente hacia donde se mueve
+		var target_look := global_position + direction
+		# Evitar errores de look_at cuando target == global_position
+		if global_position.distance_squared_to(target_look) > 0.01:
+			look_at(target_look, Vector3.UP)
 	else:
 		velocity.x = move_toward(velocity.x, 0, speed)
 		velocity.z = move_toward(velocity.z, 0, speed)
@@ -71,6 +65,36 @@ func _physics_process(delta: float) -> void:
 		velocity.y -= 9.8 * delta
 
 	move_and_slide()
+
+## Decide hacia dónde moverse respetando la zona segura: si el slime está
+## dentro sale por el camino más corto; si el jugador está a salvo, espera
+## afuera; si la zona queda en el camino, la rodea por la tangente.
+func _pick_direction(delta: float) -> Vector3:
+	# Nunca dentro de la zona segura: salir.
+	if _safe_zone and _safe_zone.contains(global_position):
+		var out := global_position - _safe_zone.global_position
+		out.y = 0
+		return out.normalized() if out.length_squared() > 0.001 else Vector3.RIGHT
+
+	var player = get_tree().get_first_node_in_group("player")
+	if player == null:
+		return Vector3.ZERO
+	# Jugador a salvo: esperar afuera de la zona.
+	if _safe_zone and _safe_zone.contains(player.global_position):
+		return Vector3.ZERO
+
+	var direction = global_position.direction_to(player.global_position)
+	direction.y = 0
+	direction = direction.normalized()
+
+	# Si el próximo paso entraría a la zona, rodearla por la tangente.
+	if _safe_zone and _safe_zone.contains(global_position + direction * speed * delta):
+		var to_center := _safe_zone.global_position - global_position
+		to_center.y = 0
+		var tangent := Vector3(-to_center.z, 0, to_center.x).normalized()
+		direction = tangent if tangent.dot(direction) >= 0.0 else -tangent
+
+	return direction
 
 func take_damage(amount: float) -> void:
 	current_health -= amount
