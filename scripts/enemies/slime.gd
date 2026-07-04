@@ -10,22 +10,40 @@ extends CharacterBody3D
 ## Probabilidad [0..1] de botar además una poción de maná (vida NUNCA dropea
 ## de enemigos: solo sale de cofres).
 @export var mana_drop_chance: float = 0.35
-## Color del cuerpo (las variantes del spawner lo cambian).
+## Color del cuerpo (esfera fallback + burst de muerte).
 @export var body_color: Color = Color(0.2, 0.8, 0.2)
-## Escala de la variante (rápido chico, tanque grande). Ajusta visual y colisión.
+## Escala de la variante. Ajusta visual y colisión.
 @export var size_scale: float = 1.0
-## Daño por contacto al jugador y cadencia entre golpes.
+## Daño por golpe (contacto o proyectil) y cadencia.
 @export var attack_damage: float = 8.0
 @export var attack_interval: float = 1.0
+## XP que entrega al morir (el spawner la escala por oleada).
+@export var xp_reward: float = 10.0
+
+## Modelo KayKit opcional (lo setea el spawner por variante) + sus anims
+## (keys: idle/run/attack/hit/death/spawn). Sin modelo = esfera tintada.
+@export var model_path: String = ""
+@export var anims: Dictionary = {}
+
+## Enemigo a distancia: mantiene el rango y dispara proyectiles.
+@export var is_ranged: bool = false
+@export var preferred_range: float = 8.0
+@export var ranged_interval: float = 2.5
+@export var projectile_scene: PackedScene
 
 var current_health: float
 var _health_bar: HealthBar3D
 var _material: StandardMaterial3D
 var _safe_zone: SafeZone
 var _attack_timer: float = 0.0
+var _ranged_timer: float = 1.5
 var _repath_timer: float = 0.0
 var _slow_mult: float = 1.0
 var _slow_timer: float = 0.0
+var _dying: bool = false
+
+var _model_anim: AnimationPlayer = null
+var _anim_lock: float = 0.0
 
 @onready var _nav_agent: NavigationAgent3D = $NavAgent
 
@@ -34,7 +52,7 @@ func _ready() -> void:
 	current_health = max_health
 	_safe_zone = get_tree().get_first_node_in_group("safe_zone")
 
-	# Material propio de la instancia, tintado por variante.
+	# Material propio de la instancia (esfera fallback, tintada por variante).
 	var mesh: MeshInstance3D = $Visual/Mesh
 	_material = mesh.mesh.surface_get_material(0).duplicate()
 	_material.albedo_color = body_color
@@ -49,10 +67,28 @@ func _ready() -> void:
 		collision.position.y = collision.shape.radius
 		$Visual.position.y = collision.shape.radius
 
-	# Barra de vida flotante para que se vea cómo van perdiendo.
+	_setup_model()
+
+	# Barra de vida flotante (más alta si hay modelo humanoide).
 	_health_bar = HealthBar3D.new()
 	add_child(_health_bar)
-	_health_bar.position.y = 1.25 * size_scale
+	_health_bar.position.y = (2.2 if _model_anim else 1.25) * size_scale
+
+## Modelo KayKit animado (esqueletos). Fallback total a la esfera tintada.
+func _setup_model() -> void:
+	if model_path == "" or not ResourceLoader.exists(model_path):
+		return
+	var scene = load(model_path)
+	if scene == null:
+		return
+	var model: Node3D = scene.instantiate()
+	$Visual.add_child(model)
+	model.rotation.y = PI # KayKit mira +Z; look_at apunta -Z
+	_model_anim = model.find_child("AnimationPlayer", true, false)
+	$Visual/Mesh.visible = false
+	if _model_anim and anims.has("spawn"):
+		_model_anim.play(anims["spawn"])
+		_anim_lock = minf(_model_anim.current_animation_length, 1.0)
 
 ## Ralentización de hielo. factor 0.65 = 35% más lento durante `duration`.
 func apply_slow(factor: float, duration: float) -> void:
@@ -60,6 +96,8 @@ func apply_slow(factor: float, duration: float) -> void:
 	_slow_timer = maxf(_slow_timer, duration)
 
 func _physics_process(delta: float) -> void:
+	if _dying:
+		return
 	if _slow_timer > 0.0:
 		_slow_timer -= delta
 		if _slow_timer <= 0.0:
@@ -78,6 +116,14 @@ func _physics_process(delta: float) -> void:
 	else:
 		velocity.x = move_toward(velocity.x, 0, speed)
 		velocity.z = move_toward(velocity.z, 0, speed)
+		# Los tiradores encaran al jugador aunque estén quietos.
+		if is_ranged:
+			var player = get_tree().get_first_node_in_group("player")
+			if player:
+				var look_target: Vector3 = player.global_position
+				look_target.y = global_position.y
+				if global_position.distance_squared_to(look_target) > 0.01:
+					look_at(look_target, Vector3.UP)
 
 	# Gravedad
 	if not is_on_floor():
@@ -86,10 +132,35 @@ func _physics_process(delta: float) -> void:
 	move_and_slide()
 
 	_attack_timer -= delta
-	_try_attack()
+	if is_ranged:
+		_ranged_timer -= delta
+		_try_shoot()
+	else:
+		_try_attack()
 
-## Golpe por contacto: si el jugador está al alcance, le pega y espera
-## `attack_interval` antes del próximo golpe.
+	_update_animation(delta, direction)
+
+# --- Animación (con modelo) --------------------------------------------------
+
+func _update_animation(delta: float, direction: Vector3) -> void:
+	if _model_anim == null:
+		return
+	if _anim_lock > 0.0:
+		_anim_lock -= delta
+		return
+	var target: String = anims.get("run", "") if direction != Vector3.ZERO else anims.get("idle", "")
+	if target != "" and _model_anim.current_animation != target:
+		_model_anim.play(target, 0.15)
+
+func _play_locked(key: String, max_lock: float = 0.6) -> void:
+	if _model_anim == null or not anims.has(key):
+		return
+	_model_anim.play(anims[key], 0.1)
+	_anim_lock = minf(_model_anim.current_animation_length, max_lock)
+
+# --- Ataques ------------------------------------------------------------------
+
+## Golpe por contacto (melee): si el jugador está al alcance, le pega.
 func _try_attack() -> void:
 	if _attack_timer > 0.0:
 		return
@@ -102,10 +173,39 @@ func _try_attack() -> void:
 	if to_player.length_squared() <= reach * reach:
 		player.take_damage(attack_damage)
 		_attack_timer = attack_interval
+		_play_locked("attack")
 
-## Decide hacia dónde moverse respetando la zona segura: si el slime está
-## dentro sale por el camino más corto; si el jugador está a salvo, espera
-## afuera; si la zona queda en el camino, la rodea por la tangente.
+## Disparo a distancia (arquero/mago esqueleto).
+func _try_shoot() -> void:
+	if _ranged_timer > 0.0 or projectile_scene == null:
+		return
+	var player = get_tree().get_first_node_in_group("player")
+	if player == null:
+		return
+	# No dispara a jugadores a salvo en la base.
+	if _safe_zone and _safe_zone.contains(player.global_position):
+		return
+	var to_player: Vector3 = player.global_position - global_position
+	to_player.y = 0
+	if to_player.length() > preferred_range + 4.0:
+		return # todavía acercándose
+
+	_ranged_timer = ranged_interval
+	var bolt = projectile_scene.instantiate()
+	get_parent().add_child(bolt)
+	bolt.global_position = global_position + Vector3(0, 0.9, 0)
+	var aim: Vector3 = player.global_position + Vector3(0, 0.5, 0) - bolt.global_position
+	if aim.length_squared() > 0.001:
+		bolt.global_transform.basis = Basis.looking_at(aim.normalized(), Vector3.UP)
+	if bolt.has_method("setup"):
+		bolt.setup(attack_damage, self)
+	_play_locked("attack")
+
+# --- Navegación ----------------------------------------------------------------
+
+## Decide hacia dónde moverse respetando la zona segura y (si es tirador) su
+## rango preferido: si el slime está dentro de la zona sale; si el jugador
+## está a salvo, espera afuera; si la zona queda en el camino, la rodea.
 func _pick_direction(delta: float) -> Vector3:
 	# Nunca dentro de la zona segura: salir.
 	if _safe_zone and _safe_zone.contains(global_position):
@@ -120,9 +220,18 @@ func _pick_direction(delta: float) -> Vector3:
 	if _safe_zone and _safe_zone.contains(player.global_position):
 		return Vector3.ZERO
 
-	var direction = global_position.direction_to(player.global_position)
-	direction.y = 0
-	direction = direction.normalized()
+	var flat_to_player: Vector3 = player.global_position - global_position
+	flat_to_player.y = 0
+
+	# Tiradores: mantener el rango (retroceden si el jugador se acerca).
+	if is_ranged:
+		var dist := flat_to_player.length()
+		if dist < preferred_range - 2.0:
+			return -flat_to_player.normalized()
+		if dist <= preferred_range + 2.0:
+			return Vector3.ZERO
+
+	var direction := flat_to_player.normalized()
 
 	# Navegación con navmesh: rodea muros hacia la puerta (repath throttled).
 	# Si el path aún no existe (bake en curso), queda el beeline directo.
@@ -145,24 +254,37 @@ func _pick_direction(delta: float) -> Vector3:
 
 	return direction
 
-func take_damage(amount: float) -> void:
+# --- Daño y muerte --------------------------------------------------------------
+
+func take_damage(amount: float, is_crit: bool = false) -> void:
+	if _dying:
+		return
 	current_health -= amount
 	_health_bar.set_ratio(current_health / max_health)
+	FX.damage_number(global_position, amount, is_crit)
 
-	# Parpadeo blanco al recibir daño; vuelve al color de la variante
-	# (no al color leído, que podría ser el blanco de un flash anterior).
-	_material.albedo_color = Color.WHITE
-	var tween = create_tween()
-	tween.tween_property(_material, "albedo_color", body_color, 0.2)
+	if _model_anim:
+		_play_locked("hit", 0.3)
+	else:
+		# Parpadeo blanco (fallback esfera); vuelve al color de la variante.
+		_material.albedo_color = Color.WHITE
+		var tween = create_tween()
+		tween.tween_property(_material, "albedo_color", body_color, 0.2)
 
 	if current_health <= 0:
 		die()
 
 func die() -> void:
-	# Recompensa del kill: stamina del super + maná por kill.
+	if _dying:
+		return
+	_dying = true
+	# Salir del grupo YA: la oleada cuenta vivos por este grupo.
+	remove_from_group("enemies")
+
+	# Recompensa del kill: stamina del super + maná por kill + XP.
 	var player = get_tree().get_first_node_in_group("player")
 	if player and player.has_method("on_enemy_killed"):
-		player.on_enemy_killed()
+		player.on_enemy_killed(xp_reward)
 
 	if loot_drop_scene and randf() <= drop_chance:
 		_spawn_drop(Loot.generate_random_item(loot_level), Vector3.ZERO)
@@ -171,7 +293,16 @@ func die() -> void:
 	if loot_drop_scene and randf() <= mana_drop_chance:
 		_spawn_drop(Loot.make_potion(&"potion_mana"), Vector3(0.7, 0, 0.2))
 
-	queue_free()
+	FX.burst(global_position + Vector3(0, 0.5, 0), body_color, 16)
+
+	if _model_anim and anims.has("death"):
+		# Cadáver: animación de muerte, sin colisión ni barra, y liberar.
+		$CollisionShape3D.set_deferred("disabled", true)
+		_health_bar.visible = false
+		_model_anim.play(anims["death"], 0.1)
+		get_tree().create_timer(1.2).timeout.connect(queue_free)
+	else:
+		queue_free()
 
 func _spawn_drop(item: LootItem, offset: Vector3) -> void:
 	if item == null:

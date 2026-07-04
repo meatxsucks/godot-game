@@ -34,6 +34,10 @@ var equipment := {}
 ## Skills estilo Tibia: suben usando cada tipo de daño y potencian ese daño.
 var skills := SkillSet.new()
 
+## Experiencia y nivel del personaje: XP por kill, stats base suben al nivel.
+var level: int = 1
+var xp: float = 0.0
+
 var health: float = 0.0
 var mana: float = 0.0
 
@@ -88,6 +92,33 @@ func unequip(slot: StringName) -> LootItem:
 func _clamp_resources() -> void:
 	health = minf(health, get_stat(&"max_health"))
 	mana = minf(mana, get_stat(&"max_mana"))
+
+# --- Experiencia ------------------------------------------------------------
+
+## XP necesaria para pasar del nivel actual al siguiente.
+func xp_needed() -> float:
+	return 40.0 + level * 30.0
+
+## Suma XP. Devuelve cuántos niveles subió (0 = ninguno).
+func add_xp(amount: float) -> int:
+	xp += amount
+	var ups := 0
+	while xp >= xp_needed():
+		xp -= xp_needed()
+		level += 1
+		ups += 1
+		_apply_level_up()
+	return ups
+
+## Bonos por nivel (todas las clases se benefician) + cura del 25% del máximo.
+func _apply_level_up() -> void:
+	base_stats[&"max_health"] = float(base_stats[&"max_health"]) + 10.0
+	base_stats[&"max_mana"] = float(base_stats[&"max_mana"]) + 5.0
+	base_stats[&"spell_damage"] = float(base_stats[&"spell_damage"]) + 1.0
+	base_stats[&"melee_damage"] = float(base_stats[&"melee_damage"]) + 1.0
+	base_stats[&"ranged_damage"] = float(base_stats[&"ranged_damage"]) + 1.0
+	recompute()
+	health = minf(get_stat(&"max_health"), health + get_stat(&"max_health") * 0.25)
 
 ## Recalcula el cache combinando base + planos + porcentajes de cada ítem.
 func recompute() -> void:

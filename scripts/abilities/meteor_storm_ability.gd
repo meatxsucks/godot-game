@@ -22,6 +22,7 @@ func _can_cast(player) -> bool:
 func _cast(player) -> bool:
 	if not player.consume_super_charge():
 		return false
+	FX.shake(0.4)
 	var result: Array = player.stats.roll_spell_damage(&"fire_damage", 1.5)
 	var storm = SCENE.instantiate()
 	player.get_parent().add_child(storm)

@@ -30,11 +30,28 @@ const PORTAL_SCENE := preload("res://scenes/world/SpawnPortal.tscn")
 ## (después el modo sigue endless).
 @export var boss_wave: int = 5
 
-## Variantes base (escalan por oleada): vida, velocidad, escala, daño, color.
+## Animaciones KayKit Skeletons por rol.
+const ANIMS_MELEE := {"idle": "Idle", "run": "Running_A", "attack": "Unarmed_Melee_Attack_Punch_A", "hit": "Hit_A", "death": "Death_A", "spawn": "Spawn_Ground"}
+const ANIMS_WARRIOR := {"idle": "Idle", "run": "Running_A", "attack": "2H_Melee_Attack_Slice", "hit": "Hit_A", "death": "Death_A", "spawn": "Spawn_Ground"}
+const ANIMS_CASTER := {"idle": "Idle", "run": "Running_A", "attack": "Spellcast_Shoot", "hit": "Hit_A", "death": "Death_A", "spawn": "Spawn_Ground"}
+
+const ENEMY_ARROW := preload("res://scenes/magic/EnemyArrow.tscn")
+
+## Variantes base (escalan por oleada): vida, velocidad, escala, daño, XP,
+## modelo KayKit + anims, y si es tirador a distancia.
 const VARIANTS := {
-	&"normal": {"hp": 30.0, "speed": 3.0, "scale": 1.0, "dmg": 8.0, "color": Color(0.2, 0.8, 0.2)},
-	&"fast": {"hp": 16.0, "speed": 4.6, "scale": 0.75, "dmg": 5.0, "color": Color(0.4, 0.9, 0.75)},
-	&"tank": {"hp": 75.0, "speed": 1.9, "scale": 1.5, "dmg": 15.0, "color": Color(0.1, 0.45, 0.15)},
+	&"normal": {"hp": 30.0, "speed": 3.0, "scale": 1.0, "dmg": 8.0, "xp": 10.0,
+		"color": Color(0.2, 0.8, 0.2), "model": "res://assets/kaykit/Skeleton_Minion.glb",
+		"anims": ANIMS_MELEE, "ranged": false},
+	&"fast": {"hp": 16.0, "speed": 4.6, "scale": 0.85, "dmg": 5.0, "xp": 8.0,
+		"color": Color(0.4, 0.9, 0.75), "model": "res://assets/kaykit/Skeleton_Rogue.glb",
+		"anims": ANIMS_MELEE, "ranged": false},
+	&"tank": {"hp": 75.0, "speed": 1.9, "scale": 1.25, "dmg": 15.0, "xp": 25.0,
+		"color": Color(0.1, 0.45, 0.15), "model": "res://assets/kaykit/Skeleton_Warrior.glb",
+		"anims": ANIMS_WARRIOR, "ranged": false},
+	&"archer": {"hp": 20.0, "speed": 2.6, "scale": 1.0, "dmg": 10.0, "xp": 15.0,
+		"color": Color(0.6, 0.25, 0.8), "model": "res://assets/kaykit/Skeleton_Mage.glb",
+		"anims": ANIMS_CASTER, "ranged": true},
 }
 
 enum State { INTERMISSION, SPAWNING, FIGHTING }
@@ -126,19 +143,23 @@ func _spawn_boss() -> void:
 func _loot_level() -> int:
 	return 1 + int(wave / 2.0)
 
-## Mezcla de variantes por progresión: temprano casi todo normal, desde la
-## oleada 3 entran más rápidos y desde la 5 más tanques.
+## Mezcla de variantes por progresión: temprano casi todo normal; arqueros
+## desde la oleada 2, más rápidos desde la 3 y tanques desde la 4.
 func _pick_variant() -> Dictionary:
+	var archer_weight := maxi(0, wave - 1) * 18
 	var fast_weight := 10 + maxi(0, wave - 2) * 20
-	var tank_weight := maxi(0, wave - 4) * 15
-	var total := 100 + fast_weight + tank_weight
+	var tank_weight := maxi(0, wave - 3) * 15
+	var total := 100 + archer_weight + fast_weight + tank_weight
 	var roll := randi() % total
-	var key: StringName = &"normal"
-	if roll >= 100 and roll < 100 + fast_weight:
-		key = &"fast"
-	elif roll >= 100 + fast_weight:
-		key = &"tank"
-	return VARIANTS[key]
+	if roll < 100:
+		return VARIANTS[&"normal"]
+	roll -= 100
+	if roll < archer_weight:
+		return VARIANTS[&"archer"]
+	roll -= archer_weight
+	if roll < fast_weight:
+		return VARIANTS[&"fast"]
+	return VARIANTS[&"tank"]
 
 func _spawn_one() -> void:
 	var variant := _pick_variant()
@@ -163,6 +184,12 @@ func _spawn_one() -> void:
 	slime.attack_damage = variant["dmg"] * dmg_mult
 	slime.body_color = variant["color"]
 	slime.loot_level = _loot_level()
+	slime.xp_reward = variant["xp"] * (1.0 + 0.1 * (wave - 1))
+	slime.model_path = variant["model"]
+	slime.anims = variant["anims"]
+	slime.is_ranged = variant["ranged"]
+	if variant["ranged"]:
+		slime.projectile_scene = ENEMY_ARROW
 	add_child(slime)
 	slime.global_position = pos
 	_to_spawn -= 1

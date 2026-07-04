@@ -32,7 +32,14 @@ func _ready() -> void:
 	assert(skills.level(&"melee") > 1, "melee sube de nivel")
 	assert(skills.damage_multiplier(&"melee_damage") > 1.0, "el skill melee potencia el daño")
 
+	# Experiencia: subir de nivel aumenta stats base.
 	Game.selected_class = &"mage"
+	var xp_stats := PlayerStats.new()
+	var health_before := xp_stats.get_stat(&"max_health")
+	var level_ups := xp_stats.add_xp(1000.0)
+	assert(level_ups >= 2, "1000 XP sube varios niveles")
+	assert(xp_stats.get_stat(&"max_health") > health_before, "el nivel sube la vida")
+	assert(xp_stats.level == 1 + level_ups, "nivel consistente")
 
 	# El Boss se instancia sin errores (hereda del slime; corona en _ready).
 	var boss = load("res://scenes/enemies/Boss.tscn").instantiate()

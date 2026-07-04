@@ -58,6 +58,8 @@ func _telegraph_slam() -> void:
 	var tween := disc.create_tween()
 	tween.tween_property(mat, "albedo_color:a", 0.65, 1.0)
 	tween.tween_callback(func() -> void:
+		FX.burst(center + Vector3(0, 0.3, 0), Color(1.0, 0.25, 0.1), 20, 0.1)
+		FX.shake(0.5)
 		var player = tree.get_first_node_in_group("player")
 		if player and player.has_method("take_damage"):
 			var delta: Vector3 = player.global_position - center
@@ -106,5 +108,6 @@ func die() -> void:
 
 	var player = get_tree().get_first_node_in_group("player")
 	if player and player.has_method("on_enemy_killed"):
-		player.on_enemy_killed()
+		player.on_enemy_killed(xp_reward)
+	FX.burst(global_position + Vector3(0, 1, 0), Color(1.0, 0.85, 0.2), 30, 0.12)
 	queue_free()

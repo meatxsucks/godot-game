@@ -9,13 +9,15 @@ extends Node3D
 
 var damage: float = 10.0
 var source: Node = null
+var is_crit: bool = false
 
 var _did_hit := false
 
 ## Configura el tajo con el daño calculado por el lanzador.
-func setup(p_damage: float, p_source: Node = null) -> void:
+func setup(p_damage: float, p_source: Node = null, p_crit: bool = false) -> void:
 	damage = p_damage
 	source = p_source
+	is_crit = p_crit
 
 func _ready() -> void:
 	# Hoja bajo un pivote que barre el arco y se desvanece al terminar.
@@ -62,6 +64,6 @@ func _physics_process(_delta: float) -> void:
 		if body is Node3D and body.is_in_group("player"):
 			continue
 		if body.has_method("take_damage"):
-			body.take_damage(damage)
+			body.take_damage(damage, is_crit)
 			if source and source.has_method("add_super_charge"):
 				source.add_super_charge(4.0)

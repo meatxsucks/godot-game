@@ -7,6 +7,8 @@ extends CanvasLayer
 @onready var health_label: Label = %HealthLabel
 @onready var mana_bar: ProgressBar = %ManaBar
 @onready var mana_label: Label = %ManaLabel
+@onready var xp_bar: ProgressBar = %XPBar
+@onready var level_label: Label = %LevelLabel
 @onready var ability_bar: HBoxContainer = %AbilityBar
 @onready var inventory_panel: PanelContainer = %InventoryPanel
 @onready var game_over: CenterContainer = %GameOver
@@ -20,6 +22,8 @@ extends CanvasLayer
 var player: Node = null
 var wave_manager: Node = null
 var _slots: Array[AbilitySlot] = []
+## Mientras corre, el label de oleada muestra "¡NIVEL X!" sin ser pisado.
+var _level_flash: float = 0.0
 
 func _ready() -> void:
 	wave_manager = get_tree().get_first_node_in_group("wave_manager")
@@ -38,6 +42,8 @@ func _ready() -> void:
 	player.health_changed.connect(_on_health_changed)
 	player.mana_changed.connect(_on_mana_changed)
 	player.super_charge_changed.connect(_on_super_changed)
+	player.xp_changed.connect(_on_xp_changed)
+	player.leveled_up.connect(_on_leveled_up)
 	player.died.connect(_on_player_died)
 	btn_retry.pressed.connect(_on_retry_pressed)
 	btn_menu.pressed.connect(_on_menu_pressed)
@@ -46,6 +52,7 @@ func _ready() -> void:
 	_on_health_changed(player.stats.health, player.stats.get_stat(&"max_health"))
 	_on_mana_changed(player.stats.mana, player.stats.get_stat(&"max_mana"))
 	_on_super_changed(player.super_charge, player.SUPER_MAX)
+	_on_xp_changed(player.stats.xp, player.stats.xp_needed(), player.stats.level)
 
 func _input(event: InputEvent) -> void:
 	if event.is_action_pressed("toggle_inventory"):
@@ -71,9 +78,11 @@ func _build_slots() -> void:
 		ability_bar.add_child(slot)
 		_slots.append(slot)
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
+	if _level_flash > 0.0:
+		_level_flash -= delta
 	# Durante la oleada, mostrar cuántos enemigos quedan (vivos + por venir).
-	if wave_manager and wave_manager.current_wave() > 0:
+	elif wave_manager and wave_manager.current_wave() > 0:
 		var left: int = wave_manager.enemies_left()
 		if left > 0:
 			wave_label.text = "Oleada %d — quedan %d" % [wave_manager.current_wave(), left]
@@ -101,6 +110,15 @@ func _on_super_changed(current: float, maximum: float) -> void:
 	for slot in _slots:
 		if slot.charge_ratio >= 0.0:
 			slot.charge_ratio = current / maximum
+
+func _on_xp_changed(current: float, needed: float, level: int) -> void:
+	xp_bar.max_value = needed
+	xp_bar.value = current
+	level_label.text = "Nv %d" % level
+
+func _on_leveled_up(new_level: int) -> void:
+	wave_label.text = "¡NIVEL %d!" % new_level
+	_level_flash = 1.4
 
 # --- Oleadas -------------------------------------------------------------------
 

@@ -48,6 +48,7 @@ var _equip_slots := {} # slot StringName -> ItemSlotUI
 var _inv_slots: Array[ItemSlotUI] = []
 var _stat_labels := {} # stat StringName -> Label
 var _skill_labels := {} # skill StringName -> Label
+var _level_label: Label = null
 
 ## Conecta el panel al player y construye las casillas. Lo llama el HUD.
 func setup(p_player: Node) -> void:
@@ -87,6 +88,7 @@ func _build() -> void:
 		inv_grid.add_child(slot)
 		_inv_slots.append(slot)
 
+	_level_label = _make_line(stats_box)
 	for row in STAT_ROWS:
 		_stat_labels[row[0]] = _make_line(stats_box)
 	for skill in SkillSet.SKILLS:
@@ -108,7 +110,8 @@ func refresh() -> void:
 		_inv_slots[i].set_item(item)
 	inv_counter.text = "Inventario %d/%d" % [player.inventory.size(), player.INVENTORY_SIZE]
 
-	# Stats efectivos (base de la clase + equipo) y skills estilo Tibia.
+	# Stats efectivos (base de la clase + equipo + niveles) y skills.
+	_level_label.text = "Nivel: %d  (XP %d/%d)" % [player.stats.level, roundi(player.stats.xp), roundi(player.stats.xp_needed())]
 	for row in STAT_ROWS:
 		_stat_labels[row[0]].text = "%s: %d" % [row[1], roundi(player.stats.get_stat(row[0]))]
 	for skill in SkillSet.SKILLS:

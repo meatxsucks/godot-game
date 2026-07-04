@@ -21,4 +21,5 @@ func _can_cast(player) -> bool:
 func _cast(player) -> bool:
 	if not player.consume_super_charge():
 		return false
+	FX.shake(0.4)
 	return _spawn_nova(player, SCENE, &"melee_damage", 2.0)

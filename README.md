@@ -48,6 +48,9 @@ ARPG isométrico *wave-based* hecho en **Godot 4.4** (Forward+). Mezcla el comba
 - Las **armas a dos manos** (ej. Bastón de guerra) ocupan también la mano del escudo.
 - El equipo sube tus stats **en vivo** (visible en el panel con I/Tab).
 
+### Experiencia
+- Cada kill da **XP** (barra púrpura bajo el maná). Subir de **nivel** aumenta tus stats base (+vida, +maná, +daño) y te **cura un 25%** — el "¡NIVEL X!" en pantalla puede salvarte una oleada.
+
 ### Skills (entrenan con el uso, estilo Tibia)
 - **Magia** (general), **Fuego**, **Rayo**, **Hielo**, **Cuerpo a cuerpo** y **Distancia**: cada casteo da XP al skill del poder usado.
 - Cada nivel = **+3% de daño de ese tipo** (+1% por nivel de Magia). El Mago entrena elementos, el Guerrero cuerpo a cuerpo, el Explorador distancia.
@@ -57,7 +60,7 @@ ARPG isométrico *wave-based* hecho en **Godot 4.4** (Forward+). Mezcla el comba
 - Cada oleada emerge de **portales púrpura** ubicados proceduralmente por el mapa, visibles **durante el descanso**: sabes de dónde vendrá la ronda y puedes posicionarte (o embocarles una Lluvia de Flechas al salir).
 - Empiezas en una **base segura amurallada** (zona cian) al borde sur: los enemigos no pueden entrar, el **cofre** con equipo inicial y pociones de vida está adentro. Cruza la **puerta** para pelear; retrocede a la base si te ves apretado.
 - **Oleadas**: rondas anunciadas con **10s de descanso** entre medio (vuelve a la base, toma pociones, compara tu loot). Cada oleada trae más enemigos, con más vida y daño, y **botín de mayor nivel**. Los **cofres se reabastecen cada 3 oleadas** — tu única fuente de vida si aguantas.
-- **Enemigos**: slimes en 3 variantes — normal (8 dmg), rápido (5 dmg, veloz) y tanque (15 dmg, 75 HP); las rondas avanzadas traen más rápidos y tanques. Pegan por contacto y navegan con navmesh (rodean los muros hasta la puerta).
+- **Enemigos**: **esqueletos KayKit animados** en 4 variantes — esbirro (8 dmg), pícaro veloz (5 dmg), guerrero tanque (15 dmg, 75 HP) y el **mago esqueleto a distancia** que mantiene el rango y te dispara proyectiles (¡esquívalos con el dash!). Emergen del suelo al spawnear, navegan con navmesh y las rondas avanzadas traen mezclas más duras.
 - **Boss final**: tras 4 oleadas, en la **oleada 5** llega el **Rey Slime** — 600 HP, corona dorada, golpe sísmico telegrafiado (¡sal del círculo rojo!) e invocación de secuaces. Derrotarlo = **¡NIVEL SUPERADO!** con **legendario garantizado**; puedes seguir en modo endless.
 - **Minimapa con niebla de guerra** (abajo a la derecha): el mapa se va **desbloqueando a medida que exploras**; muestra la base, cofres, enemigos cercanos y los portales de la próxima oleada.
 - **Muerte**: a 0 de vida → Game Over (Reintentar con la misma clase, o volver al Menú).
@@ -70,6 +73,7 @@ ARPG isométrico *wave-based* hecho en **Godot 4.4** (Forward+). Mezcla el comba
 scripts/
 ├── core/
 │   ├── game_state.gd        # Autoload "Game": clase elegida, stats/kit/modelo por clase
+│   ├── fx.gd                # Autoload "FX": números de daño, partículas, screen shake
 │   └── scene_manager.gd     # Autoload "SceneManager": transiciones con fade
 ├── player/
 │   ├── player_controller.gd # CharacterBody3D: movimiento twin-stick, dash (i-frames),
@@ -142,7 +146,7 @@ scripts/
 | Asset | Escena | Placeholder actual | Qué RESPETAR al reemplazar |
 |-------|--------|--------------------|-----------------------------|
 | **Jugador (3 clases)** | `scenes/player/Player.tscn` | ✅ **Ya usa KayKit Adventurers** (CC0): Mage/Knight/Rogue animados (`assets/kaykit/`, mapeo en `game_state.gd → CLASSES.model/anims`) | El modelo se instancia bajo `Visual` en runtime (rotado 180°: KayKit mira +Z). `Visual/Wand` = **punto de spawn de proyectiles** (invisible). **Paper-doll**: los accesorios integrados del GLB (armas/escudos/sombreros) los gestiona `equipment_visuals.gd` (mapa `VISUALS`: clase → ítem → mesh) — si agregas un modelo con accesorios, respeta ese mapa. |
-| **Slime** (enemigo) | `scenes/enemies/Slime.tscn` | Esfera verde | La ruta `Visual/Mesh` (el script tinta su material por variante y lo flashea en blanco al recibir daño). El nodo raíz escala `Visual` según la variante (`size_scale`). |
+| **Enemigos** | `scenes/enemies/Slime.tscn` | ✅ **Esqueletos KayKit** por variante (Minion/Rogue/Warrior/Mage, mapeados en `enemy_spawner.gd → VARIANTS`) con anims idle/run/attack/hit/death/spawn; **fallback a esfera tintada** si no hay modelo | El modelo va bajo `Visual` (rotado 180°). Para cambiar un enemigo: GLB + nombres de anims en `VARIANTS`. |
 | **Rey Slime** (boss) | `scenes/enemies/Boss.tscn` | Esfera dorada + corona (cono EN CÓDIGO en `boss.gd → _make_crown`) | Misma estructura que Slime (hereda su script). El disco rojo del golpe sísmico se genera por código (`_telegraph_slam`). |
 | **Bola de Fuego** | `scenes/magic/Fireball.tscn` | Esfera emisiva + OmniLight | Es un `Area3D` que avanza por su `-Z`. Cambia mesh/luz libremente; ideal punto para `GPUParticles3D` (estela). |
 | **Descarga Arcana** | `scenes/magic/ArcBolt.tscn` | Esfera celeste chica | Igual que Fireball (comparten script). |
@@ -168,7 +172,7 @@ scripts/
 - Para animar enemigos: mismo patrón — modelo con `AnimationPlayer` bajo `Visual` y clips `idle/run/attack/death` (los KayKit Skeletons calzan perfecto como enemigos).
 
 ### Créditos de assets
-- Personajes: **KayKit Character Pack: Adventurers** de [Kay Lousberg](https://kaylousberg.itch.io/kaykit-adventurers) (CC0). Licencia incluida en `assets/kaykit/LICENSE.txt`.
+- Personajes: **KayKit Adventurers** y enemigos: **KayKit Skeletons**, ambos de [Kay Lousberg](https://kaylousberg.itch.io/) (CC0). Licencia incluida en `assets/kaykit/LICENSE.txt`.
 
 ### Reglas de oro
 1. **No renombres ni muevas** los nodos mencionados en la tabla (`Visual`, `Visual/Mesh`, `Wand`, `LidPivot`...): los scripts los buscan por ruta.

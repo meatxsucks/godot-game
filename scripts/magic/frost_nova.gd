@@ -42,7 +42,7 @@ func _on_body_entered(body: Node3D) -> void:
 		return
 	_already_hit[body] = true
 	if body.has_method("take_damage"):
-		body.take_damage(damage)
+		body.take_damage(damage, is_crit)
 		if slow_factor < 1.0 and body.has_method("apply_slow"):
 			body.apply_slow(slow_factor, slow_time)
 		if source and source.has_method("add_super_charge"):

@@ -7,6 +7,10 @@ extends Area3D
 @export var super_charge_on_hit: float = 4.0
 ## true = atraviesa enemigos (Flecha Perforante); contra muros siempre muere.
 @export var pierces: bool = false
+## false = proyectil ENEMIGO: ignora al grupo "enemies" y daña al jugador.
+@export var friendly: bool = true
+## Color de la ráfaga de partículas al impactar.
+@export var impact_color: Color = Color(1.0, 0.55, 0.2)
 
 ## Quién lanzó el proyectil (para evitar fuego amigo / auto-impacto).
 var source: Node = null
@@ -46,13 +50,18 @@ func _physics_process(delta: float) -> void:
 		_on_body_entered(hit["collider"])
 
 func _on_body_entered(body: Node3D) -> void:
-	# Ignorar al lanzador, al jugador (sin fuego amigo) y a los ya golpeados.
-	if body == source or body.is_in_group("player") or _hit_bodies.has(body):
+	# Ignorar al lanzador, a los ya golpeados, y al propio bando.
+	if body == source or _hit_bodies.has(body):
+		return
+	if friendly and body.is_in_group("player"):
+		return
+	if not friendly and body.is_in_group("enemies"):
 		return
 
 	if body.has_method("take_damage"):
 		_hit_bodies[body] = true
-		body.take_damage(damage)
+		body.take_damage(damage, is_crit)
+		FX.burst(global_position, impact_color, 8, 0.05)
 		if source and source.has_method("add_super_charge"):
 			source.add_super_charge(super_charge_on_hit)
 		if chains_left > 0:

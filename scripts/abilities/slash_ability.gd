@@ -23,5 +23,5 @@ func _cast(player) -> bool:
 	# Orientado como el Visual del player (que mira al cursor).
 	slash.global_transform.basis = player.visual.global_transform.basis
 	if slash.has_method("setup"):
-		slash.setup(result[0], player)
+		slash.setup(result[0], player, result[1])
 	return true

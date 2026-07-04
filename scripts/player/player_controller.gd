@@ -65,6 +65,8 @@ signal item_equipped(item: LootItem, previous: LootItem)
 signal super_charge_changed(current: float, maximum: float)
 signal inventory_changed
 signal skills_changed
+signal xp_changed(current: float, needed: float, level: int)
+signal leveled_up(new_level: int)
 signal died
 
 @onready var visual: Node3D = $Visual
@@ -218,6 +220,7 @@ func start_dash(damage: float = 0.0) -> bool:
 	_dash_timer = DASH_TIME
 	_dash_damage = damage
 	_dash_hit.clear()
+	FX.burst(global_position + Vector3(0, 0.3, 0), Color(0.85, 0.9, 1.0), 8, 0.05)
 	return true
 
 # --- Apuntado -------------------------------------------------------------
@@ -304,10 +307,18 @@ func consume_super_charge() -> bool:
 # Vida y maná NO se regeneran solos: son recursos limitados. Se recuperan con
 # pociones (vida solo de cofres) y con el maná por kill del stat mana_regen.
 
-## Recompensa por matar un enemigo: stamina del super + maná por kill.
-func on_enemy_killed() -> void:
+## Recompensa por matar un enemigo: stamina del super + maná por kill + XP.
+func on_enemy_killed(xp_reward: float = 10.0) -> void:
 	add_super_charge(12.0)
 	restore_mana(stats.get_stat(&"mana_regen"))
+
+	var level_ups := stats.add_xp(xp_reward)
+	xp_changed.emit(stats.xp, stats.xp_needed(), stats.level)
+	if level_ups > 0:
+		FX.burst(global_position + Vector3.UP, Color(1.0, 0.9, 0.3), 22, 0.1)
+		_emit_resource_signals()
+		stats_changed.emit()
+		leveled_up.emit(stats.level)
 
 ## Cura instantánea (pociones). No supera el máximo.
 func heal(amount: float) -> void:
@@ -323,7 +334,7 @@ func restore_mana(amount: float) -> void:
 	stats.mana = minf(stats.get_stat(&"max_mana"), stats.mana + amount)
 	mana_changed.emit(stats.mana, stats.get_stat(&"max_mana"))
 
-func take_damage(amount: float) -> void:
+func take_damage(amount: float, _is_crit: bool = false) -> void:
 	# Durante el dash eres intangible (i-frames estilo Wizard of Legend).
 	if _dead or _dash_timer > 0.0:
 		return
@@ -338,6 +349,11 @@ func take_damage(amount: float) -> void:
 
 	stats.health = maxf(0.0, stats.health - amount)
 	health_changed.emit(stats.health, stats.get_stat(&"max_health"))
+
+	# Feedback: número rojo + sacudida si el golpe fue fuerte.
+	FX.damage_number(global_position, amount, false, Color(1.0, 0.25, 0.25))
+	if amount >= 15.0:
+		FX.shake(0.35)
 
 	# Legendario "Corazón de Escarcha": nova de hielo defensiva (cd 6s).
 	if _frost_guard_timer <= 0.0 and stats.has_legendary(&"on_hit_frost_nova"):
