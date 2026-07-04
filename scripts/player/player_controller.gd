@@ -223,6 +223,20 @@ func _regen_mana(delta: float) -> void:
 		stats.mana = minf(max_mana, stats.mana + stats.get_stat(&"mana_regen") * delta)
 		mana_changed.emit(stats.mana, max_mana)
 
+## Cura instantánea (pociones). No supera el máximo.
+func heal(amount: float) -> void:
+	if amount <= 0.0:
+		return
+	stats.health = minf(stats.get_stat(&"max_health"), stats.health + amount)
+	health_changed.emit(stats.health, stats.get_stat(&"max_health"))
+
+## Restaura maná instantáneo (pociones). No supera el máximo.
+func restore_mana(amount: float) -> void:
+	if amount <= 0.0:
+		return
+	stats.mana = minf(stats.get_stat(&"max_mana"), stats.mana + amount)
+	mana_changed.emit(stats.mana, stats.get_stat(&"max_mana"))
+
 func take_damage(amount: float) -> void:
 	stats.health = maxf(0.0, stats.health - amount)
 	health_changed.emit(stats.health, stats.get_stat(&"max_health"))
@@ -243,12 +257,19 @@ func pick_up(item: LootItem) -> bool:
 	inventory_changed.emit()
 	return true
 
-## Equipa el ítem en `index` del inventario. Los desplazados (slot ocupado,
-## conflicto a dos manos) vuelven al inventario.
+## Usa el ítem en `index` del inventario: las pociones se consumen (un solo
+## uso), el equipo se equipa. Los desplazados (slot ocupado, conflicto a dos
+## manos) vuelven al inventario.
 func equip_from_inventory(index: int) -> void:
 	if index < 0 or index >= inventory.size():
 		return
 	var item := inventory[index]
+	if item.is_consumable():
+		heal(item.effective(&"restore_health"))
+		restore_mana(item.effective(&"restore_mana"))
+		inventory.remove_at(index)
+		inventory_changed.emit()
+		return
 	inventory.remove_at(index)
 	var displaced := stats.equip(item)
 	inventory.append_array(displaced)

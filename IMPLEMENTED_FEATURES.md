@@ -28,12 +28,14 @@ Inspirado en *Diablo* y *Borderlands*. Genera ítems procedurales con rarezas y 
   - `has_legendary(effect_id)` permite que el combate consulte poderes legendarios equipados (ej. `crit_cdr` = "Cascada Crítica" recorta el cooldown al critear).
 - **Cooldown dinámico**: `cast_speed` y `cooldown_reduction` del equipo reducen el tiempo de recarga real (`_effective_cooldown()`).
 
-## 4. Enemigos Básicos (Slime)
-- **Script y Escena**: `Slime.tscn` (`CharacterBody3D`).
-- **IA**: Busca el primer nodo en el grupo `"player"` en la escena y se mueve lentamente hacia él usando físicas y un vector direccional.
-- **Sistema de Vida (Health)**: Responde a la función `take_damage(amount)`.
-- **Gamefeel**: Al recibir daño, su material cambia temporalmente a color blanco puro durante 0.2 segundos usando un `Tween`, dando una sensación táctil al impacto.
-- **Muerte**: Al llegar su vida a 0, instancia un `LootDrop.tscn` (con probabilidad `drop_chance`), le inyecta un `LootItem` de nivel `loot_level` (configurable por el spawner según la oleada), y luego hace `queue_free()`.
+## 4. Enemigos (Slime + variantes)
+- **Script y Escena**: `Slime.tscn` (`CharacterBody3D`), en el grupo `"enemies"`.
+- **IA**: Busca el primer nodo en el grupo `"player"` en la escena y se mueve hacia él usando físicas y un vector direccional.
+- **Barra de vida flotante** (`HealthBar3D`, `scripts/enemies/health_bar_3d.gd`): dos quads sin assets sobre la cabeza, anclada a la izquierda, va de verde a rojo y mira a la cámara cada frame — se ve claramente cómo van perdiendo vida con cada golpe.
+- **Variantes por exports** (`body_color`, `size_scale`, `max_health`, `speed`): normal (verde), **rápido** (chico, celeste, 16 HP, veloz) y **tanque** (grande, verde oscuro, 75 HP, lento). El tint usa material propio por instancia; la escala ajusta visual + colisión.
+- **Gamefeel**: parpadeo blanco 0.2s al recibir daño (vuelve al color de la variante, no al color leído — fix del flash encadenado).
+- **Muerte**: dropea equipo con probabilidad `drop_chance` (0.5) y **además** una poción de maná con `mana_drop_chance` (0.35). **Los enemigos nunca botan vida** (sale de cofres). El kill acredita +12 de stamina del super.
+- **Spawner continuo** (`scripts/levels/enemy_spawner.gd`, en la Arena): mantiene hasta 8 enemigos vivos, spawneando una variante al azar cada 3s en un anillo de 8–16m del centro.
 
 ## 4b. Loteo y Equipamiento (loop cerrado)
 - **Recogida (`LootDrop.gd`)**: al entrar el jugador llama `pick_up(item)` → el ítem va al **inventario** (ya no auto-equipa). Si el inventario está lleno, el drop no desaparece.
@@ -79,11 +81,18 @@ Inspirado en *Diablo* y *Borderlands*. Genera ítems procedurales con rarezas y 
 - **`ItemSlotUI`** (`item_slot_ui.gd`, Button 40×40): abreviatura de 3 letras y borde coloreados por **rareza**, tooltip con la ficha completa (`LootItem.to_text()`: stats, afijos, legendarios). Click en inventario = equipar; click en slot de equipo = quitar. Sin drag & drop (v1).
 - Con el inventario abierto `combat_input_enabled = false`: los clicks en la UI **no disparan** hechizos (los cooldowns siguen corriendo).
 
+## 10. Consumibles y Cofres
+- **Pociones** (`LootDB.potion_bases`, fuera del pool del generador de equipo): **Poción de vida** (+40) y **Poción de maná** (+50). Son de **un solo uso, no recargables**: van al inventario y con click se consumen (`equip_from_inventory` detecta `is_consumable()` y llama `heal()`/`restore_mana()` del player).
+- Colores propios en UI y drops (`LootItem.ui_color()`): rojo vida, azul maná; abreviaturas "VID"/"MAN" en las casillas.
+- **Economía**: los enemigos botan **solo maná** (35%); la **vida sale únicamente de cofres**.
+- **Cofre accionable** (`Chest.tscn` + `scripts/world/chest.gd`, `StaticBody3D`): al acercarse muestra el prompt `[E] Abrir` (Label3D billboard); con **E** (acción `interact`) la tapa se abre con tween y el contenido **cae al suelo en anillo** alrededor (tween de derrame): **bastón, sombrero, zapatos y túnica** generados por tipo (`Loot.generate_random_item(level, type)`) + 2 pociones de vida. Un solo uso.
+- `Loot.generate_random_item()` ahora acepta un `type` opcional para restringir la base (cofres temáticos), y `Loot.make_potion(kind)` crea consumibles.
+
 ## Próximos Pasos (Pendientes)
-- Sistema de oleadas (spawner) que escale `loot_level` y dificultad de los slimes.
+- Oleadas con escalado: subir `loot_level`, `max_alive` y dificultad del spawner con el tiempo/rondas.
 - Que los slimes ataquen al jugador (ahora el jugador tiene `take_damage`, pero nadie se lo aplica todavía) — con el dash ya hay herramienta para esquivar.
 - Enganchar los demás poderes legendarios (`fireball_chain`, `on_hit_frost_nova`, `mana_to_shield`) en la capa de combate.
 - Añadir navegación compleja con `NavigationRegion3D` (Navmesh) para los enemigos.
 - Comparación de ítems lado a lado y drag & drop en el inventario (v2 de la UI).
 
-> ✅ **Hecho recientemente**: inventario de 20 casillas + equipamiento estilo Tibia (cabeza/arma/escudo/anillo/torso/botas) con armas a dos manos, panel con toggle I/Tab, stat `move_speed` en botas, y fix del dash (corte en seco, sin resbalar).
+> ✅ **Hecho recientemente**: pociones consumibles de un uso (vida solo de cofres, maná de enemigos), barras de vida flotantes en enemigos, variantes de slime (rápido/tanque) + spawner continuo, y cofre accionable con E que derrama bastón/sombrero/zapatos/túnica + pociones de vida.

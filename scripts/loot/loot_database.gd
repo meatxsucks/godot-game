@@ -8,11 +8,15 @@ extends Node
 var item_bases: Array[ItemBase] = []
 var affixes: Array[Affix] = []
 var legendaries: Array[LegendaryPower] = []
+## Consumibles (kind -> ItemBase). Fuera de item_bases para que NO entren
+## al pool del generador de equipo.
+var potion_bases := {}
 
 func _ready() -> void:
 	_build_item_bases()
 	_build_affixes()
 	_build_legendaries()
+	_build_potions()
 
 # --- Constructores helper -------------------------------------------------
 
@@ -71,6 +75,12 @@ func _build_item_bases() -> void:
 		_base(&"shield_wood", "Escudo de madera", &"shield", &"offhand", {&"max_health": 20.0, &"res_fire": 5.0}),
 		_base(&"staff_war", "Bastón de guerra", &"staff", &"weapon", {&"spell_damage": 14.0}, true),
 	]
+
+func _build_potions() -> void:
+	potion_bases = {
+		&"potion_health": _base(&"potion_health", "Poción de vida", &"potion_health", &"consumable", {&"restore_health": 40.0}),
+		&"potion_mana": _base(&"potion_mana", "Poción de maná", &"potion_mana", &"consumable", {&"restore_mana": 50.0}),
+	}
 
 func _build_affixes() -> void:
 	var K := Affix.Kind

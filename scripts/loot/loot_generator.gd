@@ -2,15 +2,16 @@
 ## Toma bases de LootDB, determina rareza, tira dados para afijos y ensambla un LootItem.
 extends Node
 
-func generate_random_item(level: int = 1) -> LootItem:
+## `type` opcional restringe la base (ej. &"staff" para cofres temáticos).
+func generate_random_item(level: int = 1, type: StringName = &"") -> LootItem:
 	var item = LootItem.new()
 	item.item_level = level
-	
+
 	# 1. Tirar rareza (basado en pesos)
 	item.rarity = _roll_rarity()
-	
+
 	# 2. Elegir base aleatoria
-	var bases = LootDB.bases_of_type(&"")
+	var bases = LootDB.bases_of_type(type)
 	if bases.is_empty():
 		return item
 	item.base = bases.pick_random()
@@ -74,6 +75,18 @@ func generate_random_item(level: int = 1) -> LootItem:
 		if not legs.is_empty():
 			item.legendary = legs.pick_random()
 	
+	item.recompute_stats()
+	return item
+
+## Crea una poción (consumible de un solo uso, sin rareza ni afijos).
+## kind: &"potion_health" | &"potion_mana".
+func make_potion(kind: StringName) -> LootItem:
+	var item := LootItem.new()
+	item.base = LootDB.potion_bases.get(kind, null)
+	if item.base == null:
+		push_warning("[Loot] poción desconocida: %s" % kind)
+		return null
+	item.display_name = item.base.name
 	item.recompute_stats()
 	return item
 

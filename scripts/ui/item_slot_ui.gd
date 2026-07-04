@@ -27,9 +27,9 @@ func set_item(new_item: LootItem) -> void:
 		tint = Color(0.42, 0.42, 0.5)
 		style.border_color = Color(0.28, 0.28, 0.34)
 	else:
-		text = _abbrev(item.display_name)
+		text = _abbrev_for(item)
 		tooltip_text = item.to_text()
-		tint = item.rarity_color()
+		tint = item.ui_color()
 		style.border_color = tint
 
 	add_theme_color_override(&"font_color", tint)
@@ -42,5 +42,10 @@ func set_item(new_item: LootItem) -> void:
 	add_theme_stylebox_override(&"hover", hover)
 	add_theme_stylebox_override(&"pressed", hover)
 
-func _abbrev(item_name: String) -> String:
-	return item_name.substr(0, 3).to_upper()
+func _abbrev_for(it: LootItem) -> String:
+	if it.base:
+		if it.base.type == &"potion_health":
+			return "VID"
+		if it.base.type == &"potion_mana":
+			return "MAN"
+	return it.display_name.substr(0, 3).to_upper()

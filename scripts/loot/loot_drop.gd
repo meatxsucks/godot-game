@@ -12,7 +12,7 @@ func _ready() -> void:
 	body_entered.connect(_on_body_entered)
 	
 	if item:
-		var color = item.rarity_color()
+		var color = item.ui_color()
 		light.light_color = color
 		
 		# Cambiar color del material para coincidir con la rareza

@@ -1,0 +1,70 @@
+## Cofre accionable: acércate y presiona E para abrirlo. Su contenido
+## (bastón, sombrero, zapatos, túnica + pociones de vida) cae al suelo
+## alrededor. Un solo uso.
+extends StaticBody3D
+
+const DROP_SCENE := preload("res://scenes/loot/LootDrop.tscn")
+
+## Nivel del loot que genera.
+@export var loot_level: int = 1
+## Pociones de vida que trae (la vida SOLO sale de cofres, no de enemigos).
+@export var health_potions: int = 2
+
+var _player_in_range := false
+var _opened := false
+
+@onready var lid_pivot: Node3D = $LidPivot
+@onready var prompt: Label3D = $Prompt
+
+func _ready() -> void:
+	$InteractArea.body_entered.connect(_on_body_entered)
+	$InteractArea.body_exited.connect(_on_body_exited)
+
+func _physics_process(_delta: float) -> void:
+	if _player_in_range and not _opened and Input.is_action_just_pressed("interact"):
+		_open()
+
+func _on_body_entered(body: Node3D) -> void:
+	if body.is_in_group("player"):
+		_player_in_range = true
+		prompt.visible = not _opened
+
+func _on_body_exited(body: Node3D) -> void:
+	if body.is_in_group("player"):
+		_player_in_range = false
+		prompt.visible = false
+
+func _open() -> void:
+	_opened = true
+	prompt.visible = false
+	var tween := create_tween()
+	tween.tween_property(lid_pivot, "rotation:x", -1.9, 0.35) \
+		.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	_spill_content()
+
+## Genera el contenido y lo "derrama" al suelo en anillo alrededor del cofre.
+func _spill_content() -> void:
+	var items: Array[LootItem] = [
+		Loot.generate_random_item(loot_level, &"staff"),
+		Loot.generate_random_item(loot_level, &"helmet"),
+		Loot.generate_random_item(loot_level, &"boots"),
+		Loot.generate_random_item(loot_level, &"armor"),
+	]
+	for i in health_potions:
+		items.append(Loot.make_potion(&"potion_health"))
+
+	for i in items.size():
+		var item := items[i]
+		if item == null:
+			continue
+		var drop := DROP_SCENE.instantiate()
+		drop.item = item
+		get_parent().add_child(drop)
+		drop.global_position = global_position + Vector3.UP * 0.9
+
+		var angle := TAU * float(i) / items.size() + randf_range(-0.3, 0.3)
+		var dist := randf_range(1.3, 2.2)
+		var target := global_position + Vector3(cos(angle) * dist, 0.0, sin(angle) * dist)
+		var tween := drop.create_tween()
+		tween.tween_property(drop, "global_position", target, 0.35) \
+			.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
