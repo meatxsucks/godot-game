@@ -145,12 +145,13 @@ func _update_animation(delta: float) -> void:
 	if _attack_lock > 0.0:
 		_attack_lock -= delta
 		return
-	var moving := Vector2(velocity.x, velocity.z).length() > 0.5
+	var horizontal_speed := Vector2(velocity.x, velocity.z).length()
+	var moving := horizontal_speed > 0.5
 	var target: String = _anims.get("run", "") if moving else _anims.get("idle", "")
 	if target != "" and _model_anim.current_animation != target:
 		_model_anim.play(target, 0.15)
-	# Sin patinar: la anim de correr acompaña la velocidad real.
-	_model_anim.speed_scale = current_speed() / 3.2 if moving else 1.0
+	# Sin patinar: la anim de correr acompaña la velocidad REAL medida.
+	_model_anim.speed_scale = clampf(horizontal_speed / 2.2, 0.8, 3.0) if moving else 1.0
 
 func _play_attack_animation() -> void:
 	if _model_anim == null:

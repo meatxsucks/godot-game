@@ -73,7 +73,9 @@ func _build_item_bases() -> void:
 		_base(&"sword_war", "Espadón de guerra", &"sword", &"weapon", {&"spell_damage": 16.0, &"melee_damage": 10.0, &"ranged_damage": 10.0}, true),
 		_base(&"shield_wood", "Escudo de madera", &"shield", &"offhand", {&"max_health": 30.0, &"res_fire": 10.0, &"res_cold": 10.0, &"res_lightning": 10.0}),
 		_base(&"orb_quartz", "Orbe de cuarzo", &"orb", &"offhand", {&"max_mana": 40.0, &"mana_regen": 4.0}),
-		_base(&"robe_linen", "Túnica de lino", &"armor", &"armor", {&"max_health": 35.0, &"move_speed": 4.0}),
+		_base(&"robe_linen", "Túnica de lino", &"armor", &"armor", {&"max_health": 35.0}),
+		_base(&"hat_cloth", "Sombrero de tela", &"helmet", &"head", {&"max_mana": 25.0, &"max_health": 10.0}),
+		_base(&"cape_wool", "Capa de lana", &"cape", &"cape", {&"max_health": 10.0, &"move_speed": 4.0}),
 	]
 
 func _build_potions() -> void:
@@ -110,8 +112,8 @@ func _build_affixes() -> void:
 		_affix(&"res_cold", "del Invierno", K.SUFFIX, &"res_cold", "Resist. al hielo", M.PERCENT, 5, 15, 0.3, 55, T.UNCOMMON, [], [&"defense", &"cold"]),
 		_affix(&"res_light", "de la Tormenta", K.SUFFIX, &"res_lightning", "Resist. al rayo", M.PERCENT, 5, 15, 0.3, 55, T.UNCOMMON, [], [&"defense", &"lightning"]),
 		_affix(&"area", "del Coloso", K.SUFFIX, &"area", "Área de efecto", M.PERCENT, 4, 10, 0.2, 35, T.EPIC, [], [&"utility"]),
-		# Solo túnicas: velocidad de movimiento (FLAT = puntos de % directos).
-		_affix(&"move_speed", "del Viento", K.SUFFIX, &"move_speed", "Vel. de movimiento", M.FLAT, 3, 8, 0.2, 50, T.UNCOMMON, [&"armor"], [&"utility"]),
+		# Solo capas: velocidad de movimiento (FLAT = puntos de % directos).
+		_affix(&"move_speed", "del Viento", K.SUFFIX, &"move_speed", "Vel. de movimiento", M.FLAT, 3, 8, 0.2, 50, T.UNCOMMON, [&"cape"], [&"utility"]),
 	]
 
 func _build_legendaries() -> void:

@@ -59,6 +59,8 @@ func _spill_content() -> void:
 	var items: Array[LootItem] = [
 		Loot.generate_random_item(loot_level, &"staff"),
 		Loot.generate_random_item(loot_level, &"armor"),
+		Loot.generate_random_item(loot_level, &"helmet"),
+		Loot.generate_random_item(loot_level, &"cape"),
 		Loot.generate_random_item(loot_level, offhand_type),
 	]
 	for i in health_potions:

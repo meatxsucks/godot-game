@@ -149,11 +149,12 @@ func _update_animation(delta: float, direction: Vector3) -> void:
 	if _anim_lock > 0.0:
 		_anim_lock -= delta
 		return
+	var horizontal_speed := Vector2(velocity.x, velocity.z).length()
 	var target: String = anims.get("run", "") if direction != Vector3.ZERO else anims.get("idle", "")
 	if target != "" and _model_anim.current_animation != target:
 		_model_anim.play(target, 0.15)
-	# Sin patinar: la anim acompaña la velocidad real del enemigo.
-	_model_anim.speed_scale = (speed * _slow_mult) / 3.2 if direction != Vector3.ZERO else 1.0
+	# Sin patinar: la anim acompaña la velocidad REAL medida del enemigo.
+	_model_anim.speed_scale = clampf(horizontal_speed / 2.2, 0.7, 3.0) if direction != Vector3.ZERO else 1.0
 
 func _play_locked(key: String, max_lock: float = 0.6) -> void:
 	if _model_anim == null or not anims.has(key):

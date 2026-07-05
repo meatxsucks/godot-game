@@ -18,12 +18,22 @@ const PROPS := {
 	&"orb_quartz": {"scene": "res://assets/kaykit/props/spellbook_open.gltf", "hand": "l"},
 }
 
-## Meshes integrados por clase → id de base que los enciende (túnica = capa).
+## Meshes integrados por clase → id de base que los enciende.
+## Sombrero: hat/helmet (el Rogue no trae — sin visual en el Explorador).
+## Capa: los meshes _Cape. Túnica: tiñe el torso (ver ROBE_TINT).
 const BUILTIN_VISUALS := {
-	&"mage": {&"robe_linen": "Mage_Cape"},
-	&"warrior": {&"robe_linen": "Knight_Cape"},
-	&"ranger": {&"robe_linen": "Rogue_Cape"},
+	&"mage": {&"hat_cloth": "Mage_Hat", &"cape_wool": "Mage_Cape"},
+	&"warrior": {&"hat_cloth": "Knight_Helmet", &"cape_wool": "Knight_Cape"},
+	&"ranger": {&"cape_wool": "Rogue_Cape"},
 }
+
+## Mesh del torso por clase (la Túnica lo tiñe para verse puesta).
+const BODY_MESH := {
+	&"mage": "Mage_Body",
+	&"warrior": "Knight_Body",
+	&"ranger": "Rogue_Body",
+}
+const ROBE_TINT := Color(0.7, 0.78, 1.2)
 
 ## TODOS los meshes de accesorio integrados: se ocultan al inicio y solo
 ## se encienden los mapeados arriba.
@@ -37,14 +47,26 @@ var _player: Node = null
 var _meshes := {} # nombre -> MeshInstance3D (integrados)
 var _attach_r: BoneAttachment3D = null
 var _attach_l: BoneAttachment3D = null
+var _body_mesh: MeshInstance3D = null
+var _robe_material: StandardMaterial3D = null
 
 ## Registra meshes, crea los anclajes de mano y se conecta al equipo.
 func setup(player: Node, model: Node) -> void:
 	_player = player
 	var managed: Array = ACCESSORY_MESHES.get(Game.selected_class, [])
+	var body_name: String = BODY_MESH.get(Game.selected_class, "")
 	for mesh in model.find_children("*", "MeshInstance3D", true, false):
 		if managed.has(String(mesh.name)):
 			_meshes[String(mesh.name)] = mesh
+		elif String(mesh.name) == body_name:
+			_body_mesh = mesh
+
+	# Material teñido para la Túnica (se aplica como override al equiparla).
+	if _body_mesh and _body_mesh.mesh and _body_mesh.mesh.get_surface_count() > 0:
+		var base_mat = _body_mesh.mesh.surface_get_material(0)
+		if base_mat:
+			_robe_material = base_mat.duplicate()
+			_robe_material.albedo_color = ROBE_TINT
 
 	# Anclajes en los huesos de las manos del rig KayKit.
 	var skeletons := model.find_children("*", "Skeleton3D", true, false)
@@ -70,11 +92,13 @@ func _on_item_equipped(_item, _previous) -> void:
 
 ## Sincroniza el visual completo con el equipo actual.
 func refresh() -> void:
-	# Apagar todo (integrados) y vaciar las manos.
+	# Apagar todo (integrados), vaciar manos y quitar el tinte de túnica.
 	for mesh in _meshes.values():
 		mesh.visible = false
 	_clear_hand(_attach_r)
 	_clear_hand(_attach_l)
+	if _body_mesh:
+		_body_mesh.set_surface_override_material(0, null)
 
 	var builtin: Dictionary = BUILTIN_VISUALS.get(Game.selected_class, {})
 	for slot in _player.stats.equipment:
@@ -87,6 +111,10 @@ func refresh() -> void:
 		var mesh_name: String = builtin.get(id, "")
 		if mesh_name != "" and _meshes.has(mesh_name):
 			_meshes[mesh_name].visible = true
+
+		# Túnica: tiñe el torso para verse puesta.
+		if id == &"robe_linen" and _body_mesh and _robe_material:
+			_body_mesh.set_surface_override_material(0, _robe_material)
 
 		# Prop en la mano.
 		if PROPS.has(id):
