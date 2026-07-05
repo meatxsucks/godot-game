@@ -14,17 +14,19 @@ ARPG isométrico *wave-based* hecho en **Godot 4.4** (Forward+). Mezcla el comba
 
 ## Controles
 
-| Input | Acción |
-|-------|--------|
-| **WASD** | Moverse (relativo a cámara) |
-| **Mouse** | Apuntar (el personaje mira al cursor) |
-| **Click izquierdo** | Ataque principal de tu clase (**gratis**, sin maná) |
-| **Click derecho** | Ataque secundario |
-| **Espacio** | Movilidad: dash/embestida/voltereta (impulso con **i-frames**: eres intangible mientras dura) |
-| **Q** | Habilidad de área de tu clase |
-| **R** | SUPER de tu clase (requiere barra de stamina llena) |
-| **E** | Interactuar (abrir cofres) |
-| **I / Tab** | Inventario y equipo (bloquea el casteo mientras está abierto) |
+**Teclado + mouse o 🎮 mando** (soporte completo de joystick):
+
+| Acción | Teclado/Mouse | Mando |
+|--------|---------------|-------|
+| Moverse | **WASD** | Stick izquierdo |
+| Apuntar | **Mouse** | Stick derecho |
+| Ataque básico (**según tu ARMA**: espada = corte, bastón = fuego, varita = descarga; gratis) | **Click izq** | **RT** |
+| Ataque secundario | **Click der** | **LT** |
+| Movilidad con **i-frames** (hacia donde miras) | **Espacio** | **A** |
+| Habilidad de área | **Q** | **X** |
+| SUPER (stamina llena; cae **frente a ti**) | **R** | **Y** |
+| Interactuar (cofres) | **E** | **B** |
+| Inventario | **I / Tab** | **Start** |
 
 ## Reglas del juego
 
@@ -41,7 +43,12 @@ ARPG isométrico *wave-based* hecho en **Godot 4.4** (Forward+). Mezcla el comba
 - **Vida**: **solo** con pociones rojas, y esas **solo salen de cofres**. Racionalas.
 - Las pociones son **consumibles de un solo uso**: van al inventario y se usan con click.
 
-### Loot y equipo (estilo Tibia)
+### Loot y equipo — "menos es mejor"
+- **6 ítems, TODOS visibles en tu personaje** (3 slots: arma · torso · escudo/orbe): Bastón, Varita, **Espadón de guerra** (2H), Escudo, Orbe y Túnica (se ve como capa).
+- **El ARMA define tu ataque básico**: espada = corte, bastón = Bola de Fuego, varita = Descarga rápida; sin arma = golpe débil. Cambiar de arma cambia el click (y el círculo del HUD).
+- **El equipo cae como RECOMPENSA al superar cada oleada** (cerca de ti) — los enemigos ya no sueltan equipo a mitad de ronda. Boss y cofres siguen premiando.
+- **Vida y maná se recogen AL TOCAR**: las pociones del suelo llenan tus barras al instante (estilo Diablo), sin pasar por el inventario.
+
 - 5 rarezas: **Común** (blanco) → **Poco común** (verde) → **Raro** (azul) → **Épico** (morado) → **Legendario** (naranja, con poder único **activo**: bolas de fuego que rebotan en cadena, nova de hielo defensiva al recibir golpes, maná que absorbe daño como escudo, o críticos que recortan cooldowns). Más rareza = más afijos y mejores valores.
 - Los drops van al **inventario (20 casillas)**; equipas a mano (click o **arrastrando**) en **6 slots**: cabeza, torso, arma, escudo/orbe, anillo, botas. Pasa el mouse sobre un ítem para **compararlo lado a lado** con el que llevas equipado.
 - **El equipo se ve puesto**: empiezas con las manos vacías y lo que equipas aparece en el personaje (arma en mano, escudo/libro en la otra, sombrero/casco) — cada clase con su versión del ítem.

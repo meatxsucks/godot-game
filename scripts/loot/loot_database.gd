@@ -63,19 +63,17 @@ func _legendary(id: StringName, title: String, text: String, types: Array[String
 # --- Contenido ------------------------------------------------------------
 
 func _build_item_bases() -> void:
-	# Pocas bases con valores fuertes y claros (la rareza los multiplica:
-	# ver Rarity.STAT_MULT). Cada ítem tiene un propósito legible.
+	# Pool de 6 ítems: TODOS visibles en el personaje ("menos es mejor").
+	# La rareza multiplica los stats (Rarity.STAT_MULT).
 	item_bases = [
 		_base(&"staff_oak", "Bastón de roble", &"staff", &"weapon", {&"spell_damage": 10.0}),
-		_base(&"orb_quartz", "Orbe de cuarzo", &"orb", &"offhand", {&"max_mana": 40.0, &"mana_regen": 4.0}),
-		_base(&"wand_bone", "Varita de hueso", &"wand", &"weapon", {&"spell_damage": 6.0, &"cast_speed": 10.0}),
-		_base(&"ring_copper", "Anillo de cobre", &"ring", &"ring", {&"crit_chance": 5.0, &"crit_damage": 15.0}),
-		_base(&"robe_linen", "Túnica de lino", &"armor", &"armor", {&"max_health": 35.0}),
-		_base(&"hat_cloth", "Sombrero de tela", &"helmet", &"head", {&"max_mana": 25.0, &"max_health": 10.0}),
-		_base(&"boots_leather", "Botas de cuero", &"boots", &"boots", {&"max_health": 10.0, &"move_speed": 6.0}),
+		_base(&"wand_bone", "Varita de hueso", &"wand", &"weapon", {&"spell_damage": 6.0, &"cast_speed": 10.0, &"crit_chance": 3.0}),
+		# El arma pesada: potencia el ataque de CUALQUIER clase (2 manos)
+		# y convierte el click en CORTE de espada.
+		_base(&"sword_war", "Espadón de guerra", &"sword", &"weapon", {&"spell_damage": 16.0, &"melee_damage": 10.0, &"ranged_damage": 10.0}, true),
 		_base(&"shield_wood", "Escudo de madera", &"shield", &"offhand", {&"max_health": 30.0, &"res_fire": 10.0, &"res_cold": 10.0, &"res_lightning": 10.0}),
-		# El arma universal: potencia el ataque de CUALQUIER clase (2 manos).
-		_base(&"staff_war", "Bastón de guerra", &"staff", &"weapon", {&"spell_damage": 16.0, &"melee_damage": 10.0, &"ranged_damage": 10.0}, true),
+		_base(&"orb_quartz", "Orbe de cuarzo", &"orb", &"offhand", {&"max_mana": 40.0, &"mana_regen": 4.0}),
+		_base(&"robe_linen", "Túnica de lino", &"armor", &"armor", {&"max_health": 35.0, &"move_speed": 4.0}),
 	]
 
 func _build_potions() -> void:
@@ -88,9 +86,9 @@ func _build_affixes() -> void:
 	var K := Affix.Kind
 	var M := Affix.Mode
 	var T := Rarity.Tier
-	# Tipos de arma mágica (para afijos de daño ofensivo).
-	var weapons: Array[StringName] = [&"staff", &"wand"]
-	var melee_types: Array[StringName] = [&"staff", &"wand", &"shield"]
+	# Tipos de arma (para afijos de daño ofensivo).
+	var weapons: Array[StringName] = [&"staff", &"wand", &"sword"]
+	var melee_types: Array[StringName] = [&"sword", &"shield"]
 	affixes = [
 		# Ofensivos
 		_affix(&"flat_spell_dmg", "Arcano", K.PREFIX, &"spell_damage", "Daño mágico", M.FLAT, 3, 9, 0.8, 100, T.COMMON, weapons, [&"offense"]),
@@ -112,8 +110,8 @@ func _build_affixes() -> void:
 		_affix(&"res_cold", "del Invierno", K.SUFFIX, &"res_cold", "Resist. al hielo", M.PERCENT, 5, 15, 0.3, 55, T.UNCOMMON, [], [&"defense", &"cold"]),
 		_affix(&"res_light", "de la Tormenta", K.SUFFIX, &"res_lightning", "Resist. al rayo", M.PERCENT, 5, 15, 0.3, 55, T.UNCOMMON, [], [&"defense", &"lightning"]),
 		_affix(&"area", "del Coloso", K.SUFFIX, &"area", "Área de efecto", M.PERCENT, 4, 10, 0.2, 35, T.EPIC, [], [&"utility"]),
-		# Solo botas: velocidad de movimiento (FLAT = puntos de % directos).
-		_affix(&"move_speed", "del Viento", K.SUFFIX, &"move_speed", "Vel. de movimiento", M.FLAT, 3, 8, 0.2, 50, T.UNCOMMON, [&"boots"], [&"utility"]),
+		# Solo túnicas: velocidad de movimiento (FLAT = puntos de % directos).
+		_affix(&"move_speed", "del Viento", K.SUFFIX, &"move_speed", "Vel. de movimiento", M.FLAT, 3, 8, 0.2, 50, T.UNCOMMON, [&"armor"], [&"utility"]),
 	]
 
 func _build_legendaries() -> void:
@@ -127,7 +125,7 @@ func _build_legendaries() -> void:
 			[&"orb", &"armor"], &"", &"on_hit_frost_nova"),
 		_legendary(&"leg_mana_overflow", "Desborde Arcano",
 			"El maná es tu escudo: la mitad del daño recibido se absorbe con maná (1:1) mientras tengas.",
-			[&"orb", &"ring"], &"", &"mana_to_shield"),
+			[&"orb"], &"", &"mana_to_shield"),
 		_legendary(&"leg_crit_cascade", "Cascada Crítica",
 			"Cada golpe crítico reduce 0.5s el enfriamiento de todos tus hechizos.",
 			weapons, &"", &"crit_cdr"),

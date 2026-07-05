@@ -3,7 +3,7 @@ extends Node
 
 func _ready() -> void:
 	var stats := PlayerStats.new()
-	var staff2h := _make_item(&"staff_war")
+	var staff2h := _make_item(&"sword_war")
 	var orb := _make_item(&"orb_quartz")
 	var staff := _make_item(&"staff_oak")
 

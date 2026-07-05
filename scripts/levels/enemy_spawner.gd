@@ -100,6 +100,7 @@ func _physics_process(delta: float) -> void:
 			if get_tree().get_nodes_in_group("enemies").is_empty():
 				print("[Waves] oleada %d superada" % wave)
 				wave_cleared.emit(wave)
+				_spawn_rewards()
 				if wave == boss_wave:
 					print("[Waves] ¡NIVEL SUPERADO!")
 					boss_defeated.emit()
@@ -228,6 +229,22 @@ func _clear_portals() -> void:
 	for portal in _portals:
 		portal.queue_free()
 	_portals.clear()
+
+const REWARD_DROP := preload("res://scenes/loot/LootDrop.tscn")
+
+## Recompensa por superar la oleada: el equipo cae AL FINAL, cerca del
+## jugador (los enemigos ya no dropean equipo a mitad de ronda).
+func _spawn_rewards() -> void:
+	var player = get_tree().get_first_node_in_group("player")
+	var center: Vector3 = player.global_position if player else global_position
+	var count := 1 + int(wave / 3.0)
+	for i in count:
+		var drop := REWARD_DROP.instantiate()
+		drop.item = Loot.generate_random_item(_loot_level())
+		add_child(drop)
+		var angle := TAU * float(i) / count + randf() * 0.5
+		drop.global_position = center + Vector3(cos(angle) * 1.8, 0.0, sin(angle) * 1.8)
+	print("[Waves] recompensa: %d ítems" % count)
 
 func _restock_chests() -> void:
 	for chest in get_tree().get_nodes_in_group("chest"):

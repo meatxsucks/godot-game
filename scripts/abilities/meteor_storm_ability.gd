@@ -26,7 +26,7 @@ func _cast(player) -> bool:
 	var result: Array = player.stats.roll_spell_damage(&"fire_damage", 1.5)
 	var storm = SCENE.instantiate()
 	player.get_parent().add_child(storm)
-	storm.global_position = player.get_aim_point()
+	storm.global_position = player.get_front_point()
 	if storm.has_method("setup"):
 		storm.setup(result[0], player)
 	return true

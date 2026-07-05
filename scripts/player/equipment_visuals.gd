@@ -13,15 +13,15 @@ extends Node
 const PROPS := {
 	&"wand_bone": {"scene": "res://assets/kaykit/props/wand.gltf", "hand": "r"},
 	&"staff_oak": {"scene": "res://assets/kaykit/props/staff.gltf", "hand": "r"},
-	&"staff_war": {"scene": "res://assets/kaykit/props/sword_2handed.gltf", "hand": "r"},
+	&"sword_war": {"scene": "res://assets/kaykit/props/sword_2handed.gltf", "hand": "r"},
 	&"shield_wood": {"scene": "res://assets/kaykit/props/shield_round.gltf", "hand": "l"},
 	&"orb_quartz": {"scene": "res://assets/kaykit/props/spellbook_open.gltf", "hand": "l"},
 }
 
-## Meshes integrados por clase → id de base que los enciende.
+## Meshes integrados por clase → id de base que los enciende (túnica = capa).
 const BUILTIN_VISUALS := {
-	&"mage": {&"hat_cloth": "Mage_Hat", &"robe_linen": "Mage_Cape"},
-	&"warrior": {&"hat_cloth": "Knight_Helmet", &"robe_linen": "Knight_Cape"},
+	&"mage": {&"robe_linen": "Mage_Cape"},
+	&"warrior": {&"robe_linen": "Knight_Cape"},
 	&"ranger": {&"robe_linen": "Rogue_Cape"},
 }
 

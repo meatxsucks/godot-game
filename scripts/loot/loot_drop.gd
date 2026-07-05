@@ -34,7 +34,18 @@ func _process(delta: float) -> void:
 func _on_body_entered(body: Node3D) -> void:
 	if not body.is_in_group("player") or item == null:
 		return
-	# Al inventario: la decisión de equipar es del jugador (estilo Tibia).
+
+	# Consumibles: se aplican AL TOCAR (llenan vida/maná al instante).
+	if item.is_consumable():
+		if body.has_method("heal"):
+			body.heal(item.effective(&"restore_health"))
+		if body.has_method("restore_mana"):
+			body.restore_mana(item.effective(&"restore_mana"))
+		FX.burst(global_position + Vector3(0, 0.5, 0), item.ui_color(), 10, 0.06)
+		queue_free()
+		return
+
+	# Equipo: al inventario (la decisión de equipar es del jugador).
 	if not body.has_method("pick_up"):
 		return
 	if not body.pick_up(item):

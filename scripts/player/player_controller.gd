@@ -57,6 +57,13 @@ var _model_anim: AnimationPlayer = null
 var _anims: Dictionary = {}
 var _attack_lock: float = 0.0
 
+## Apuntado con el stick derecho del mando (fallback: mouse).
+var _pad_aim := Vector3.FORWARD
+var _use_pad_aim := false
+
+## Arma actual del slot básico (el LMB cambia según el arma equipada).
+var _last_weapon_id: StringName = &"__init__"
+
 ## UI / HUD puede conectarse a estas señales.
 signal stats_changed
 signal health_changed(current: float, maximum: float)
@@ -67,6 +74,7 @@ signal inventory_changed
 signal skills_changed
 signal xp_changed(current: float, needed: float, level: int)
 signal leveled_up(new_level: int)
+signal kit_changed
 signal died
 
 @onready var visual: Node3D = $Visual
@@ -85,8 +93,16 @@ func _ready() -> void:
 	body_mesh.set_surface_override_material(0, _body_material)
 
 	_setup_model()
+	# El ataque básico depende del arma equipada (arranca desarmado).
+	stats_changed.connect(_refresh_basic)
+	_refresh_basic()
 	_emit_resource_signals()
 	stats_changed.emit()
+
+func _input(event: InputEvent) -> void:
+	# Mover el mouse devuelve el apuntado al cursor.
+	if event is InputEventMouseMotion:
+		_use_pad_aim = false
 
 ## Modelo KayKit animado de la clase. Si no carga, queda la cápsula placeholder.
 func _setup_model() -> void:
@@ -133,6 +149,8 @@ func _update_animation(delta: float) -> void:
 	var target: String = _anims.get("run", "") if moving else _anims.get("idle", "")
 	if target != "" and _model_anim.current_animation != target:
 		_model_anim.play(target, 0.15)
+	# Sin patinar: la anim de correr acompaña la velocidad real.
+	_model_anim.speed_scale = current_speed() / 3.2 if moving else 1.0
 
 func _play_attack_animation() -> void:
 	if _model_anim == null:
@@ -140,8 +158,33 @@ func _play_attack_animation() -> void:
 	var attack: String = _anims.get("attack", "")
 	if attack == "":
 		return
+	_model_anim.speed_scale = 1.0
 	_model_anim.play(attack, 0.1)
 	_attack_lock = minf(_model_anim.current_animation_length, 0.45)
+
+## El ataque básico (slot 0) depende del ARMA equipada: espada = corte,
+## bastón = Bola de Fuego, varita = Descarga, sin arma = Golpe débil.
+func _refresh_basic() -> void:
+	var weapon: LootItem = stats.equipment.get(&"weapon", null)
+	var weapon_id: StringName = weapon.base.id if (weapon and weapon.base) else &""
+	if weapon_id == _last_weapon_id:
+		return
+	_last_weapon_id = weapon_id
+
+	var basic: Ability
+	if weapon == null or weapon.base == null:
+		basic = UnarmedAbility.new()
+	else:
+		match weapon.base.type:
+			&"sword":
+				basic = SlashAbility.new()
+			&"wand":
+				basic = ArcBoltAbility.new()
+			_:
+				basic = FireballAbility.new()
+	abilities[0] = basic
+	cooldowns[0] = 0.0
+	kit_changed.emit()
 
 # --- Movimiento -----------------------------------------------------------
 
@@ -187,14 +230,19 @@ func _move(delta: float) -> void:
 
 	move_and_slide()
 
-## Dirección del input WASD alineada a la cámara: "W" siempre mueve hacia
-## "arriba" en pantalla.
+## Dirección del input WASD/stick izquierdo alineada a la cámara.
 func _camera_aligned_input() -> Vector3:
 	var input_dir := Input.get_vector("move_left", "move_right", "move_up", "move_down")
-	var direction := Vector3(input_dir.x, 0, input_dir.y).normalized()
+	return _camera_align(Vector3(input_dir.x, 0, input_dir.y))
 
+## Alinea un vector plano (x, z) a la orientación de la cámara: "arriba"
+## del input siempre es "arriba" en pantalla.
+func _camera_align(direction: Vector3) -> Vector3:
+	if direction == Vector3.ZERO:
+		return Vector3.ZERO
+	direction = direction.normalized()
 	var camera := get_viewport().get_camera_3d()
-	if camera and direction != Vector3.ZERO:
+	if camera:
 		var cam_forward := -camera.global_transform.basis.z
 		var cam_right := camera.global_transform.basis.x
 		cam_forward.y = 0
@@ -202,21 +250,16 @@ func _camera_aligned_input() -> Vector3:
 		cam_forward = cam_forward.normalized()
 		cam_right = cam_right.normalized()
 		direction = (cam_right * direction.x + cam_forward * -direction.z).normalized()
-
 	return direction
 
-## Impulso del dash: hacia el input de movimiento, o hacia el cursor si el
-## personaje está quieto. `damage` > 0 = Embestida (daña lo que atraviesa).
-## Devuelve false si no hay dirección válida.
+## Impulso del dash: SIEMPRE hacia donde mira el personaje (cursor/stick).
+## `damage` > 0 = Embestida (daña lo que atraviesa).
 func start_dash(damage: float = 0.0) -> bool:
-	var dir := _camera_aligned_input()
-	if dir == Vector3.ZERO:
-		dir = get_aim_point() - global_position
-		dir.y = 0.0
-		dir = dir.normalized()
-	if dir == Vector3.ZERO:
-		return false
-	_dash_dir = dir
+	var dir := -visual.global_transform.basis.z
+	dir.y = 0.0
+	if dir.length_squared() < 0.001:
+		dir = Vector3.FORWARD
+	_dash_dir = dir.normalized()
 	_dash_timer = DASH_TIME
 	_dash_damage = damage
 	_dash_hit.clear()
@@ -225,9 +268,11 @@ func start_dash(damage: float = 0.0) -> bool:
 
 # --- Apuntado -------------------------------------------------------------
 
-## Punto del suelo (plano Y=0) bajo el cursor. Lo usan el apuntado del mago
-## y las habilidades dirigidas (super).
+## Punto del suelo (plano Y=0) al que se apunta: cursor del mouse, o el
+## stick derecho del mando si fue lo último usado.
 func get_aim_point() -> Vector3:
+	if _use_pad_aim:
+		return global_position + _pad_aim * 6.0
 	var camera := get_viewport().get_camera_3d()
 	if not camera:
 		return global_position
@@ -239,7 +284,23 @@ func get_aim_point() -> Vector3:
 		return global_position
 	return hit
 
+## Punto FRENTE al personaje (los supers dirigidos caen ahí).
+func get_front_point(distance: float = 5.5) -> Vector3:
+	var forward := -visual.global_transform.basis.z
+	forward.y = 0.0
+	if forward.length_squared() < 0.001:
+		forward = Vector3.FORWARD
+	return global_position + forward.normalized() * distance
+
 func _aim_at_mouse() -> void:
+	# Stick derecho del mando: apuntado directo alineado a cámara.
+	var stick := Vector2(
+		Input.get_joy_axis(0, JOY_AXIS_RIGHT_X),
+		Input.get_joy_axis(0, JOY_AXIS_RIGHT_Y))
+	if stick.length() > 0.35:
+		_use_pad_aim = true
+		_pad_aim = _camera_align(Vector3(stick.x, 0, stick.y))
+
 	var hit := get_aim_point()
 	hit.y = visual.global_position.y
 	if hit.distance_squared_to(visual.global_position) > 0.1:

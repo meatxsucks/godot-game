@@ -55,11 +55,11 @@ func _open() -> void:
 
 ## Genera el contenido y lo "derrama" al suelo en anillo alrededor del cofre.
 func _spill_content() -> void:
+	var offhand_type: StringName = [&"shield", &"orb"].pick_random()
 	var items: Array[LootItem] = [
 		Loot.generate_random_item(loot_level, &"staff"),
-		Loot.generate_random_item(loot_level, &"helmet"),
-		Loot.generate_random_item(loot_level, &"boots"),
 		Loot.generate_random_item(loot_level, &"armor"),
+		Loot.generate_random_item(loot_level, offhand_type),
 	]
 	for i in health_potions:
 		items.append(Loot.make_potion(&"potion_health"))

@@ -25,7 +25,7 @@ func _cast(player) -> bool:
 	var result: Array = player.stats.roll_spell_damage(&"ranged_damage", 1.2)
 	var rain = SCENE.instantiate()
 	player.get_parent().add_child(rain)
-	rain.global_position = player.get_aim_point()
+	rain.global_position = player.get_front_point()
 	if rain.has_method("setup"):
 		rain.setup(result[0], player)
 	return true

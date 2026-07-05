@@ -5,8 +5,9 @@ extends CharacterBody3D
 @export var loot_drop_scene: PackedScene = preload("res://scenes/loot/LootDrop.tscn")
 ## Nivel del botín que dropea (lo setea el spawner según la oleada).
 @export var loot_level: int = 1
-## Probabilidad [0..1] de dropear equipo al morir.
-@export var drop_chance: float = 0.5
+## Probabilidad [0..1] de dropear equipo al morir. 0 por diseño: el equipo
+## cae como RECOMPENSA al superar la oleada (menos ruido en el suelo).
+@export var drop_chance: float = 0.0
 ## Probabilidad [0..1] de botar además una poción de maná (vida NUNCA dropea
 ## de enemigos: solo sale de cofres).
 @export var mana_drop_chance: float = 0.35
@@ -151,10 +152,13 @@ func _update_animation(delta: float, direction: Vector3) -> void:
 	var target: String = anims.get("run", "") if direction != Vector3.ZERO else anims.get("idle", "")
 	if target != "" and _model_anim.current_animation != target:
 		_model_anim.play(target, 0.15)
+	# Sin patinar: la anim acompaña la velocidad real del enemigo.
+	_model_anim.speed_scale = (speed * _slow_mult) / 3.2 if direction != Vector3.ZERO else 1.0
 
 func _play_locked(key: String, max_lock: float = 0.6) -> void:
 	if _model_anim == null or not anims.has(key):
 		return
+	_model_anim.speed_scale = 1.0
 	_model_anim.play(anims[key], 0.1)
 	_anim_lock = minf(_model_anim.current_animation_length, max_lock)
 

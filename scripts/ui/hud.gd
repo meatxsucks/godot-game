@@ -44,6 +44,7 @@ func _ready() -> void:
 	player.super_charge_changed.connect(_on_super_changed)
 	player.xp_changed.connect(_on_xp_changed)
 	player.leveled_up.connect(_on_leveled_up)
+	player.kit_changed.connect(_on_kit_changed)
 	player.died.connect(_on_player_died)
 	btn_retry.pressed.connect(_on_retry_pressed)
 	btn_menu.pressed.connect(_on_menu_pressed)
@@ -110,6 +111,14 @@ func _on_super_changed(current: float, maximum: float) -> void:
 	for slot in _slots:
 		if slot.charge_ratio >= 0.0:
 			slot.charge_ratio = current / maximum
+
+## El arma equipada cambió el ataque básico: reconstruir la barra de poderes.
+func _on_kit_changed() -> void:
+	for child in ability_bar.get_children():
+		child.queue_free()
+	_slots.clear()
+	_build_slots()
+	_on_super_changed(player.super_charge, player.SUPER_MAX)
 
 func _on_xp_changed(current: float, needed: float, level: int) -> void:
 	xp_bar.max_value = needed
