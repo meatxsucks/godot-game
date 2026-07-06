@@ -13,7 +13,9 @@ extends Node
 const PROPS := {
 	&"wand_bone": {"scene": "res://assets/kaykit/props/wand.gltf", "hand": "r"},
 	&"staff_oak": {"scene": "res://assets/kaykit/props/staff.gltf", "hand": "r"},
-	&"sword_war": {"scene": "res://assets/kaykit/props/sword_2handed.gltf", "hand": "r"},
+	&"sword_iron": {"scene": "res://assets/kaykit/props/sword_1handed.gltf", "hand": "r"},
+	&"mace_heavy": {"scene": "res://assets/kaykit/props/axe_2handed.gltf", "hand": "r"},
+	&"bow_wood": {"scene": "res://assets/kaykit/props/crossbow_1handed.gltf", "hand": "r"},
 	&"shield_wood": {"scene": "res://assets/kaykit/props/shield_round.gltf", "hand": "l"},
 	&"orb_quartz": {"scene": "res://assets/kaykit/props/spellbook_open.gltf", "hand": "l"},
 }

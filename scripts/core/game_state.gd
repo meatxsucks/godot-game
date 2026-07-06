@@ -64,30 +64,39 @@ func class_def(id: StringName) -> Dictionary:
 func selected_stats() -> Dictionary:
 	return class_def(selected_class).get("stats", {})
 
-## Kit de poderes de la clase seleccionada (5 slots: LMB/RMB/SPC/Q/R-super).
-func build_kit() -> Array[Ability]:
+## Kit base de la clase (3 slots: Espacio, Q, R).
+func build_class_kit() -> Array[Ability]:
 	match selected_class:
 		&"warrior":
 			return [
-				SlashAbility.new(),
-				AxeThrowAbility.new(),
 				ChargeAbility.new(),
 				WarCryAbility.new(),
 				WhirlwindAbility.new(),
 			]
 		&"ranger":
 			return [
-				ArrowAbility.new(),
-				MultiShotAbility.new(),
 				DashAbility.new(),
 				PiercingArrowAbility.new(),
 				ArrowRainAbility.new(),
 			]
 		_:
 			return [
-				FireballAbility.new(),
-				ArcBoltAbility.new(),
 				DashAbility.new(),
 				FrostNovaAbility.new(),
 				MeteorStormAbility.new(),
 			]
+
+## Instancia una habilidad por su ID.
+func make_ability(id: StringName) -> Ability:
+	match id:
+		&"fireball": return FireballAbility.new()
+		&"arc_bolt": return ArcBoltAbility.new()
+		&"chain_bolt": return ChainBoltAbility.new()
+		&"multi_bolt": return MultiBoltAbility.new()
+		&"sword_slash": return SlashAbility.new()
+		&"spin_slash": return SpinSlashAbility.new()
+		&"mace_smash": return MaceSmashAbility.new()
+		&"shockwave": return ShockwaveAbility.new()
+		&"arrow": return ArrowAbility.new()
+		&"multi_shot": return MultiShotAbility.new()
+		_: return UnarmedAbility.new()

@@ -11,5 +11,5 @@ func _init() -> void:
 	cooldown = 1.5
 	mana_cost = 0.0
 
-func _cast(player) -> bool:
+func _cast(player) -> Variant:
 	return player.start_dash()

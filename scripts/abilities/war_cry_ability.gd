@@ -16,7 +16,7 @@ func _init() -> void:
 	mana_cost = 20.0
 	element = &"melee"
 
-func _cast(player) -> bool:
+func _cast(player) -> Variant:
 	# Cura al Guerrero (número verde) además del golpe en área.
 	var heal_amount: float = player.stats.get_stat(&"max_health") * HEAL_FRACTION
 	player.heal(heal_amount)

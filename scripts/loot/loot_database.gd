@@ -20,7 +20,7 @@ func _ready() -> void:
 
 # --- Constructores helper -------------------------------------------------
 
-func _base(id: StringName, name: String, type: StringName, slot: StringName, base_stats: Dictionary, two_handed := false) -> ItemBase:
+func _base(id: StringName, name: String, type: StringName, slot: StringName, base_stats: Dictionary, two_handed := false, lmb: StringName = &"", rmb: StringName = &"") -> ItemBase:
 	var b := ItemBase.new()
 	b.id = id
 	b.name = name
@@ -28,6 +28,8 @@ func _base(id: StringName, name: String, type: StringName, slot: StringName, bas
 	b.slot = slot
 	b.base_stats = base_stats
 	b.two_handed = two_handed
+	b.lmb_power = lmb
+	b.rmb_power = rmb
 	return b
 
 func _affix(id: StringName, word: String, kind: int, stat: StringName, label: String,
@@ -66,11 +68,11 @@ func _build_item_bases() -> void:
 	# Pool de 6 ítems: TODOS visibles en el personaje ("menos es mejor").
 	# La rareza multiplica los stats (Rarity.STAT_MULT).
 	item_bases = [
-		_base(&"staff_oak", "Bastón de roble", &"staff", &"weapon", {&"spell_damage": 10.0}),
-		_base(&"wand_bone", "Varita de hueso", &"wand", &"weapon", {&"spell_damage": 6.0, &"cast_speed": 10.0, &"crit_chance": 3.0}),
-		# El arma pesada: potencia el ataque de CUALQUIER clase (2 manos)
-		# y convierte el click en CORTE de espada.
-		_base(&"sword_war", "Espadón de guerra", &"sword", &"weapon", {&"spell_damage": 16.0, &"melee_damage": 10.0, &"ranged_damage": 10.0}, true),
+		_base(&"staff_oak", "Bastón de roble", &"staff", &"weapon", {&"spell_damage": 10.0}, true, &"fireball", &"multi_bolt"),
+		_base(&"wand_bone", "Varita de hueso", &"wand", &"weapon", {&"spell_damage": 6.0, &"cast_speed": 10.0, &"crit_chance": 3.0}, false, &"arc_bolt", &"chain_bolt"),
+		_base(&"sword_iron", "Espada corta", &"sword", &"weapon", {&"melee_damage": 8.0, &"crit_chance": 5.0}, false, &"sword_slash", &"spin_slash"),
+		_base(&"mace_heavy", "Mazo pesado", &"mace", &"weapon", {&"melee_damage": 14.0}, true, &"mace_smash", &"shockwave"),
+		_base(&"bow_wood", "Arco de madera", &"bow", &"weapon", {&"ranged_damage": 9.0, &"move_speed": 5.0}, true, &"arrow", &"multi_shot"),
 		_base(&"shield_wood", "Escudo de madera", &"shield", &"offhand", {&"max_health": 30.0, &"res_fire": 10.0, &"res_cold": 10.0, &"res_lightning": 10.0}),
 		_base(&"orb_quartz", "Orbe de cuarzo", &"orb", &"offhand", {&"max_mana": 40.0, &"mana_regen": 4.0}),
 		_base(&"robe_linen", "Túnica de lino", &"armor", &"armor", {&"max_health": 35.0}),
@@ -89,8 +91,9 @@ func _build_affixes() -> void:
 	var M := Affix.Mode
 	var T := Rarity.Tier
 	# Tipos de arma (para afijos de daño ofensivo).
-	var weapons: Array[StringName] = [&"staff", &"wand", &"sword"]
-	var melee_types: Array[StringName] = [&"sword", &"shield"]
+	var weapons: Array[StringName] = [&"staff", &"wand"]
+	var melee_types: Array[StringName] = [&"sword", &"mace", &"shield"]
+	var ranged_types: Array[StringName] = [&"bow"]
 	affixes = [
 		# Ofensivos
 		_affix(&"flat_spell_dmg", "Arcano", K.PREFIX, &"spell_damage", "Daño mágico", M.FLAT, 3, 9, 0.8, 100, T.COMMON, weapons, [&"offense"]),
@@ -99,7 +102,7 @@ func _build_affixes() -> void:
 		_affix(&"cold_dmg", "Glacial", K.PREFIX, &"cold_damage", "Daño de hielo", M.FLAT, 4, 12, 1.0, 60, T.UNCOMMON, weapons, [&"offense", &"cold"]),
 		# Daño por clase: Guerrero (melee) y Explorador (distancia).
 		_affix(&"melee_dmg", "Feroz", K.PREFIX, &"melee_damage", "Daño melee", M.FLAT, 4, 12, 1.0, 60, T.UNCOMMON, melee_types, [&"offense"]),
-		_affix(&"ranged_dmg", "Certero", K.PREFIX, &"ranged_damage", "Daño distancia", M.FLAT, 4, 12, 1.0, 60, T.UNCOMMON, weapons, [&"offense"]),
+		_affix(&"ranged_dmg", "Certero", K.PREFIX, &"ranged_damage", "Daño distancia", M.FLAT, 4, 12, 1.0, 60, T.UNCOMMON, ranged_types, [&"offense"]),
 		_affix(&"crit_chance", "Letal", K.PREFIX, &"crit_chance", "Prob. crítico", M.PERCENT, 2, 6, 0.1, 55, T.UNCOMMON, [], [&"offense"]),
 		_affix(&"crit_dmg", "Brutal", K.PREFIX, &"crit_damage", "Daño crítico", M.PERCENT, 8, 20, 0.6, 45, T.RARE, [], [&"offense"]),
 		_affix(&"cast_speed", "Veloz", K.PREFIX, &"cast_speed", "Vel. de lanzamiento", M.PERCENT, 3, 8, 0.1, 50, T.UNCOMMON, [], [&"utility"]),

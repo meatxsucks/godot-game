@@ -3,9 +3,9 @@ extends Node
 
 func _ready() -> void:
 	var stats := PlayerStats.new()
-	var staff2h := _make_item(&"sword_war")
+	var staff2h := _make_item(&"mace_heavy")
 	var orb := _make_item(&"orb_quartz")
-	var staff := _make_item(&"staff_oak")
+	var wand := _make_item(&"wand_bone")
 
 	# Equipar orbe y luego arma 2H: el orbe sale desplazado.
 	assert(stats.equip(orb).is_empty(), "orbe en slot vacío no desplaza nada")
@@ -18,12 +18,12 @@ func _ready() -> void:
 	assert(displaced.size() == 1 and displaced[0] == staff2h, "offhand desplaza al arma 2H")
 
 	# Arma 1H convive con el offhand.
-	displaced = stats.equip(staff)
+	displaced = stats.equip(wand)
 	assert(displaced.is_empty(), "1H no desplaza al offhand")
 	assert(stats.equipment.get(&"offhand") == orb, "orbe sigue equipado")
 
 	# Unequip.
-	assert(stats.unequip(&"weapon") == staff, "unequip devuelve el ítem")
+	assert(stats.unequip(&"weapon") == wand, "unequip devuelve el ítem")
 	assert(stats.unequip(&"weapon") == null, "unequip de slot vacío devuelve null")
 
 	# Rareza forzada (el boss garantiza legendarios).

@@ -14,5 +14,5 @@ func _init() -> void:
 	hold_to_cast = true
 	element = &"melee"
 
-func _cast(player) -> bool:
+func _cast(player) -> Variant:
 	return _spawn_projectile(player, SCENE, &"melee_damage", 0.7)

@@ -36,7 +36,8 @@ var _cooldown_refund: float = 0.0
 func execute(player) -> bool:
 	if not _can_cast(player):
 		return false
-	if not _cast(player):
+	var cast_result = _cast(player)
+	if cast_result is bool and not cast_result:
 		return false
 	player.stats.mana -= mana_cost
 	return true
@@ -44,8 +45,8 @@ func execute(player) -> bool:
 func _can_cast(player) -> bool:
 	return player.stats.mana >= mana_cost
 
-## Implementación concreta del poder. Devuelve true si se lanzó.
-func _cast(_player) -> bool:
+## Implementación concreta del poder. Puede usar await (retorna coroutine) o bool.
+func _cast(_player) -> Variant:
 	return false
 
 func consume_cooldown_refund() -> float:

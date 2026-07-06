@@ -19,7 +19,7 @@ func _init() -> void:
 func _can_cast(player) -> bool:
 	return player.super_charge >= player.SUPER_MAX
 
-func _cast(player) -> bool:
+func _cast(player) -> Variant:
 	if not player.consume_super_charge():
 		return false
 	FX.shake(0.4)

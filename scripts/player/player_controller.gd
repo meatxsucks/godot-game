@@ -45,10 +45,15 @@ var _frost_guard_timer: float = 0.0
 
 var _dash_timer: float = 0.0
 var _dash_dir := Vector3.ZERO
+var _dash_speed_mult := 4.0
+var _dash_iframes := true
 ## Daño del dash (Embestida del Guerrero; 0 = dash sin daño) y ya golpeados.
 var _dash_damage: float = 0.0
 var _dash_hit := {}
 var _dead: bool = false
+var _leaping: bool = false
+var _speed_modifier: float = 1.0
+var _speed_modifier_timer: float = 0.0
 var _body_material: StandardMaterial3D
 var _body_color: Color
 
@@ -86,7 +91,8 @@ signal died
 
 func _ready() -> void:
 	add_to_group("player")
-	abilities = Game.build_kit()
+	abilities = [UnarmedAbility.new(), UnarmedAbility.new()]
+	abilities.append_array(Game.build_class_kit())
 	cooldowns.resize(abilities.size())
 	cooldowns.fill(0.0)
 
@@ -97,9 +103,9 @@ func _ready() -> void:
 	body_mesh.set_surface_override_material(0, _body_material)
 
 	_setup_model()
-	# El ataque básico depende del arma equipada (arranca desarmado).
-	stats_changed.connect(_refresh_basic)
-	_refresh_basic()
+	# El ataque básico y secundario dependen del arma equipada (arranca desarmado).
+	stats_changed.connect(_refresh_weapon_skills)
+	_refresh_weapon_skills()
 	_emit_resource_signals()
 	stats_changed.emit()
 
@@ -141,16 +147,24 @@ func _physics_process(delta: float) -> void:
 	_aim_at_mouse()
 	_update_abilities(delta)
 	_update_animation(delta)
+	
+	if _speed_modifier_timer > 0.0:
+		_speed_modifier_timer -= delta
+	else:
+		_speed_modifier = 1.0
 
-## Idle/correr según la velocidad; el ataque tiene prioridad breve.
+## Idle/correr según la velocidad. El ataque congela la pose SOLO de pie:
+## si te mueves, el correr tiene prioridad (así no se ve "quieto" al atacar).
 func _update_animation(delta: float) -> void:
 	if _model_anim == null or _dead:
 		return
+	var horizontal_speed := Vector2(velocity.x, velocity.z).length()
+	var moving := horizontal_speed > 0.8
 	if _attack_lock > 0.0:
 		_attack_lock -= delta
-		return
-	var horizontal_speed := Vector2(velocity.x, velocity.z).length()
-	var moving := horizontal_speed > 0.5
+		if not moving:
+			return # de pie: se ve el ataque completo
+		# moviéndose: seguimos y dejamos que gane el correr
 	var target: String = _anims.get("run", "") if moving else _anims.get("idle", "")
 	if target != "" and _model_anim.current_animation != target:
 		_model_anim.play(target, 0.15)
@@ -167,42 +181,39 @@ func _play_attack_animation() -> void:
 	_model_anim.play(attack, 0.1)
 	_attack_lock = minf(_model_anim.current_animation_length, 0.45)
 
-## El ataque básico (slot 0) depende del ARMA equipada: espada = corte,
-## bastón = Bola de Fuego, varita = Descarga, sin arma = Golpe débil.
-func _refresh_basic() -> void:
+## El ataque básico (slot 0) y secundario (slot 1) dependen del ARMA equipada.
+func _refresh_weapon_skills() -> void:
 	var weapon: LootItem = stats.equipment.get(&"weapon", null)
 	var weapon_id: StringName = weapon.base.id if (weapon and weapon.base) else &""
 	if weapon_id == _last_weapon_id:
 		return
 	_last_weapon_id = weapon_id
 
-	var basic: Ability
 	if weapon == null or weapon.base == null:
-		basic = UnarmedAbility.new()
+		abilities[0] = UnarmedAbility.new()
+		abilities[1] = UnarmedAbility.new()
 	else:
-		match weapon.base.type:
-			&"sword":
-				basic = SlashAbility.new()
-			&"wand":
-				basic = ArcBoltAbility.new()
-			_:
-				basic = FireballAbility.new()
-	abilities[0] = basic
+		abilities[0] = Game.make_ability(weapon.base.lmb_power)
+		abilities[1] = Game.make_ability(weapon.base.rmb_power)
 	cooldowns[0] = 0.0
+	cooldowns[1] = 0.0
 	kit_changed.emit()
 
 # --- Movimiento -----------------------------------------------------------
 
 ## Velocidad de caminata real: base + move_speed (%) de las botas/loot.
 func current_speed() -> float:
-	return speed * (1.0 + stats.get_stat(&"move_speed") / 100.0)
+	return speed * (1.0 + stats.get_stat(&"move_speed") / 100.0) * _speed_modifier
 
 func _move(delta: float) -> void:
+	if _leaping:
+		return
+		
 	# Durante el dash la velocidad está bloqueada al impulso.
 	if _dash_timer > 0.0:
 		_dash_timer -= delta
-		velocity.x = _dash_dir.x * current_speed() * DASH_SPEED_MULT
-		velocity.z = _dash_dir.z * current_speed() * DASH_SPEED_MULT
+		velocity.x = _dash_dir.x * current_speed() * _dash_speed_mult
+		velocity.z = _dash_dir.z * current_speed() * _dash_speed_mult
 		# Al terminar el impulso se corta en seco a velocidad de caminata:
 		# sin esto el mago "resbala" mientras desacelera desde x4.
 		if _dash_timer <= 0.0:
@@ -257,19 +268,58 @@ func _camera_align(direction: Vector3) -> Vector3:
 		direction = (cam_right * direction.x + cam_forward * -direction.z).normalized()
 	return direction
 
-## Impulso del dash: SIEMPRE hacia donde mira el personaje (cursor/stick).
-## `damage` > 0 = Embestida (daña lo que atraviesa).
+## Modifica la velocidad del jugador durante un tiempo corto (0 = inmovilizado).
+func apply_speed_modifier(mult: float, duration: float) -> void:
+	_speed_modifier = mult
+	_speed_modifier_timer = duration
+
+## Fuerza un desplazamiento en una dirección (Lunge, Dash, Backstep).
+func force_move(dir: Vector3, speed_mult: float, duration: float, has_iframes: bool = false, damage: float = 0.0) -> void:
+	_dash_dir = dir.normalized()
+	_dash_timer = duration
+	_dash_speed_mult = speed_mult
+	_dash_damage = damage
+	_dash_iframes = has_iframes
+	_dash_hit.clear()
+
+## Impulso clásico: hacia donde mira el personaje.
 func start_dash(damage: float = 0.0) -> bool:
 	var dir := -visual.global_transform.basis.z
 	dir.y = 0.0
 	if dir.length_squared() < 0.001:
 		dir = Vector3.FORWARD
-	_dash_dir = dir.normalized()
-	_dash_timer = DASH_TIME
-	_dash_damage = damage
-	_dash_hit.clear()
+	force_move(dir, DASH_SPEED_MULT, DASH_TIME, true, damage)
 	FX.burst(global_position + Vector3(0, 0.3, 0), Color(0.85, 0.9, 1.0), 8, 0.05)
 	return true
+
+## Salto en parábola hacia un destino: XZ lineal y Y en arco, ambos DURANTE
+## toda la duración (concurrentes) para que se vea un salto de verdad.
+func leap_to(target: Vector3, duration: float, height: float, callback: Callable = Callable()) -> void:
+	_leaping = true
+	_dash_timer = duration # Previene otros dashes
+	var start_y := global_position.y
+
+	# Efecto al despegar.
+	FX.burst(global_position, Color(0.7, 0.7, 0.6), 10, 0.1)
+
+	# Desplazamiento horizontal lineal (x y z en paralelo).
+	var move_tween := create_tween().set_parallel(true)
+	move_tween.tween_property(self, "global_position:x", target.x, duration)
+	move_tween.tween_property(self, "global_position:z", target.z, duration)
+
+	# Arco vertical CONCURRENTE (tween aparte): sube y baja durante el salto.
+	var arc_tween := create_tween()
+	arc_tween.tween_property(self, "global_position:y", start_y + height, duration * 0.5) \
+		.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	arc_tween.tween_property(self, "global_position:y", target.y, duration * 0.5) \
+		.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+	arc_tween.tween_callback(func() -> void:
+		_leaping = false
+		_dash_timer = 0.0
+		if callback.is_valid():
+			callback.call()
+	)
+
 
 # --- Apuntado -------------------------------------------------------------
 
@@ -415,8 +465,8 @@ func restore_mana(amount: float) -> void:
 	mana_changed.emit(stats.mana, stats.get_stat(&"max_mana"))
 
 func take_damage(amount: float, _is_crit: bool = false) -> void:
-	# Durante el dash eres intangible (i-frames estilo Wizard of Legend).
-	if _dead or _dash_timer > 0.0:
+	# Durante el dash con i-frames o salto, eres intangible.
+	if _dead or _leaping or (_dash_timer > 0.0 and _dash_iframes):
 		return
 
 	# Legendario "Desborde Arcano": el maná es tu escudo — la mitad del daño

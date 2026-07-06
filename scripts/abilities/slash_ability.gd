@@ -1,5 +1,5 @@
-## Guerrero slot 1 — Tajo de Espada: el ataque básico, un barrido frontal
-## con la hoja visible. Gratis y spameable; apunta hacia el mouse.
+## Guerrero slot 1 — Tajo Deslizante (Lunge Slash).
+## Da un salto rápido hacia adelante al atacar.
 class_name SlashAbility
 extends Ability
 
@@ -7,7 +7,7 @@ const SCENE := preload("res://scenes/magic/SwordSlash.tscn")
 
 func _init() -> void:
 	id = &"slash"
-	display_name = "Tajo de Espada"
+	display_name = "Corte Deslizante"
 	key_label = "LMB"
 	color = Color(0.95, 0.95, 0.88)
 	cooldown = 0.5
@@ -15,13 +15,20 @@ func _init() -> void:
 	hold_to_cast = true
 	element = &"melee"
 
-func _cast(player) -> bool:
+func _cast(player) -> Variant:
 	var result: Array = player.stats.roll_spell_damage(&"melee_damage", 1.0)
 	var slash = SCENE.instantiate()
 	player.get_parent().add_child(slash)
 	slash.global_position = player.global_position
-	# Orientado como el Visual del player (que mira al cursor).
+	# Orientado como el Visual del player
 	slash.global_transform.basis = player.visual.global_transform.basis
 	if slash.has_method("setup"):
 		slash.setup(result[0], player, result[1])
+	
+	# Lunge forward (micro-dash sin i-frames)
+	var dir: Vector3 = -player.visual.global_transform.basis.z
+	dir.y = 0.0
+	if dir.length_squared() > 0.001:
+		player.force_move(dir, 3.0, 0.15, false, 0.0)
+	
 	return true

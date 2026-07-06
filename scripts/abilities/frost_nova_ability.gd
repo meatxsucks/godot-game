@@ -14,5 +14,5 @@ func _init() -> void:
 	mana_cost = 25.0
 	element = &"cold"
 
-func _cast(player) -> bool:
+func _cast(player) -> Variant:
 	return _spawn_nova(player, SCENE, &"cold_damage", 1.0)

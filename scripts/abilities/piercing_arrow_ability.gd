@@ -14,5 +14,5 @@ func _init() -> void:
 	mana_cost = 15.0
 	element = &"ranged"
 
-func _cast(player) -> bool:
+func _cast(player) -> Variant:
 	return _spawn_projectile(player, SCENE, &"ranged_damage", 1.2)

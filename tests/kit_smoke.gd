@@ -5,24 +5,24 @@ extends Node
 func _ready() -> void:
 	for cls in [&"mage", &"warrior", &"ranger"]:
 		Game.selected_class = cls
-		var kit := Game.build_kit()
-		assert(kit.size() == 5, "kit de %s tiene 5 slots" % cls)
+		var kit := Game.build_class_kit()
+		assert(kit.size() == 3, "kit de clase de %s tiene 3 slots" % cls)
 		for ability in kit:
 			assert(ability.display_name != "", "habilidad con nombre en %s" % cls)
 			assert(ability.key_label != "", "habilidad con tecla en %s" % cls)
-		# El slot 5 es el SUPER en TODOS los kits (el HUD muestra su carga).
-		assert(kit[4].is_super, "el slot 5 de %s es el super" % cls)
+		# El slot 2 es el SUPER en TODOS los kits de clase
+		assert(kit[2].is_super, "el slot 2 de %s es el super" % cls)
 
-	# El kit del Guerrero entrena melee y sus stats de clase aplican.
+	# El tajo de espada (arma) entrena melee y los stats de clase aplican al Guerrero.
 	Game.selected_class = &"warrior"
-	assert(Game.build_kit()[0].element == &"melee", "Tajo entrena melee")
+	assert(Game.make_ability(&"sword_slash").element == &"melee", "Tajo entrena melee")
 	var warrior_stats := PlayerStats.new()
 	assert(warrior_stats.get_stat(&"melee_damage") == 8.0, "Guerrero con daño melee base")
 	assert(warrior_stats.get_stat(&"max_health") == 170.0, "Guerrero tanque")
 
-	# El kit del Explorador entrena distancia.
+	# La flecha de arco entrena distancia.
 	Game.selected_class = &"ranger"
-	assert(Game.build_kit()[0].element == &"ranged", "Flecha entrena distancia")
+	assert(Game.make_ability(&"arrow").element == &"ranged", "Flecha entrena distancia")
 	var ranger_stats := PlayerStats.new()
 	assert(ranger_stats.get_stat(&"ranged_damage") == 8.0, "Explorador con daño distancia base")
 

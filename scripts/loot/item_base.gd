@@ -14,6 +14,10 @@ extends Resource
 @export var two_handed: bool = false
 ## Stats base implícitos del item (stat -> valor).
 @export var base_stats: Dictionary = {}
+## Poder asociado al click izquierdo (LMB) si el ítem es un arma.
+@export var lmb_power: StringName = &""
+## Poder asociado al click derecho (RMB) si el ítem es un arma.
+@export var rmb_power: StringName = &""
 ## Etiquetas de afijos permitidas (vacío = todas). Filtra el pool.
 @export var allowed_tags: Array[StringName] = []
 @export var icon: Texture2D

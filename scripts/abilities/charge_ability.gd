@@ -12,6 +12,6 @@ func _init() -> void:
 	mana_cost = 0.0
 	element = &"melee"
 
-func _cast(player) -> bool:
+func _cast(player) -> Variant:
 	var result: Array = player.stats.roll_spell_damage(&"melee_damage", 1.0)
 	return player.start_dash(result[0])

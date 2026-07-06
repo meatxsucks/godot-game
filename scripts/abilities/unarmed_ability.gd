@@ -15,7 +15,7 @@ func _init() -> void:
 	hold_to_cast = true
 	element = &"melee"
 
-func _cast(player) -> bool:
+func _cast(player) -> Variant:
 	var result: Array = player.stats.roll_spell_damage(&"melee_damage", 0.5)
 	var punch = SCENE.instantiate()
 	punch.reach = 1.2
