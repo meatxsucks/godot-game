@@ -179,7 +179,10 @@ func _play_attack_animation() -> void:
 		return
 	_model_anim.speed_scale = 1.0
 	_model_anim.play(attack, 0.1)
-	_attack_lock = minf(_model_anim.current_animation_length, 0.45)
+	# Bloquear la pose SOLO mientras dura el clip real: cortarlo antes (con
+	# un número mágico) dejaba al personaje "pegado" en la pose a mitad de
+	# animación hasta que el timer expiraba — eso se veía como freeze.
+	_attack_lock = _model_anim.current_animation_length
 
 ## El ataque básico (slot 0) y secundario (slot 1) dependen del ARMA equipada.
 func _refresh_weapon_skills() -> void:

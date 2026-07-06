@@ -4,6 +4,8 @@
 extends StaticBody3D
 
 const DROP_SCENE := preload("res://scenes/loot/LootDrop.tscn")
+## Tipos de arma: se derraman TODOS para poder probar cada poder de LMB/RMB.
+const WEAPON_TYPES: Array[StringName] = [&"staff", &"wand", &"sword", &"mace", &"bow"]
 
 ## Nivel del loot que genera.
 @export var loot_level: int = 1
@@ -57,12 +59,13 @@ func _open() -> void:
 func _spill_content() -> void:
 	var offhand_type: StringName = [&"shield", &"orb"].pick_random()
 	var items: Array[LootItem] = [
-		Loot.generate_random_item(loot_level, &"staff"),
 		Loot.generate_random_item(loot_level, &"armor"),
 		Loot.generate_random_item(loot_level, &"helmet"),
 		Loot.generate_random_item(loot_level, &"cape"),
 		Loot.generate_random_item(loot_level, offhand_type),
 	]
+	for weapon_type in WEAPON_TYPES:
+		items.append(Loot.generate_random_item(loot_level, weapon_type))
 	for i in health_potions:
 		items.append(Loot.make_potion(&"potion_health"))
 
