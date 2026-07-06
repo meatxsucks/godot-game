@@ -1,0 +1,37 @@
+[gd_scene load_steps=5 format=3 uid="uid://ctitanslam001"]
+
+[ext_resource type="Script" path="res://scripts/magic/frost_nova.gd" id="1_slam"]
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_slam"]
+radius = 0.3
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_slam"]
+transparency = 1
+shading_mode = 0
+albedo_color = Color(1, 0.92, 0.55, 0.8)
+emission_enabled = true
+emission = Color(1, 0.85, 0.3, 1)
+emission_energy_multiplier = 4.0
+
+[sub_resource type="TorusMesh" id="TorusMesh_slam"]
+material = SubResource("StandardMaterial3D_slam")
+inner_radius = 0.85
+outer_radius = 1.0
+
+[node name="TitanSlam" type="Area3D"]
+script = ExtResource("1_slam")
+max_radius = 8.0
+expand_time = 0.35
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+shape = SubResource("SphereShape3D_slam")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.12, 0)
+mesh = SubResource("TorusMesh_slam")
+
+[node name="Light" type="OmniLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+light_color = Color(1, 0.85, 0.4, 1)
+light_energy = 6.0
+omni_range = 9.0

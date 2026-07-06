@@ -34,7 +34,7 @@ ARPG isométrico *wave-based* hecho en **Godot 4.4** (Forward+). Mezcla el comba
 | Clase | Perfil | Kit (LMB · RMB · Espacio · Q · R) |
 |-------|--------|-----------------------------------|
 | 🔵 **Mago** | Cañón de cristal: daño y maná altos, poca vida | Bola de Fuego · Descarga Arcana · Dash Arcano · Nova de Escarcha · ☄️ Tormenta de Meteoros |
-| 🟠 **Guerrero** | Tanque melee: mucha vida y resistencias | Tajo de Espada (barrido visible) · Hacha Arrojadiza · **Embestida** (daña lo que atraviesa) · **Grito de Guerra** (golpea en área y se CURA 25%) · 🌪️ Torbellino |
+| 🟠 **Guerrero** | Tanque melee: mucha vida y resistencias. LMB/RMB según el arma equipada | **Embestida** (daña lo que atraviesa) · **Grito de Guerra** (golpea en área y se CURA 25%) · 👑 **Golpe de Titán** (un solo impacto colosal) |
 | 🟢 **Explorador** | Arquero ágil: crítico y velocidad | Flecha · Disparo Múltiple (abanico ×3) · Voltereta · **Flecha Perforante** (atraviesa filas) · 🏹 Lluvia de Flechas |
 
 ### Recursos limitados (¡no hay regeneración!)
