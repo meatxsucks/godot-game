@@ -27,6 +27,7 @@ ARPG isométrico *wave-based* hecho en **Godot 4.4** (Forward+). Mezcla el comba
 | SUPER (stamina llena; cae **frente a ti**) | **R** | **Y** |
 | Interactuar (cofres) | **E** | **B** |
 | Inventario | **I / Tab** | **Start** |
+| Pausa | **ESC** | **B / Select** |
 
 ## Reglas del juego
 

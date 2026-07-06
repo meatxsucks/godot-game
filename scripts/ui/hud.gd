@@ -18,6 +18,10 @@ extends CanvasLayer
 @onready var victory: CenterContainer = %Victory
 @onready var btn_continue: Button = %BtnContinue
 @onready var btn_victory_menu: Button = %BtnVictoryMenu
+@onready var pause_panel: CenterContainer = %Pause
+@onready var btn_resume: Button = %BtnResume
+@onready var btn_pause_menu: Button = %BtnPauseMenu
+@onready var btn_pause_quit: Button = %BtnPauseQuit
 
 var player: Node = null
 var wave_manager: Node = null
@@ -34,6 +38,9 @@ func _ready() -> void:
 		wave_manager.boss_defeated.connect(_on_boss_defeated)
 	btn_continue.pressed.connect(_on_continue_pressed)
 	btn_victory_menu.pressed.connect(_on_menu_pressed)
+	btn_resume.pressed.connect(_toggle_pause)
+	btn_pause_menu.pressed.connect(_on_menu_pressed)
+	btn_pause_quit.pressed.connect(_on_pause_quit_pressed)
 
 	player = get_tree().get_first_node_in_group("player")
 	if player == null:
@@ -56,8 +63,26 @@ func _ready() -> void:
 	_on_xp_changed(player.stats.xp, player.stats.xp_needed(), player.stats.level)
 
 func _input(event: InputEvent) -> void:
-	if event.is_action_pressed("toggle_inventory"):
+	if event.is_action_pressed("ui_cancel"):
+		# Con el inventario abierto, ESC lo cierra primero; si ya terminó la
+		# partida (game over/victoria), esos paneles tienen sus propios botones.
+		if inventory_panel.visible:
+			_toggle_inventory()
+		elif not game_over.visible and not victory.visible:
+			_toggle_pause()
+		return
+	if event.is_action_pressed("toggle_inventory") and not pause_panel.visible:
 		_toggle_inventory()
+
+## Pausa/reanuda el juego (ESC). El HUD corre en PROCESS_MODE_ALWAYS para
+## seguir recibiendo input y poder des-pausar.
+func _toggle_pause() -> void:
+	pause_panel.visible = not pause_panel.visible
+	get_tree().paused = pause_panel.visible
+
+func _on_pause_quit_pressed() -> void:
+	get_tree().paused = false
+	get_tree().quit()
 
 ## Abre/cierra el inventario. Mientras está abierto, el player no castea
 ## (así el click en las casillas no dispara la Bola de Fuego) y la cámara
@@ -165,8 +190,10 @@ func _on_player_died() -> void:
 	game_over.visible = true
 
 func _on_retry_pressed() -> void:
+	get_tree().paused = false
 	# Misma clase, arena fresca.
 	SceneManager.change_scene("res://scenes/levels/Arena.tscn")
 
 func _on_menu_pressed() -> void:
+	get_tree().paused = false
 	SceneManager.change_scene("res://scenes/ui/MainMenu.tscn")
