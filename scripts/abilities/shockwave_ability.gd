@@ -27,7 +27,7 @@ func _spawn_sequence(player: Node, tree: SceneTree, dir: Vector3, i: int) -> voi
 	if i >= 3 or not is_instance_valid(player) or not player.is_inside_tree() or player.get("_dead"):
 		return
 	
-	var result: Array = player.stats.roll_spell_damage(&"melee_damage", 0.9)
+	var result: Array = player.stats.roll_spell_damage(&"melee_damage", 0.4)
 	var nova = SCENE.instantiate()
 	nova.position = player.global_position + dir * (2.0 + i * 2.5)
 	player.get_parent().add_child(nova)

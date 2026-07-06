@@ -16,7 +16,7 @@ func _init() -> void:
 	element = &"melee"
 
 func _cast(player) -> Variant:
-	var result: Array = player.stats.roll_spell_damage(&"melee_damage", 1.0)
+	var result: Array = player.stats.roll_spell_damage(&"melee_damage", 0.55)
 	var slash = SCENE.instantiate()
 	player.get_parent().add_child(slash)
 	slash.global_position = player.global_position

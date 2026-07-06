@@ -24,4 +24,4 @@ func _cast(player) -> Variant:
 	
 	# Deja una trampa que explota
 	FX.burst(player.global_position + Vector3.UP, Color(0.8, 0.9, 1.0), 12, 0.05)
-	return _spawn_nova(player, SCENE, &"ranged_damage", 1.2)
+	return _spawn_nova(player, SCENE, &"ranged_damage", 0.6)

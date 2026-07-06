@@ -1,4 +1,4 @@
-## Slot 1 — Ametralladora Arcana (Varita LMB): proyectil muy rápido, pero te ralentiza.
+## Slot 1 — Descarga Arcana (Varita LMB): el básico de la varita, rápido y liviano.
 class_name ArcBoltAbility
 extends Ability
 
@@ -6,15 +6,13 @@ const SCENE := preload("res://scenes/magic/ArcBolt.tscn")
 
 func _init() -> void:
 	id = &"arc_bolt"
-	display_name = "Ametralladora Arcana"
+	display_name = "Descarga Arcana"
 	key_label = "LMB"
 	color = Color(0.4, 0.8, 1.0)
-	cooldown = 0.25 # Fuego rápido
+	cooldown = 0.3
 	mana_cost = 0.0
 	hold_to_cast = true
 	element = &"lightning"
 
 func _cast(player) -> Variant:
-	# Ralentiza al jugador mientras ametralla
-	player.apply_speed_modifier(0.7, 0.3)
-	return _spawn_projectile(player, SCENE, &"lightning_damage", 0.4)
+	return _spawn_projectile(player, SCENE, &"lightning_damage", 0.28)

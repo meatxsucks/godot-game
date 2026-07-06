@@ -26,5 +26,5 @@ func _spawn_sequence(player: Node, tree: SceneTree, i: int) -> void:
 	if i >= 3 or not is_instance_valid(player) or not player.is_inside_tree() or player.get("_dead"):
 		return
 	
-	_spawn_nova(player, SCENE, &"melee_damage", 0.6)
+	_spawn_nova(player, SCENE, &"melee_damage", 0.3)
 	tree.create_timer(0.4).timeout.connect(_spawn_sequence.bind(player, tree, i + 1))

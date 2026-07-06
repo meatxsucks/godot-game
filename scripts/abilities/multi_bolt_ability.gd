@@ -26,13 +26,13 @@ func _cast(player) -> Variant:
 	return true
 
 func _spawn_sequence(player: Node, tree: SceneTree, target: Vector3, right: Vector3, i: int) -> void:
-	if i >= 5 or not is_instance_valid(player) or not player.is_inside_tree() or player.get("_dead"):
+	if i >= 3 or not is_instance_valid(player) or not player.is_inside_tree() or player.get("_dead"):
 		return
-	
-	var offset = right * (i - 2) * 1.5 # -3, -1.5, 0, 1.5, 3
+
+	var offset = right * (i - 1) * 1.5 # -1.5, 0, 1.5
 	var spawn_pos = target + offset
-	
-	var result: Array = player.stats.roll_spell_damage(&"fire_damage", 1.2)
+
+	var result: Array = player.stats.roll_spell_damage(&"fire_damage", 0.5)
 	var nova = SCENE.instantiate()
 	nova.position = spawn_pos
 	player.get_parent().add_child(nova)
