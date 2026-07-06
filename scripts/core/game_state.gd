@@ -20,7 +20,7 @@ const CLASSES := {
 	},
 	&"warrior": {
 		"name": "Guerrero",
-		"desc": "Tanque cuerpo a cuerpo: tajos, embestida que atraviesa y gritos de guerra. Aguanta de todo.",
+		"desc": "Tanque cuerpo a cuerpo: tajos, embestida y un Grito de Guerra que golpea y lo CURA. Aguanta de todo.",
 		"color": Color(1.0, 0.5, 0.3),
 		"model": "res://assets/kaykit/Knight.glb",
 		"anims": {"idle": "Idle", "run": "Running_A", "attack": "1H_Melee_Attack_Slice_Horizontal", "death": "Death_A"},

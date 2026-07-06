@@ -31,6 +31,8 @@ extends CharacterBody3D
 @export var preferred_range: float = 8.0
 @export var ranged_interval: float = 2.5
 @export var projectile_scene: PackedScene
+## Proyectiles por disparo (el spawner lo sube en oleadas altas = abanico).
+@export var projectile_count: int = 1
 
 var current_health: float
 var _health_bar: HealthBar3D
@@ -196,14 +198,21 @@ func _try_shoot() -> void:
 		return # todavía acercándose
 
 	_ranged_timer = ranged_interval
-	var bolt = projectile_scene.instantiate()
-	get_parent().add_child(bolt)
-	bolt.global_position = global_position + Vector3(0, 0.9, 0)
-	var aim: Vector3 = player.global_position + Vector3(0, 0.5, 0) - bolt.global_position
-	if aim.length_squared() > 0.001:
+	var origin := global_position + Vector3(0, 0.9, 0)
+	var aim: Vector3 = player.global_position + Vector3(0, 0.5, 0) - origin
+	if aim.length_squared() < 0.001:
+		return
+	# Abanico: en oleadas altas el arquero dispara varios proyectiles.
+	var spread := 0.22
+	var base_angle := -spread * (projectile_count - 1) * 0.5
+	for i in projectile_count:
+		var bolt = projectile_scene.instantiate()
+		get_parent().add_child(bolt)
+		bolt.global_position = origin
 		bolt.global_transform.basis = Basis.looking_at(aim.normalized(), Vector3.UP)
-	if bolt.has_method("setup"):
-		bolt.setup(attack_damage, self)
+		bolt.rotate_y(base_angle + spread * i)
+		if bolt.has_method("setup"):
+			bolt.setup(attack_damage, self)
 	_play_locked("attack")
 
 # --- Navegación ----------------------------------------------------------------

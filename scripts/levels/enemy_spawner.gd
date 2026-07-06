@@ -178,11 +178,16 @@ func _spawn_one() -> void:
 	if _safe_zone and _safe_zone.contains(pos):
 		return
 
+	# Los "poderes" de los enemigos escalan con la oleada: atacan más rápido
+	# y los arqueros disparan abanicos de más flechas.
+	var atk_speed := 1.0 + 0.06 * (wave - 1)
+
 	var slime := slime_scene.instantiate()
 	slime.max_health = variant["hp"] * hp_mult
 	slime.speed = variant["speed"]
 	slime.size_scale = variant["scale"]
 	slime.attack_damage = variant["dmg"] * dmg_mult
+	slime.attack_interval = maxf(0.45, 1.0 / atk_speed)
 	slime.body_color = variant["color"]
 	slime.loot_level = _loot_level()
 	slime.xp_reward = variant["xp"] * (1.0 + 0.1 * (wave - 1))
@@ -191,6 +196,9 @@ func _spawn_one() -> void:
 	slime.is_ranged = variant["ranged"]
 	if variant["ranged"]:
 		slime.projectile_scene = ENEMY_ARROW
+		slime.ranged_interval = maxf(1.0, 2.5 / atk_speed)
+		# +1 flecha cada 3 oleadas (1 → 2 en la 4, 3 en la 7...).
+		slime.projectile_count = 1 + int(wave / 3.0)
 	add_child(slime)
 	slime.global_position = pos
 	_to_spawn -= 1
