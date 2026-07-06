@@ -66,6 +66,8 @@ func _toggle_inventory() -> void:
 	inventory_panel.visible = not inventory_panel.visible
 	if player:
 		player.combat_input_enabled = not inventory_panel.visible
+		if player.has_method("set_inspect"):
+			player.set_inspect(inventory_panel.visible)
 	var rig = get_tree().get_first_node_in_group("camera_rig")
 	if rig and rig.has_method("set_zoomed"):
 		rig.set_zoomed(inventory_panel.visible)

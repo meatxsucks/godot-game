@@ -61,6 +61,10 @@ var _attack_lock: float = 0.0
 var _pad_aim := Vector3.FORWARD
 var _use_pad_aim := false
 
+## Modo inspección (inventario abierto): el personaje mira a la cámara para
+## que se le vea el frente con el equipo, en vez de apuntar al cursor.
+var _inspect: bool = false
+
 ## Arma actual del slot básico (el LMB cambia según el arma equipada).
 var _last_weapon_id: StringName = &"__init__"
 
@@ -293,7 +297,21 @@ func get_front_point(distance: float = 5.5) -> Vector3:
 		forward = Vector3.FORWARD
 	return global_position + forward.normalized() * distance
 
+## Modo inspección: el personaje encara la cámara (inventario abierto).
+func set_inspect(on: bool) -> void:
+	_inspect = on
+
 func _aim_at_mouse() -> void:
+	# Inventario abierto: el personaje mira a la cámara (se le ve el frente).
+	if _inspect:
+		var cam := get_viewport().get_camera_3d()
+		if cam:
+			var look := cam.global_position
+			look.y = visual.global_position.y
+			if look.distance_squared_to(visual.global_position) > 0.1:
+				visual.look_at(look, Vector3.UP)
+		return
+
 	# Stick derecho del mando: apuntado directo alineado a cámara.
 	var stick := Vector2(
 		Input.get_joy_axis(0, JOY_AXIS_RIGHT_X),

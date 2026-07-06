@@ -4,14 +4,17 @@ extends Node3D
 @export var smooth_speed: float = 8.0
 # Desplazamiento base de la cámara isométrica clásica.
 @export var offset: Vector3 = Vector3(12, 12, 12)
+# Pose de inspección (inventario abierto): más baja y cerca, casi de frente
+# al personaje para apreciar el equipo puesto.
+@export var inspect_offset: Vector3 = Vector3(4.5, 3.0, 6.0)
 
 var target: Node3D = null
 ## Fuerza restante del screen shake (decae sola).
 var _shake: float = 0.0
-## Zoom (1 = normal, <1 = más cerca) y desplazamiento lateral. Al abrir el
-## inventario la cámara se acerca y corre al personaje a un lado del panel.
-var _zoom: float = 1.0
-var _pan: float = 0.0
+## Inspección: al abrir el inventario la cámara pasa a la pose de inspección
+## (frontal y cercana) y desplaza el encuadre para dejar al personaje a la
+## izquierda del panel.
+var _inspect: bool = false
 
 func _ready() -> void:
 	add_to_group("camera_rig")
@@ -33,30 +36,17 @@ func _ready() -> void:
 func shake(strength: float = 0.3) -> void:
 	_shake = maxf(_shake, strength)
 
-## Acerca (o restaura) la cámara al personaje. Lo usa el HUD al abrir el
-## inventario: zoom + corrimiento para que el personaje quede a la vista,
-## no detrás del panel de la derecha.
+## Entra/sale del modo inspección. Lo usa el HUD al abrir el inventario.
 func set_zoomed(on: bool) -> void:
-	_zoom = 0.5 if on else 1.0
-	_pan = 5.0 if on else 0.0
+	_inspect = on
 
 func _process(delta: float) -> void:
 	if not target:
 		return
 	var cam: Camera3D = $Camera3D
-	# Zoom suave: acerca/aleja la cámara sobre su eje.
-	if cam:
-		cam.position = cam.position.lerp(offset * _zoom, 6.0 * delta)
 
+	# Seguir al jugador (con shake).
 	var goal := target.global_position
-	# Corrimiento lateral (en el eje "derecha" de la cámara) para dejar al
-	# personaje a un lado y no detrás del panel del inventario.
-	if cam and absf(_pan) > 0.01:
-		var cam_right := cam.global_transform.basis.x
-		cam_right.y = 0.0
-		if cam_right.length_squared() > 0.001:
-			goal += cam_right.normalized() * _pan
-
 	if _shake > 0.005:
 		_shake = lerpf(_shake, 0.0, 8.0 * delta)
 		goal += Vector3(
@@ -64,3 +54,15 @@ func _process(delta: float) -> void:
 			0.0,
 			randf_range(-_shake, _shake))
 	global_position = global_position.lerp(goal, smooth_speed * delta)
+
+	if cam == null:
+		return
+	# Interpola entre la pose de juego y la de inspección.
+	var want_pos := inspect_offset if _inspect else offset
+	cam.position = cam.position.lerp(want_pos, 6.0 * delta)
+	# h_offset desplaza el encuadre (sin rotar la vista) para dejar al
+	# personaje a la izquierda del panel del inventario.
+	cam.h_offset = lerpf(cam.h_offset, 1.6 if _inspect else 0.0, 6.0 * delta)
+	# Apuntar al centro del jugador (al pecho en inspección).
+	var look_h := 1.0 if _inspect else 0.0
+	cam.look_at(global_position + Vector3(0, look_h, 0), Vector3.UP)
