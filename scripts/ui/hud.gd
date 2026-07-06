@@ -60,11 +60,15 @@ func _input(event: InputEvent) -> void:
 		_toggle_inventory()
 
 ## Abre/cierra el inventario. Mientras está abierto, el player no castea
-## (así el click en las casillas no dispara la Bola de Fuego).
+## (así el click en las casillas no dispara la Bola de Fuego) y la cámara
+## se acerca al personaje para ver el equipo puesto.
 func _toggle_inventory() -> void:
 	inventory_panel.visible = not inventory_panel.visible
 	if player:
 		player.combat_input_enabled = not inventory_panel.visible
+	var rig = get_tree().get_first_node_in_group("camera_rig")
+	if rig and rig.has_method("set_zoomed"):
+		rig.set_zoomed(inventory_panel.visible)
 
 func _build_slots() -> void:
 	for i in player.abilities.size():

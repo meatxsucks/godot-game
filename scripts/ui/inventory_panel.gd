@@ -59,13 +59,6 @@ func setup(p_player: Node) -> void:
 	refresh()
 
 func _build() -> void:
-	# Vista previa 3D del personaje arriba de la cruz de equipo.
-	var left_col: Node = equip_grid.get_parent().get_parent()
-	var preview := CharacterPreview.new()
-	left_col.add_child(preview)
-	left_col.move_child(preview, 0)
-	preview.setup(player)
-
 	for slot_name in EQUIP_LAYOUT:
 		if slot_name == &"":
 			var spacer := Control.new()
