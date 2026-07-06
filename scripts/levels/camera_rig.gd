@@ -2,8 +2,9 @@ extends Node3D
 
 @export var target_path: NodePath
 @export var smooth_speed: float = 8.0
-# Desplazamiento base de la cámara isométrica clásica
-@export var offset: Vector3 = Vector3(12, 12, 12)
+# Desplazamiento base de la cámara isométrica. Más cerca que el clásico
+# (12,12,12 ≈ 21m) para apreciar el equipo puesto en el personaje.
+@export var offset: Vector3 = Vector3(8, 8, 8)
 
 var target: Node3D = null
 ## Fuerza restante del screen shake (decae sola).
