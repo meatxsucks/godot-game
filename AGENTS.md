@@ -1,10 +1,23 @@
 # AGENTS.md — Reglas para agentes de IA
 
-Este repo lo editan **varios agentes** (Claude, Antigravity, agentes de arte/visual, humanos). Estas reglas evitan que se pisen entre sí. **Léelas ANTES de tocar nada.** Aplican a todos por igual.
+Este repo lo editan **varios agentes** (Claude, Antigravity, agentes de arte/visual, humanos). Este archivo es el **punto de entrada**: te dice dónde mirar para entender, qué hacer y cómo registrar tu avance. **Léelo ANTES de tocar nada.** Aplica a todos por igual.
+
+## 0. El mapa de documentos (dónde mirar / dónde escribir)
+| Documento | Para qué | Tú… |
+|-----------|----------|-----|
+| `spec/GDD.md` | Reglas del **juego** (diseño, mecánicas, decisiones cerradas) | **Lees**. Solo se edita con decisión del dueño |
+| `spec/ARCHITECTURE.md` | Reglas de **desarrollo** (stack, networking, estándares Steam/consola) | **Lees**. Se edita al cambiar arquitectura |
+| `spec/prompts/` | Prompts reutilizables (documentar scripts, flujogramas) | Usas cuando toque |
+| `TODO.md` | Backlog por épicas + ideas + decisiones abiertas | **Tomas UNA tarea** y actualizas su estado |
+| `CHANGELOG.md` | Registro de TODO cambio hecho por agentes | **Escribes SIEMPRE** al terminar (obligatorio) |
+| `IMPLEMENTED_FEATURES.md` (gitignored) | Estado técnico detallado del prototipo | Lees/actualizas si tocas gameplay |
+| `README.md` | Público: guía para artistas + controles | Actualizas si cambias algo que documenta |
+
+**Flujo resumido: `spec/` (entender) → `TODO.md` (tomar tarea) → trabajar → validar → `CHANGELOG.md` (registrar) → commit.**
 
 ## 1. Antes de empezar (obligatorio)
-1. Lee `docs/GDD.md` (qué es el juego), `docs/ARCHITECTURE.md` (cómo está hecho) y `docs/BACKLOG.md` (tareas).
-2. Toma **UNA** tarea del backlog y márcala `[~] en progreso` con tu nombre de agente. No abras 5 frentes a la vez.
+1. Lee `spec/GDD.md`, `spec/ARCHITECTURE.md` y este archivo completo.
+2. Toma **UNA** tarea de `TODO.md` y márcala `[~] (tu-nombre-de-agente)`. No abras 5 frentes a la vez.
 3. Trabaja SOLO dentro de tu **zona de propiedad** (sección 2).
 
 ## 2. Zonas de propiedad (no salgas de la tuya sin coordinar)
@@ -31,16 +44,18 @@ Cambiar esto rompe el trabajo de otros agentes silenciosamente:
 - **Tween callbacks** de entidades que pueden morir (boss) van en el **nodo del efecto**, no en el emisor.
 - El **flash de daño** debe volver al color BASE, no al color leído.
 - Identifica slots especiales por **propiedad** (`is_super`), nunca por id hardcodeado.
-- **Co-op:** NUNCA asumas "un solo jugador". Usa grupos/listas; el prototipo usa `get_first_node_in_group("player")` en muchos lados — eso hay que migrar (ver backlog E1).
+- **Co-op:** NUNCA asumas "un solo jugador". Usa grupos/listas; el prototipo usa `get_first_node_in_group("player")` en muchos lados — eso hay que migrar (TODO E1).
+- **Posiciona nodos ANTES de `add_child`** cuando el `_ready` del hijo calcula objetivos (supers caían en el origen).
 - `Container` ignora hijos `top_level` (útil para popups dentro de `PanelContainer`).
 
 ## 5. Flujo de trabajo (obligatorio para cada tarea)
 1. **Branch** por tarea: `feat/loot-tiendas`, `fix/dash-direccion`.
 2. Cambios **pequeños y atómicos** (una tarea = un PR/commit lógico).
 3. **Validar headless ANTES de commitear** (comando abajo). Cero errores de parseo; los 3 smokes deben imprimir `SMOKE OK`, `KIT SMOKE OK`, `HIT SMOKE OK`.
-4. **Actualiza la doc** de tu zona (`GDD.md`, `ARCHITECTURE.md`, `README.md` o `BACKLOG.md`).
-5. **Commit claro en español.** ⚠️ **PROHIBIDO** poner `Co-Authored-By: Claude`, `🤖 Generated with…` ni cualquier atribución de IA. El autor es el dueño del repo.
-6. Marca la tarea `[x] hecha` en `BACKLOG.md`.
+4. **Registrar en `CHANGELOG.md`** (entrada arriba del todo: fecha, agente, tarea, qué, archivos, validación). **Sin entrada = trabajo incompleto.**
+5. **Actualiza la doc** de tu zona si cambiaste algo que documenta (`spec/`, `README.md`, `IMPLEMENTED_FEATURES.md`).
+6. **Commit claro en español.** ⚠️ **PROHIBIDO** poner `Co-Authored-By: Claude`, `🤖 Generated with…` ni cualquier atribución de IA. El autor es el dueño del repo.
+7. Marca la tarea `[x]` en `TODO.md`.
 
 ### Comando de validación (copia y pega)
 ```bash
@@ -56,8 +71,9 @@ PROJ="c:/Users/matia/OneDrive/Documentos/GithubProyects/godot-game"
 ## 6. Definition of Done
 - [ ] Dentro de mi zona (o coordinado si tuve que salir).
 - [ ] Sin errores de parseo; los 3 smokes pasan.
-- [ ] Doc actualizada.
-- [ ] Commit sin atribución de IA; tarea marcada `[x]`.
+- [ ] Entrada agregada en `CHANGELOG.md`.
+- [ ] Doc de mi zona actualizada.
+- [ ] Commit sin atribución de IA; tarea marcada `[x]` en `TODO.md`.
 
 ## 7. Si tienes que salir de tu zona
-No lo hagas silencioso. Anota en `BACKLOG.md` una nota `⚠️ requiere tocar <archivo> (zona X)` y coordina, o divídelo en dos tareas (una por zona). Un contrato roto sin avisar es el peor error posible aquí.
+No lo hagas silencioso. Anota en `TODO.md` una nota `⚠️ requiere tocar <archivo> (zona X)` y coordina, o divídelo en dos tareas (una por zona). Un contrato roto sin avisar es el peor error posible aquí.

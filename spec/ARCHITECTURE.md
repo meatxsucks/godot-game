@@ -1,6 +1,6 @@
 # ARQUITECTURA — revisión y estándares (Steam / consola)
 
-> Estado técnico y el camino de "prototipo" a "producto vendible". Complementa `IMPLEMENTED_FEATURES.md` (qué existe) y `docs/GDD.md` (qué se quiere).
+> Estado técnico y el camino de "prototipo" a "producto vendible". Complementa `IMPLEMENTED_FEATURES.md` (qué existe) y `spec/GDD.md` (qué se quiere).
 
 ## 1. Stack actual
 - **Motor:** Godot 4.4 (Forward+). GDScript.
@@ -52,4 +52,4 @@ El prototipo es **100% single-player**. Convertirlo a cooperativo es el mayor ri
 5. Re-tematización insecto (agente visual) en paralelo, respetando contratos de `AGENTS.md`.
 6. Steam/consola (Steamworks, Deck, localización, cert) — capa final antes de vender.
 
-Detalle de tareas en `docs/BACKLOG.md`.
+Detalle de tareas en `TODO.md`.

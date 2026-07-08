@@ -1,6 +1,6 @@
 # GDD — ARPG de Insectos (título provisional)
 
-> Documento de diseño. El **estado real de implementación** está en `IMPLEMENTED_FEATURES.md`; el **cómo técnico** en `docs/ARCHITECTURE.md`; las **tareas** en `docs/BACKLOG.md`. Este doc es la fuente de verdad de DISEÑO.
+> Documento de diseño. El **estado real de implementación** está en `IMPLEMENTED_FEATURES.md`; el **cómo técnico** en `spec/ARCHITECTURE.md`; las **tareas** en `TODO.md`. Este doc es la fuente de verdad de DISEÑO.
 
 ## 1. Visión y pilares
 ARPG **cooperativo** con temática de **insectos** que **descienden** por una ciudad subterránea corrompida. Twin-stick (teclado+mouse o mando). Farmeo con peso (economía Tibia) y combos arma×clase.
@@ -80,7 +80,7 @@ Un medidor de **Corrupción** por jugador:
 - **Infección como amenaza activa** (mutación por tiempo, contagio) — §5.
 
 ## 10. Estado del prototipo (reutilizable)
-El repo ya tiene un prototipo **single-player** funcional que cubre gran parte de §3–§8 en versión mago (clases, kit arma×clase, loot con rareza, skills por uso, XP, dash, mundo procedural, minimapa, mando, pausa). **Se re-tematiza a insectos y se convierte a co-op.** El mayor trabajo NO hecho: **networking/co-op**, **guardado/persistencia**, **corrupción**, **facciones**, **ciudades-hub**. Ver `docs/BACKLOG.md`.
+El repo ya tiene un prototipo **single-player** funcional que cubre gran parte de §3–§8 en versión mago (clases, kit arma×clase, loot con rareza, skills por uso, XP, dash, mundo procedural, minimapa, mando, pausa). **Se re-tematiza a insectos y se convierte a co-op.** El mayor trabajo NO hecho: **networking/co-op**, **guardado/persistencia**, **corrupción**, **facciones**, **ciudades-hub**. Ver `TODO.md`.
 
 ## 11. Decisiones aún abiertas (para próximas iteraciones)
 - Tamaño de party (¿2 o 4?) y si se puede jugar solo con bots/escala.

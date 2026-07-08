@@ -1,6 +1,6 @@
-# BACKLOG — tareas troceadas para agentes
+# TODO — backlog, tareas e ideas
 
-> **Cómo usar:** un agente toma **UNA** tarea, sigue `AGENTS.md`, la marca `[~]` al empezar y `[x]` al terminar (con smokes en verde). Cada tarea es chica a propósito, para dársela a un chat/agente pequeño. `Z:` = zona de propiedad (ver `AGENTS.md §2`).
+> **Cómo usar:** un agente toma **UNA** tarea, sigue `AGENTS.md`, la marca `[~] (nombre-agente)` al empezar y `[x]` al terminar (con smokes en verde). Al terminar, **registra el cambio en `CHANGELOG.md`** (obligatorio). Cada tarea es chica a propósito, para dársela a un chat/agente pequeño. `Z:` = zona de propiedad (ver `AGENTS.md §2`). El contexto de diseño/técnica está en `spec/`.
 
 Estado: `[ ]` pendiente · `[~]` en progreso · `[x]` hecha · `⚠️` requiere coordinar zonas.
 
@@ -70,3 +70,20 @@ Estado: `[ ]` pendiente · `[~]` en progreso · `[x]` hecha · `⚠️` requiere
 - [ ] **E9.1** Integrar GodotSteam (logros, Cloud, stats). `Z: lógica`.
 - [ ] **E9.2** Steam Deck: escalar UI legible, glifos de mando, verificar arranque. `Z: lógica`+`visual`.
 - [ ] **E9.3** Contactar porting partner para consola; desacoplar save/input de gameplay. `Z: lógica`.
+
+---
+
+## 💡 Ideas (sin comprometer — mover a épica cuando se decidan)
+- Sonido y música (pendiente grande, se aborda más adelante a propósito).
+- Shaders PSX (dithering/vertex snap) para el look retro.
+- Modelo propio para el boss (hoy: esfera dorada con corona).
+- Persistencia de récords (oleada máxima) y meta-progresión.
+- Mascotas/símbolos de facción; misiones secundarias por colonia.
+- Modo "juego solo con bots" si el co-op queda grande (GDD §11).
+- Loot corrupto: ítems mejores pero con maldición ligada a la Corrupción.
+- Eventos de mundo: brotes de infección temporales en zonas ya limpiadas.
+
+## Decisiones abiertas (bloquean tareas — resolver con el dueño)
+- Tamaño de party (¿2 o 4?) → bloquea E1.5.
+- Loot compartido vs instanciado por jugador → bloquea E1.7.
+- ¿Corrupción por-jugador o de party? → afecta E2.1.
