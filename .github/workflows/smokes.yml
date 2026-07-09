@@ -1,0 +1,68 @@
+name: Smokes
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  smokes:
+    runs-on: ubuntu-latest
+    env:
+      GODOT_VERSION: 4.4.1
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cache Godot
+        id: cache-godot
+        uses: actions/cache@v4
+        with:
+          path: ~/godot
+          key: godot-${{ env.GODOT_VERSION }}-linux
+
+      - name: Download Godot (headless-capable Linux build)
+        if: steps.cache-godot.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p ~/godot
+          curl -fsSL -o /tmp/godot.zip "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-stable/Godot_v${GODOT_VERSION}-stable_linux.x86_64.zip"
+          unzip -q /tmp/godot.zip -d ~/godot
+          mv ~/godot/Godot_v${GODOT_VERSION}-stable_linux.x86_64 ~/godot/godot
+          chmod +x ~/godot/godot
+
+      - name: Importar proyecto (parseo de scripts/escenas)
+        run: |
+          set -o pipefail
+          ~/godot/godot --headless --path . --editor --quit-after 250 2>&1 | tee /tmp/import.log
+          # El import puede salir 0 aunque haya logueado errores de parseo — se
+          # chequea el log a mano (mismo criterio que AGENTS.md: cero errores).
+          if grep -qE "SCRIPT ERROR|Parse Error|Failed to load script" /tmp/import.log; then
+            echo "::error::Errores de parseo en la importación (ver log arriba)"
+            exit 1
+          fi
+
+      - name: Smokes headless (LootSmoke, KitSmoke, HitSmoke, SaveSmoke, L10nSmoke)
+        run: |
+          run_smoke() {
+            local scene="$1" expected="$2"
+            echo "=== $scene ==="
+            local out
+            out=$(~/godot/godot --headless --path . "res://tests/$scene" 2>&1)
+            echo "$out"
+            if ! grep -qF "$expected" <<< "$out"; then
+              echo "::error::$scene no imprimió '$expected'"
+              exit 1
+            fi
+          }
+          run_smoke LootSmoke.tscn "SMOKE OK"
+          run_smoke KitSmoke.tscn "KIT SMOKE OK"
+          run_smoke HitSmoke.tscn "HIT SMOKE OK"
+          run_smoke SaveSmoke.tscn "SAVE SMOKE OK"
+          run_smoke L10nSmoke.tscn "L10N SMOKE OK"
+
+      - name: Runtime de Arena.tscn (no debe crashear)
+        run: |
+          set -o pipefail
+          ~/godot/godot --headless --path . --quit-after 900 res://scenes/levels/Arena.tscn 2>&1 | tee /tmp/arena.log
+          if grep -qE "SCRIPT ERROR|Parse Error" /tmp/arena.log; then
+            echo "::error::Errores en runtime de Arena.tscn (ver log arriba)"
+            exit 1
+          fi
