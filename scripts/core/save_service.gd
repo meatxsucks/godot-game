@@ -22,8 +22,20 @@ const DEFAULT_SETTINGS := {
 	"fullscreen": false,
 }
 
+## Keybinds remapeables en runtime (E0.4): subconjunto de acciones de
+## gameplay de `project.godot` — movimiento, ataques, habilidades, UI.
+## Quedan afuera las acciones `ui_*` built-in de Godot.
+const REMAPPABLE_ACTIONS: Array[StringName] = [
+	&"move_up", &"move_down", &"move_left", &"move_right",
+	&"attack_primary", &"attack_secondary",
+	&"ability_dash", &"ability_nova", &"ability_super",
+	&"toggle_inventory", &"interact",
+]
+const KEYBINDS_PATH := "user://keybinds.dat"
+
 func _ready() -> void:
 	apply_settings(load_settings())
+	load_keybinds()
 
 func has_save() -> bool:
 	return FileAccess.file_exists(SAVE_PATH)
@@ -188,3 +200,65 @@ func apply_settings(settings: Dictionary) -> void:
 	else:
 		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_WINDOWED)
 		DisplayServer.window_set_size(settings.get("resolution", DEFAULT_SETTINGS["resolution"]))
+
+# --- Keybinds remapeables (E0.4) --------------------------------------------
+
+func has_keybinds() -> bool:
+	return FileAccess.file_exists(KEYBINDS_PATH)
+
+## Persiste al disco los eventos actuales del InputMap para las acciones
+## remapeables (formato binario vía `store_var`: los InputEvent son
+## Resources y se serializan solos, sin reinventar su codificación).
+func save_keybinds() -> void:
+	var data := {}
+	for action in REMAPPABLE_ACTIONS:
+		data[String(action)] = InputMap.action_get_events(action)
+	var file := FileAccess.open(KEYBINDS_PATH, FileAccess.WRITE)
+	if file == null:
+		push_error("[SaveService] no se pudo abrir %s para escribir" % KEYBINDS_PATH)
+		return
+	file.store_var(data, true)
+	file.close()
+
+## Aplica los binds guardados al InputMap (reemplaza los eventos de cada
+## acción remapeable). No-op si no hay archivo o está corrupto.
+func load_keybinds() -> void:
+	if not has_keybinds():
+		return
+	var file := FileAccess.open(KEYBINDS_PATH, FileAccess.READ)
+	if file == null:
+		return
+	var data = file.get_var(true)
+	file.close()
+	if typeof(data) != TYPE_DICTIONARY:
+		return
+	for action in REMAPPABLE_ACTIONS:
+		var key := String(action)
+		if not data.has(key) or typeof(data[key]) != TYPE_ARRAY:
+			continue
+		InputMap.action_erase_events(action)
+		for ev in data[key]:
+			if ev is InputEvent:
+				InputMap.action_add_event(action, ev)
+
+## Reemplaza el bind de UN dispositivo (teclado/mouse o joypad) para una
+## acción sin tocar el bind del otro, y persiste. `new_event` decide qué
+## tipo se reemplaza (si es de joypad, reemplaza solo binds de joypad).
+func rebind_action(action: StringName, new_event: InputEvent) -> void:
+	var is_joy := new_event is InputEventJoypadButton or new_event is InputEventJoypadMotion
+	var keep: Array[InputEvent] = []
+	for ev in InputMap.action_get_events(action):
+		var ev_is_joy := ev is InputEventJoypadButton or ev is InputEventJoypadMotion
+		if ev_is_joy != is_joy:
+			keep.append(ev)
+	InputMap.action_erase_events(action)
+	for ev in keep:
+		InputMap.action_add_event(action, ev)
+	InputMap.action_add_event(action, new_event)
+	save_keybinds()
+
+## Vuelve todas las acciones remapeables a los binds de `project.godot`.
+func reset_keybinds() -> void:
+	InputMap.load_from_project_settings()
+	if has_keybinds():
+		DirAccess.remove_absolute(KEYBINDS_PATH)

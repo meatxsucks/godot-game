@@ -29,12 +29,36 @@ extends CanvasLayer
 @onready var resolution_option: OptionButton = %ResolutionOption
 @onready var fullscreen_check: CheckButton = %FullscreenCheck
 @onready var btn_options_back: Button = %BtnOptionsBack
+@onready var controls_panel: CenterContainer = %Controls
+@onready var btn_pause_controls: Button = %BtnPauseControls
+@onready var controls_list: VBoxContainer = %ControlsList
+@onready var btn_controls_reset: Button = %BtnControlsReset
+@onready var btn_controls_back: Button = %BtnControlsBack
 
 var player: Node = null
 var wave_manager: Node = null
 var _slots: Array[AbilitySlot] = []
 ## Mientras corre, el label de oleada muestra "¡NIVEL X!" sin ser pisado.
 var _level_flash: float = 0.0
+
+## Nombres legibles de las acciones remapeables (ver SaveService.REMAPPABLE_ACTIONS).
+const ACTION_LABELS := {
+	&"move_up": "Mover arriba",
+	&"move_down": "Mover abajo",
+	&"move_left": "Mover izquierda",
+	&"move_right": "Mover derecha",
+	&"attack_primary": "Ataque primario",
+	&"attack_secondary": "Ataque secundario",
+	&"ability_dash": "Dash / blink",
+	&"ability_nova": "Habilidad (Q)",
+	&"ability_super": "Ultimate (R)",
+	&"toggle_inventory": "Inventario",
+	&"interact": "Interactuar",
+}
+var _kb_buttons := {} # StringName -> Button
+var _joy_labels := {} # StringName -> Label
+## Acción esperando la próxima tecla/click para remapearse (&"" = ninguna).
+var _rebind_action: StringName = &""
 
 func _ready() -> void:
 	wave_manager = get_tree().get_first_node_in_group("wave_manager")
@@ -54,6 +78,10 @@ func _ready() -> void:
 	resolution_option.item_selected.connect(_on_resolution_selected)
 	fullscreen_check.toggled.connect(_on_fullscreen_toggled)
 	_setup_options_ui()
+	btn_pause_controls.pressed.connect(_on_controls_pressed)
+	btn_controls_back.pressed.connect(_on_controls_back_pressed)
+	btn_controls_reset.pressed.connect(_on_controls_reset_pressed)
+	_build_controls_rows()
 
 	player = get_tree().get_first_node_in_group("player")
 	if player == null:
@@ -76,14 +104,21 @@ func _ready() -> void:
 	_on_xp_changed(player.stats.xp, player.stats.xp_needed(), player.stats.level)
 
 func _input(event: InputEvent) -> void:
+	# Con un rebind pendiente, la próxima tecla/click captura el bind (o lo
+	# cancela si es Escape) en vez de accionar cualquier otra cosa.
+	if _rebind_action != &"":
+		_capture_rebind(event)
+		return
 	if event.is_action_pressed("ui_cancel"):
-		# Con el inventario abierto, ESC lo cierra primero; con Opciones abierto,
-		# vuelve a Pausa; si ya terminó la partida (game over/victoria), esos
-		# paneles tienen sus propios botones.
+		# Con el inventario abierto, ESC lo cierra primero; con Opciones o
+		# Controles abiertos, vuelve a Pausa; si ya terminó la partida (game
+		# over/victoria), esos paneles tienen sus propios botones.
 		if inventory_panel.visible:
 			_toggle_inventory()
 		elif options_panel.visible:
 			_on_options_back_pressed()
+		elif controls_panel.visible:
+			_on_controls_back_pressed()
 		elif not game_over.visible and not victory.visible:
 			_toggle_pause()
 		return
@@ -96,6 +131,7 @@ func _toggle_pause() -> void:
 	pause_panel.visible = not pause_panel.visible
 	if not pause_panel.visible:
 		options_panel.visible = false
+		controls_panel.visible = false
 	get_tree().paused = pause_panel.visible
 
 func _on_pause_quit_pressed() -> void:
@@ -145,6 +181,97 @@ func _persist_settings() -> void:
 	}
 	SaveService.save_settings(settings)
 	SaveService.apply_settings(settings)
+
+# --- Controles (E0.4) --------------------------------------------------------
+# Solo el bind de teclado/mouse es remapeable interactivamente; el de mando
+# se muestra de referencia (rebindearlo requiere resolver ejes/gatillos
+# analógicos aparte — queda para una iteración futura de E0.4).
+
+func _build_controls_rows() -> void:
+	for child in controls_list.get_children():
+		child.queue_free()
+	_kb_buttons.clear()
+	_joy_labels.clear()
+	for action in SaveService.REMAPPABLE_ACTIONS:
+		var row := HBoxContainer.new()
+		row.add_theme_constant_override(&"separation", 10)
+
+		var name_label := Label.new()
+		name_label.custom_minimum_size = Vector2(140, 0)
+		name_label.add_theme_font_size_override(&"font_size", 10)
+		name_label.text = ACTION_LABELS.get(action, String(action))
+		row.add_child(name_label)
+
+		var kb_button := Button.new()
+		kb_button.custom_minimum_size = Vector2(90, 0)
+		kb_button.pressed.connect(_on_rebind_pressed.bind(action))
+		row.add_child(kb_button)
+		_kb_buttons[action] = kb_button
+
+		var joy_label := Label.new()
+		joy_label.custom_minimum_size = Vector2(90, 0)
+		joy_label.add_theme_font_size_override(&"font_size", 10)
+		joy_label.add_theme_color_override(&"font_color", Color(0.7, 0.7, 0.75))
+		row.add_child(joy_label)
+		_joy_labels[action] = joy_label
+
+		controls_list.add_child(row)
+	_refresh_controls_rows()
+
+func _refresh_controls_rows() -> void:
+	for action in SaveService.REMAPPABLE_ACTIONS:
+		var kb_text := "—"
+		var joy_text := "—"
+		for ev in InputMap.action_get_events(action):
+			if ev is InputEventJoypadButton or ev is InputEventJoypadMotion:
+				joy_text = InputGlyphs.text(ev)
+			else:
+				kb_text = InputGlyphs.text(ev)
+		_kb_buttons[action].text = kb_text
+		_joy_labels[action].text = joy_text
+
+func _on_controls_pressed() -> void:
+	pause_panel.visible = false
+	controls_panel.visible = true
+	_refresh_controls_rows()
+
+func _on_controls_back_pressed() -> void:
+	_cancel_rebind()
+	controls_panel.visible = false
+	pause_panel.visible = true
+
+func _on_controls_reset_pressed() -> void:
+	_cancel_rebind()
+	SaveService.reset_keybinds()
+	_refresh_controls_rows()
+
+func _on_rebind_pressed(action: StringName) -> void:
+	_cancel_rebind() # solo un rebind pendiente a la vez
+	_rebind_action = action
+	_kb_buttons[action].text = "..."
+
+func _cancel_rebind() -> void:
+	if _rebind_action == &"":
+		return
+	_rebind_action = &""
+	_refresh_controls_rows()
+
+## Captura el próximo evento válido (tecla o botón de mouse) mientras hay un
+## rebind pendiente. Escape cancela en vez de asignarse.
+func _capture_rebind(event: InputEvent) -> void:
+	if event is InputEventKey and event.pressed and not event.echo:
+		if event.physical_keycode == KEY_ESCAPE:
+			_cancel_rebind()
+		else:
+			SaveService.rebind_action(_rebind_action, event)
+			_rebind_action = &""
+			_refresh_controls_rows()
+		get_viewport().set_input_as_handled()
+	elif event is InputEventMouseButton and event.pressed:
+		SaveService.rebind_action(_rebind_action, event)
+		_rebind_action = &""
+		_refresh_controls_rows()
+		get_viewport().set_input_as_handled()
 
 ## Abre/cierra el inventario. Mientras está abierto, el player no castea
 ## (así el click en las casillas no dispara la Bola de Fuego) y la cámara

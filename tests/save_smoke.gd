@@ -52,5 +52,31 @@ func _ready() -> void:
 	SaveService.delete_save()
 	assert(not SaveService.has_save(), "delete_save limpia el archivo")
 
+	# --- Keybinds (E0.4) ---------------------------------------------------
+	var f_key := InputEventKey.new()
+	f_key.physical_keycode = KEY_F
+
+	SaveService.rebind_action(&"ability_dash", f_key)
+	assert(SaveService.has_keybinds(), "rebind_action persiste a disco")
+	var dash_events := InputMap.action_get_events(&"ability_dash")
+	assert(dash_events.any(func(ev): return ev is InputEventKey and ev.physical_keycode == KEY_F),
+		"el InputMap tiene el nuevo bind de teclado")
+	assert(dash_events.any(func(ev): return ev is InputEventJoypadButton),
+		"rebind_action no toca el bind de joypad de la misma acción")
+
+	# Simula reabrir el juego: reset a los defaults de project.godot y recargar el archivo.
+	InputMap.load_from_project_settings()
+	assert(not InputMap.action_get_events(&"ability_dash").any(func(ev): return ev is InputEventKey and ev.physical_keycode == KEY_F),
+		"load_from_project_settings vuelve al default (sanity check)")
+	SaveService.load_keybinds()
+	dash_events = InputMap.action_get_events(&"ability_dash")
+	assert(dash_events.any(func(ev): return ev is InputEventKey and ev.physical_keycode == KEY_F),
+		"load_keybinds reaplica el bind guardado")
+
+	SaveService.reset_keybinds()
+	assert(not SaveService.has_keybinds(), "reset_keybinds limpia el archivo")
+	assert(not InputMap.action_get_events(&"ability_dash").any(func(ev): return ev is InputEventKey and ev.physical_keycode == KEY_F),
+		"reset_keybinds vuelve al bind original")
+
 	print("SAVE SMOKE OK")
 	get_tree().quit(0)

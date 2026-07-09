@@ -280,6 +280,11 @@ unique_name_in_owner = true
 layout_mode = 2
 text = "Opciones"
 
+[node name="BtnPauseControls" type="Button" parent="Root/Pause/Panel/VBox/Buttons"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Controles"
+
 [node name="BtnPauseMenu" type="Button" parent="Root/Pause/Panel/VBox/Buttons"]
 unique_name_in_owner = true
 layout_mode = 2
@@ -369,6 +374,84 @@ theme_override_constants/separation = 10
 alignment = 1
 
 [node name="BtnOptionsBack" type="Button" parent="Root/Options/Panel/VBox/Buttons"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Volver"
+
+[node name="Controls" type="CenterContainer" parent="Root"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+
+[node name="Panel" type="PanelContainer" parent="Root/Controls"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_pause")
+
+[node name="VBox" type="VBoxContainer" parent="Root/Controls/Panel"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Title" type="Label" parent="Root/Controls/Panel/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.85, 0.74, 1, 1)
+theme_override_font_sizes/font_size = 24
+text = "CONTROLES"
+horizontal_alignment = 1
+
+[node name="Hint" type="Label" parent="Root/Controls/Panel/VBox"]
+theme_override_font_sizes/font_size = 9
+theme_override_colors/font_color = Color(0.7, 0.7, 0.75, 1)
+text = "Click en el botón de teclado/mouse y apretá la tecla nueva. El mando no se remapea todavía (E0.4)."
+horizontal_alignment = 1
+autowrap_mode = 2
+custom_minimum_size = Vector2(340, 0)
+
+[node name="HeaderRow" type="HBoxContainer" parent="Root/Controls/Panel/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="Label" type="Label" parent="Root/Controls/Panel/VBox/HeaderRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(140, 0)
+theme_override_font_sizes/font_size = 9
+text = "Acción"
+
+[node name="Label2" type="Label" parent="Root/Controls/Panel/VBox/HeaderRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(90, 0)
+theme_override_font_sizes/font_size = 9
+text = "Teclado/mouse"
+
+[node name="Label3" type="Label" parent="Root/Controls/Panel/VBox/HeaderRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(90, 0)
+theme_override_font_sizes/font_size = 9
+text = "Mando"
+
+[node name="Scroll" type="ScrollContainer" parent="Root/Controls/Panel/VBox"]
+custom_minimum_size = Vector2(340, 220)
+layout_mode = 2
+
+[node name="ControlsList" type="VBoxContainer" parent="Root/Controls/Panel/VBox/Scroll"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 6
+
+[node name="Buttons" type="HBoxContainer" parent="Root/Controls/Panel/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 10
+alignment = 1
+
+[node name="BtnControlsReset" type="Button" parent="Root/Controls/Panel/VBox/Buttons"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Restablecer"
+
+[node name="BtnControlsBack" type="Button" parent="Root/Controls/Panel/VBox/Buttons"]
 unique_name_in_owner = true
 layout_mode = 2
 text = "Volver"
