@@ -54,16 +54,17 @@ func effective(stat: StringName) -> float:
 ## Representación con BBCode coloreado para RichTextLabel.
 func to_bbcode() -> String:
 	var hex := rarity_color().to_html(false)
-	var s := "[color=#%s][b]%s[/b][/color]  [i](nv %d · %s)[/i]\n" % [
-		hex, display_name, item_level, Rarity.display_name(rarity)
-	]
+	# display_name queda en el idioma en que se generó el ítem (ver nota en
+	# loot_generator.gd); el resto de la ficha se traduce en vivo.
+	var info := tr("nv %d · %s") % [item_level, Rarity.display_name(rarity)]
+	var s := "[color=#%s][b]%s[/b][/color]  [i](%s)[/i]\n" % [hex, display_name, info]
 	for k in stats:
-		s += "    [color=#cfcfcf]%s: %s[/color]\n" % [k, _fmt(stats[k])]
+		s += "    [color=#cfcfcf]%s: %s[/color]\n" % [StatLabels.label(k), _fmt(stats[k])]
 	for inst in affixes:
 		s += "    [color=#8fd0ff]%s[/color]\n" % inst.describe()
 	if legendary:
-		s += "  [color=#%s]★ %s[/color]\n" % [hex, legendary.title]
-		s += "      [i][color=#ffd9a8]%s[/color][/i]\n" % legendary.text
+		s += "  [color=#%s]★ %s[/color]\n" % [hex, tr(legendary.title)]
+		s += "      [i][color=#ffd9a8]%s[/color][/i]\n" % tr(legendary.text)
 	return s
 
 func to_text() -> String:

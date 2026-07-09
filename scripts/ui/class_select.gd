@@ -4,22 +4,6 @@ extends Control
 
 const ORDER: Array[StringName] = [&"mage", &"warrior", &"ranger"]
 
-## Etiquetas cortas para las líneas de stats de cada tarjeta.
-const STAT_LABELS := {
-	&"max_health": "Vida",
-	&"max_mana": "Maná",
-	&"mana_regen": "Maná por kill",
-	&"spell_damage": "Daño mágico",
-	&"melee_damage": "Daño melee",
-	&"ranged_damage": "Daño distancia",
-	&"crit_chance": "Crítico %",
-	&"crit_damage": "Daño crít. %",
-	&"move_speed": "Vel. mov. %",
-	&"res_fire": "Res. fuego %",
-	&"res_cold": "Res. hielo %",
-	&"res_lightning": "Res. rayo %",
-}
-
 @onready var cards: HBoxContainer = %Cards
 
 func _ready() -> void:
@@ -44,14 +28,14 @@ func _make_card(id: StringName) -> Control:
 	panel.add_child(box)
 
 	var title := Label.new()
-	title.text = def["name"]
+	title.text = tr(def["name"])
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title.add_theme_color_override(&"font_color", def["color"])
 	title.add_theme_font_size_override(&"font_size", 18)
 	box.add_child(title)
 
 	var desc := Label.new()
-	desc.text = def["desc"]
+	desc.text = tr(def["desc"])
 	desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	desc.add_theme_font_size_override(&"font_size", 10)
 	desc.custom_minimum_size = Vector2(0, 56)
@@ -61,7 +45,7 @@ func _make_card(id: StringName) -> Control:
 
 	for stat in def["stats"]:
 		var line := Label.new()
-		line.text = "%s: %d" % [STAT_LABELS.get(stat, String(stat)), roundi(def["stats"][stat])]
+		line.text = "%s: %d" % [StatLabels.label(stat), roundi(def["stats"][stat])]
 		line.add_theme_font_size_override(&"font_size", 10)
 		box.add_child(line)
 
@@ -70,7 +54,7 @@ func _make_card(id: StringName) -> Control:
 	box.add_child(spacer)
 
 	var button := Button.new()
-	button.text = "Elegir"
+	button.text = tr("Elegir")
 	button.pressed.connect(_on_class_chosen.bind(id))
 	box.add_child(button)
 

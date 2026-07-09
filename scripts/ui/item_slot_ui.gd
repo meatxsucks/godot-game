@@ -89,7 +89,9 @@ func _drop_data(_at_position: Vector2, data: Variant) -> void:
 func _abbrev_for(it: LootItem) -> String:
 	if it.base:
 		if it.base.type == &"potion_health":
-			return "VID"
+			return tr("VID")
 		if it.base.type == &"potion_mana":
-			return "MAN"
+			return tr("MAN")
+	# Se abrevia el display_name ya generado (queda en el idioma en que se
+	# generó el ítem — cambiar de idioma no re-traduce ítems ya en el mundo).
 	return it.display_name.substr(0, 3).to_upper()

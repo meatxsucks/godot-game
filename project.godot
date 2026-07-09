@@ -18,6 +18,7 @@ config/icon="res://icon.svg"
 
 [autoload]
 
+L10n="*res://scripts/core/l10n.gd"
 Game="*res://scripts/core/game_state.gd"
 FX="*res://scripts/core/fx.gd"
 LootDB="*res://scripts/loot/loot_database.gd"
@@ -101,6 +102,16 @@ interact={
 , Object(InputEventJoypadButton,"resource_local_to_scene":false,"resource_name":"","device":-1,"button_index":2,"pressure":0.0,"pressed":false,"script":null)
 ]
 }
+
+[internationalization]
+
+locale/default_locale="es"
+; Godot cae al locale de fallback cuando el activo no tiene traducción
+; registrada. El default de Godot es "en" — con el español como idioma
+; fuente (sin Translation propia) eso hacía que jugar en "es" mostrara
+; inglés igual (encontrado por el smoke L10nSmoke). Fallback = "es" hace
+; que, al no encontrar nada, Godot devuelva el string fuente tal cual.
+locale/fallback="es"
 
 [rendering]
 

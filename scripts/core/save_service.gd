@@ -16,10 +16,12 @@ const RESOLUTIONS: Array[Vector2i] = [
 	Vector2i(1600, 900),
 	Vector2i(1920, 1080),
 ]
+const LOCALES: Array[String] = ["es", "en"]
 const DEFAULT_SETTINGS := {
 	"master_volume": 1.0, # lineal 0..1
 	"resolution": Vector2i(854, 480),
 	"fullscreen": false,
+	"locale": "es",
 }
 
 ## Keybinds remapeables en runtime (E0.4): subconjunto de acciones de
@@ -150,7 +152,7 @@ func has_settings() -> bool:
 	return FileAccess.file_exists(SETTINGS_PATH)
 
 ## Devuelve los settings guardados, o `DEFAULT_SETTINGS` si no hay archivo
-## o está corrupto. Siempre trae las 3 claves (nunca faltan por save viejo).
+## o está corrupto. Siempre trae las 4 claves (nunca faltan por save viejo).
 func load_settings() -> Dictionary:
 	var settings: Dictionary = DEFAULT_SETTINGS.duplicate()
 	if not has_settings():
@@ -169,6 +171,9 @@ func load_settings() -> Dictionary:
 	var res: Array = data.get("resolution", [])
 	if res.size() == 2:
 		settings["resolution"] = Vector2i(int(res[0]), int(res[1]))
+	var locale := String(data.get("locale", settings["locale"]))
+	if LOCALES.has(locale):
+		settings["locale"] = locale
 	return settings
 
 func save_settings(settings: Dictionary) -> void:
@@ -177,6 +182,7 @@ func save_settings(settings: Dictionary) -> void:
 		"master_volume": float(settings.get("master_volume", DEFAULT_SETTINGS["master_volume"])),
 		"resolution": [resolution.x, resolution.y],
 		"fullscreen": bool(settings.get("fullscreen", DEFAULT_SETTINGS["fullscreen"])),
+		"locale": String(settings.get("locale", DEFAULT_SETTINGS["locale"])),
 	}
 	var file := FileAccess.open(SETTINGS_PATH, FileAccess.WRITE)
 	if file == null:
@@ -185,9 +191,13 @@ func save_settings(settings: Dictionary) -> void:
 	file.store_string(JSON.stringify(data, "\t"))
 	file.close()
 
-## Aplica settings al motor (bus Master + ventana). Se llama al boot
+## Aplica settings al motor (idioma, bus Master, ventana). Se llama al boot
 ## (con lo último guardado) y en vivo cada vez que cambian en el menú.
 func apply_settings(settings: Dictionary) -> void:
+	var locale := String(settings.get("locale", "es"))
+	if LOCALES.has(locale):
+		TranslationServer.set_locale(locale)
+
 	var master_idx := AudioServer.get_bus_index("Master")
 	if master_idx >= 0:
 		var volume: float = clampf(settings.get("master_volume", 1.0), 0.0, 1.0)

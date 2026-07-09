@@ -18,17 +18,10 @@ const SLOT_LABELS := {
 	&"cape": "CAPA",
 }
 
-## Stats mostrados en el bloque de Stats: [stat, etiqueta].
-const STAT_ROWS := [
-	[&"max_health", "Vida"],
-	[&"max_mana", "Maná"],
-	[&"mana_regen", "Maná por kill"],
-	[&"spell_damage", "Daño mágico"],
-	[&"melee_damage", "Daño melee"],
-	[&"ranged_damage", "Daño distancia"],
-	[&"crit_chance", "Crítico %"],
-	[&"cast_speed", "Vel. lanz. %"],
-	[&"move_speed", "Vel. mov. %"],
+## Stats mostrados en el bloque de Stats, en orden (etiquetas: StatLabels).
+const STAT_ROWS: Array[StringName] = [
+	&"max_health", &"max_mana", &"mana_regen", &"spell_damage",
+	&"melee_damage", &"ranged_damage", &"crit_chance", &"cast_speed", &"move_speed",
 ]
 
 var player: Node = null
@@ -66,7 +59,7 @@ func _build() -> void:
 			equip_grid.add_child(spacer)
 			continue
 		var slot := ItemSlotUI.new()
-		slot.placeholder = SLOT_LABELS[slot_name]
+		slot.placeholder = tr(SLOT_LABELS[slot_name])
 		slot.slot_kind = &"equipment"
 		slot.equip_slot = slot_name
 		slot.pressed.connect(_on_equip_slot_pressed.bind(slot_name))
@@ -88,8 +81,8 @@ func _build() -> void:
 		_inv_slots.append(slot)
 
 	_level_label = _make_line(stats_box)
-	for row in STAT_ROWS:
-		_stat_labels[row[0]] = _make_line(stats_box)
+	for stat in STAT_ROWS:
+		_stat_labels[stat] = _make_line(stats_box)
 	for skill in SkillSet.SKILLS:
 		_skill_labels[skill] = _make_line(skills_box)
 
@@ -107,16 +100,16 @@ func refresh() -> void:
 	for i in _inv_slots.size():
 		var item: LootItem = player.inventory[i] if i < player.inventory.size() else null
 		_inv_slots[i].set_item(item)
-	inv_counter.text = "Inventario %d/%d" % [player.inventory.size(), player.INVENTORY_SIZE]
+	inv_counter.text = tr("Inventario %d/%d") % [player.inventory.size(), player.INVENTORY_SIZE]
 
 	# Stats efectivos (base de la clase + equipo + niveles) y skills.
-	_level_label.text = "Nivel: %d  (XP %d/%d)" % [player.stats.level, roundi(player.stats.xp), roundi(player.stats.xp_needed())]
-	for row in STAT_ROWS:
-		_stat_labels[row[0]].text = "%s: %d" % [row[1], roundi(player.stats.get_stat(row[0]))]
+	_level_label.text = tr("Nivel: %d  (XP %d/%d)") % [player.stats.level, roundi(player.stats.xp), roundi(player.stats.xp_needed())]
+	for stat in STAT_ROWS:
+		_stat_labels[stat].text = "%s: %d" % [StatLabels.label(stat), roundi(player.stats.get_stat(stat))]
 	for skill in SkillSet.SKILLS:
 		var lv: int = player.stats.skills.level(skill)
 		var pct: int = roundi(player.stats.skills.progress(skill) * 100)
-		_skill_labels[skill].text = "%s: nv %d (%d%%)" % [SkillSet.NAMES[skill], lv, pct]
+		_skill_labels[skill].text = tr("%s: nv %d (%d%%)") % [tr(SkillSet.NAMES[skill]), lv, pct]
 
 func _on_inventory_slot_pressed(index: int) -> void:
 	_hide_compare()

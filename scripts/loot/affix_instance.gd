@@ -19,7 +19,7 @@ func is_percent() -> bool:
 func describe() -> String:
 	var sign_str := "+" if value >= 0.0 else ""
 	var unit := "%" if is_percent() else ""
-	return "%s%s%s %s" % [sign_str, _fmt(value), unit, source.stat_label]
+	return "%s%s%s %s" % [sign_str, _fmt(value), unit, tr(source.stat_label)]
 
 func _fmt(v: float) -> String:
 	if absf(v - roundf(v)) < 0.001:

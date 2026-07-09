@@ -16,7 +16,10 @@ func generate_random_item(level: int = 1, type: StringName = &"", forced_rarity:
 	if bases.is_empty():
 		return item
 	item.base = bases.pick_random()
-	item.display_name = item.base.name
+	# El nombre se traduce y compone acá, al generar el ítem: display_name
+	# queda fijo en el idioma activo en ese momento (cambiar de idioma no
+	# retraduce ítems ya generados — ver nota en item_slot_ui.gd).
+	item.display_name = tr(item.base.name)
 	
 	# 3. Determinar cantidad de afijos según rareza
 	var affix_count_range = Rarity.AFFIX_RANGE.get(item.rarity, Vector2i(0, 0))
@@ -55,10 +58,10 @@ func generate_random_item(level: int = 1, type: StringName = &"", forced_rarity:
 			
 			# Lógica simple de nombre (toma el primero que encuentra)
 			if chosen.kind == Affix.Kind.PREFIX and not has_prefix:
-				item.display_name = chosen.name_word + " " + item.display_name
+				item.display_name = tr(chosen.name_word) + " " + item.display_name
 				has_prefix = true
 			elif chosen.kind == Affix.Kind.SUFFIX and not has_suffix:
-				item.display_name = item.display_name + " " + chosen.name_word
+				item.display_name = item.display_name + " " + tr(chosen.name_word)
 				has_suffix = true
 				
 			# Generar valor (AffixInstance)
@@ -87,7 +90,7 @@ func make_potion(kind: StringName) -> LootItem:
 	if item.base == null:
 		push_warning("[Loot] poción desconocida: %s" % kind)
 		return null
-	item.display_name = item.base.name
+	item.display_name = tr(item.base.name)
 	item.recompute_stats()
 	return item
 

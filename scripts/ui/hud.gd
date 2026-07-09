@@ -24,6 +24,7 @@ extends CanvasLayer
 @onready var btn_pause_menu: Button = %BtnPauseMenu
 @onready var btn_pause_quit: Button = %BtnPauseQuit
 @onready var options_panel: CenterContainer = %Options
+@onready var language_option: OptionButton = %LanguageOption
 @onready var volume_slider: HSlider = %VolumeSlider
 @onready var volume_label: Label = %VolumeLabel
 @onready var resolution_option: OptionButton = %ResolutionOption
@@ -55,6 +56,12 @@ const ACTION_LABELS := {
 	&"toggle_inventory": "Inventario",
 	&"interact": "Interactuar",
 }
+## Nombre de cada locale en SU PROPIO idioma (no se traduce: un hablante de
+## inglés tiene que poder reconocer "Español" aunque esté viendo el menú en inglés).
+const LOCALE_NAMES := {
+	"es": "Español",
+	"en": "English",
+}
 var _kb_buttons := {} # StringName -> Button
 var _joy_labels := {} # StringName -> Label
 ## Acción esperando la próxima tecla/click para remapearse (&"" = ninguna).
@@ -74,6 +81,7 @@ func _ready() -> void:
 	btn_pause_quit.pressed.connect(_on_pause_quit_pressed)
 	btn_pause_options.pressed.connect(_on_options_pressed)
 	btn_options_back.pressed.connect(_on_options_back_pressed)
+	language_option.item_selected.connect(_on_language_selected)
 	volume_slider.value_changed.connect(_on_volume_changed)
 	resolution_option.item_selected.connect(_on_resolution_selected)
 	fullscreen_check.toggled.connect(_on_fullscreen_toggled)
@@ -143,9 +151,13 @@ func _on_pause_quit_pressed() -> void:
 # cada cambio vía SaveService — sin botón "Guardar" separado.
 
 func _setup_options_ui() -> void:
+	for locale in SaveService.LOCALES:
+		language_option.add_item(LOCALE_NAMES.get(locale, locale))
 	for res in SaveService.RESOLUTIONS:
 		resolution_option.add_item("%d×%d" % [res.x, res.y])
 	var settings := SaveService.load_settings()
+	var locale_idx := SaveService.LOCALES.find(settings["locale"])
+	language_option.selected = maxi(locale_idx, 0)
 	volume_slider.value = settings["master_volume"]
 	_update_volume_label(settings["master_volume"])
 	fullscreen_check.button_pressed = settings["fullscreen"]
@@ -173,8 +185,19 @@ func _on_resolution_selected(_index: int) -> void:
 func _on_fullscreen_toggled(_pressed: bool) -> void:
 	_persist_settings()
 
+## Cambiar idioma re-traduce en vivo los Controls estáticos (Godot lo hace
+## solo), pero los labels dinámicos ya compuestos (inventario, controles)
+## hay que reconstruirlos a mano para que no se queden en el idioma viejo
+## hasta el próximo refresh natural.
+func _on_language_selected(_index: int) -> void:
+	_persist_settings()
+	_build_controls_rows()
+	if player:
+		inventory_panel.refresh()
+
 func _persist_settings() -> void:
 	var settings := {
+		"locale": SaveService.LOCALES[language_option.selected],
 		"master_volume": volume_slider.value,
 		"resolution": SaveService.RESOLUTIONS[resolution_option.selected],
 		"fullscreen": fullscreen_check.button_pressed,
@@ -199,7 +222,7 @@ func _build_controls_rows() -> void:
 		var name_label := Label.new()
 		name_label.custom_minimum_size = Vector2(140, 0)
 		name_label.add_theme_font_size_override(&"font_size", 10)
-		name_label.text = ACTION_LABELS.get(action, String(action))
+		name_label.text = tr(ACTION_LABELS.get(action, String(action)))
 		row.add_child(name_label)
 
 		var kb_button := Button.new()
@@ -292,7 +315,7 @@ func _build_slots() -> void:
 		var slot := AbilitySlot.new()
 		slot.ability_color = ability.color
 		slot.key_label = ability.key_label
-		slot.tooltip_text = ability.display_name
+		slot.tooltip_text = tr(ability.display_name)
 		if ability.is_super:
 			slot.charge_ratio = 0.0
 			slot.custom_minimum_size = Vector2(54, 54)
@@ -306,7 +329,7 @@ func _process(delta: float) -> void:
 	elif wave_manager and wave_manager.current_wave() > 0:
 		var left: int = wave_manager.enemies_left()
 		if left > 0:
-			wave_label.text = "Oleada %d — quedan %d" % [wave_manager.current_wave(), left]
+			wave_label.text = tr("Oleada %d — quedan %d") % [wave_manager.current_wave(), left]
 
 	if player == null:
 		return
@@ -343,19 +366,19 @@ func _on_kit_changed() -> void:
 func _on_xp_changed(current: float, needed: float, level: int) -> void:
 	xp_bar.max_value = needed
 	xp_bar.value = current
-	level_label.text = "Nv %d" % level
+	level_label.text = tr("Nv %d") % level
 
 func _on_leveled_up(new_level: int) -> void:
-	wave_label.text = "¡NIVEL %d!" % new_level
+	wave_label.text = tr("¡NIVEL %d!") % new_level
 	_level_flash = 1.4
 
 # --- Oleadas -------------------------------------------------------------------
 
 func _on_wave_started(n: int) -> void:
 	if wave_manager and n == wave_manager.boss_wave:
-		wave_label.text = "¡OLEADA FINAL — EL REY SLIME!"
+		wave_label.text = tr("¡OLEADA FINAL — EL REY SLIME!")
 	else:
-		wave_label.text = "Oleada %d" % n
+		wave_label.text = tr("Oleada %d") % n
 
 func _on_boss_defeated() -> void:
 	victory.visible = true
@@ -364,12 +387,12 @@ func _on_continue_pressed() -> void:
 	victory.visible = false
 
 func _on_wave_cleared(n: int) -> void:
-	wave_label.text = "¡Oleada %d superada!" % n
+	wave_label.text = tr("¡Oleada %d superada!") % n
 
 func _on_intermission_tick(next_n: int, seconds_left: int) -> void:
 	# Los primeros segundos se deja el "¡superada!" en pantalla.
 	if seconds_left <= 7 or next_n == 1:
-		wave_label.text = "Oleada %d en %d s..." % [next_n, seconds_left]
+		wave_label.text = tr("Oleada %d en %d s...") % [next_n, seconds_left]
 
 # --- Game Over ---------------------------------------------------------------
 

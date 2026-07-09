@@ -20,6 +20,7 @@ var _opened := false
 
 func _ready() -> void:
 	add_to_group("chest")
+	prompt.text = tr(prompt.text)
 	$InteractArea.body_entered.connect(_on_body_entered)
 	$InteractArea.body_exited.connect(_on_body_exited)
 

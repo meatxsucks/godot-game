@@ -21,17 +21,23 @@ const JOY_AXIS_NAMES := {
 
 static func text(event: InputEvent) -> String:
 	if event is InputEventKey:
+		# Nombre de tecla provisto por el motor (no pasa por el string table
+		# del proyecto; sigue el locale del sistema/engine).
 		return (event as InputEventKey).as_text_physical_keycode()
 	if event is InputEventMouseButton:
 		match (event as InputEventMouseButton).button_index:
-			MOUSE_BUTTON_LEFT: return "Click izq."
-			MOUSE_BUTTON_RIGHT: return "Click der."
-			MOUSE_BUTTON_MIDDLE: return "Click medio"
-			_: return "Mouse %d" % (event as InputEventMouseButton).button_index
+			MOUSE_BUTTON_LEFT: return TranslationServer.translate("Click izq.")
+			MOUSE_BUTTON_RIGHT: return TranslationServer.translate("Click der.")
+			MOUSE_BUTTON_MIDDLE: return TranslationServer.translate("Click medio")
+			_: return TranslationServer.translate("Mouse %d") % (event as InputEventMouseButton).button_index
 	if event is InputEventJoypadButton:
 		var idx := (event as InputEventJoypadButton).button_index
-		return JOY_BUTTON_NAMES.get(idx, "Botón %d" % idx)
+		if JOY_BUTTON_NAMES.has(idx):
+			return TranslationServer.translate(JOY_BUTTON_NAMES[idx])
+		return TranslationServer.translate("Botón %d") % idx
 	if event is InputEventJoypadMotion:
 		var axis := (event as InputEventJoypadMotion).axis
-		return JOY_AXIS_NAMES.get(axis, "Eje %d" % axis)
+		if JOY_AXIS_NAMES.has(axis):
+			return TranslationServer.translate(JOY_AXIS_NAMES[axis])
+		return TranslationServer.translate("Eje %d") % axis
 	return event.as_text()

@@ -70,4 +70,4 @@ static func stat_mult(tier: int) -> float:
 	return STAT_MULT.get(tier, 1.0)
 
 static func display_name(tier: int) -> String:
-	return NAMES.get(tier, "?")
+	return TranslationServer.translate(NAMES.get(tier, "?"))
