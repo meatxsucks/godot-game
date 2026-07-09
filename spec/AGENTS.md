@@ -1,0 +1,1 @@
+D:/Obsidian/godot-game/AGENTS.md
