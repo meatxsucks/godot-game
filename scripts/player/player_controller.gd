@@ -591,3 +591,23 @@ func equip(item: LootItem) -> LootItem:
 func _emit_resource_signals() -> void:
 	health_changed.emit(stats.health, stats.get_stat(&"max_health"))
 	mana_changed.emit(stats.mana, stats.get_stat(&"max_mana"))
+
+# --- Guardado (SaveService) --------------------------------------------------
+
+## Guarda el estado actual del personaje (clase, nivel, XP, skills, equipo,
+## inventario) a disco.
+func save_game() -> void:
+	SaveService.save_game(stats, inventory)
+
+## Carga el save sobre este player y refresca toda la UI conectada por señal.
+## false si no había save (no cambia nada en ese caso).
+func load_game() -> bool:
+	if not SaveService.load_game(stats, inventory):
+		return false
+	_refresh_weapon_skills()
+	_emit_resource_signals()
+	stats_changed.emit()
+	inventory_changed.emit()
+	skills_changed.emit()
+	xp_changed.emit(stats.xp, stats.xp_needed(), stats.level)
+	return true

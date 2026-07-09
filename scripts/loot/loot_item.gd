@@ -75,3 +75,63 @@ func _fmt(v: float) -> String:
 	if absf(v - roundf(v)) < 0.001:
 		return str(int(roundf(v)))
 	return "%.1f" % v
+
+# --- Guardado (SaveService) ------------------------------------------------
+
+## Serializa el ítem a un Dictionary JSON-friendly (solo tipos primitivos:
+## String/int/float/Array/Dictionary). Referencia la base/afijos/legendario
+## por id — se resuelven contra `LootDB` al cargar, no se duplica su data.
+func to_save_dict() -> Dictionary:
+	var affix_list := []
+	for inst: AffixInstance in affixes:
+		affix_list.append({"id": String(inst.source.id), "value": inst.value})
+	return {
+		"base_id": String(base.id) if base else "",
+		"rarity": rarity,
+		"item_level": item_level,
+		"display_name": display_name,
+		"affixes": affix_list,
+		"legendary_id": String(legendary.id) if legendary else "",
+	}
+
+## Reconstruye un LootItem desde `to_save_dict()`, resolviendo base/afijos/
+## legendario contra el contenido actual de `LootDB`. Devuelve null si la
+## base ya no existe (ej. se borró del pool entre versiones del juego).
+static func from_save_dict(d: Dictionary) -> LootItem:
+	var base_id := StringName(d.get("base_id", ""))
+	var base_res: ItemBase = null
+	for b: ItemBase in LootDB.item_bases:
+		if b.id == base_id:
+			base_res = b
+			break
+	if base_res == null:
+		for pb: ItemBase in LootDB.potion_bases.values():
+			if pb.id == base_id:
+				base_res = pb
+				break
+	if base_res == null:
+		push_warning("[LootItem] base desconocida al cargar save: %s" % base_id)
+		return null
+
+	var item := LootItem.new()
+	item.base = base_res
+	item.rarity = int(d.get("rarity", Rarity.Tier.COMMON))
+	item.item_level = int(d.get("item_level", 1))
+	item.display_name = String(d.get("display_name", base_res.name))
+
+	for affix_data: Dictionary in d.get("affixes", []):
+		var affix_id := StringName(affix_data.get("id", ""))
+		for a: Affix in LootDB.affixes:
+			if a.id == affix_id:
+				item.affixes.append(AffixInstance.new(a, float(affix_data.get("value", 0.0))))
+				break
+
+	var legendary_id := StringName(d.get("legendary_id", ""))
+	if legendary_id != &"":
+		for l: LegendaryPower in LootDB.legendaries:
+			if l.id == legendary_id:
+				item.legendary = l
+				break
+
+	item.recompute_stats()
+	return item

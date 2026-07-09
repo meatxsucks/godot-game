@@ -20,8 +20,15 @@ extends CanvasLayer
 @onready var btn_victory_menu: Button = %BtnVictoryMenu
 @onready var pause_panel: CenterContainer = %Pause
 @onready var btn_resume: Button = %BtnResume
+@onready var btn_pause_options: Button = %BtnPauseOptions
 @onready var btn_pause_menu: Button = %BtnPauseMenu
 @onready var btn_pause_quit: Button = %BtnPauseQuit
+@onready var options_panel: CenterContainer = %Options
+@onready var volume_slider: HSlider = %VolumeSlider
+@onready var volume_label: Label = %VolumeLabel
+@onready var resolution_option: OptionButton = %ResolutionOption
+@onready var fullscreen_check: CheckButton = %FullscreenCheck
+@onready var btn_options_back: Button = %BtnOptionsBack
 
 var player: Node = null
 var wave_manager: Node = null
@@ -41,6 +48,12 @@ func _ready() -> void:
 	btn_resume.pressed.connect(_toggle_pause)
 	btn_pause_menu.pressed.connect(_on_menu_pressed)
 	btn_pause_quit.pressed.connect(_on_pause_quit_pressed)
+	btn_pause_options.pressed.connect(_on_options_pressed)
+	btn_options_back.pressed.connect(_on_options_back_pressed)
+	volume_slider.value_changed.connect(_on_volume_changed)
+	resolution_option.item_selected.connect(_on_resolution_selected)
+	fullscreen_check.toggled.connect(_on_fullscreen_toggled)
+	_setup_options_ui()
 
 	player = get_tree().get_first_node_in_group("player")
 	if player == null:
@@ -64,10 +77,13 @@ func _ready() -> void:
 
 func _input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_cancel"):
-		# Con el inventario abierto, ESC lo cierra primero; si ya terminó la
-		# partida (game over/victoria), esos paneles tienen sus propios botones.
+		# Con el inventario abierto, ESC lo cierra primero; con Opciones abierto,
+		# vuelve a Pausa; si ya terminó la partida (game over/victoria), esos
+		# paneles tienen sus propios botones.
 		if inventory_panel.visible:
 			_toggle_inventory()
+		elif options_panel.visible:
+			_on_options_back_pressed()
 		elif not game_over.visible and not victory.visible:
 			_toggle_pause()
 		return
@@ -78,11 +94,57 @@ func _input(event: InputEvent) -> void:
 ## seguir recibiendo input y poder des-pausar.
 func _toggle_pause() -> void:
 	pause_panel.visible = not pause_panel.visible
+	if not pause_panel.visible:
+		options_panel.visible = false
 	get_tree().paused = pause_panel.visible
 
 func _on_pause_quit_pressed() -> void:
 	get_tree().paused = false
 	get_tree().quit()
+
+# --- Opciones (E0.3) --------------------------------------------------------
+# Volumen/resolución/pantalla completa se aplican en vivo y persisten en
+# cada cambio vía SaveService — sin botón "Guardar" separado.
+
+func _setup_options_ui() -> void:
+	for res in SaveService.RESOLUTIONS:
+		resolution_option.add_item("%d×%d" % [res.x, res.y])
+	var settings := SaveService.load_settings()
+	volume_slider.value = settings["master_volume"]
+	_update_volume_label(settings["master_volume"])
+	fullscreen_check.button_pressed = settings["fullscreen"]
+	var res_idx := SaveService.RESOLUTIONS.find(settings["resolution"])
+	resolution_option.selected = maxi(res_idx, 0)
+
+func _on_options_pressed() -> void:
+	pause_panel.visible = false
+	options_panel.visible = true
+
+func _on_options_back_pressed() -> void:
+	options_panel.visible = false
+	pause_panel.visible = true
+
+func _on_volume_changed(value: float) -> void:
+	_update_volume_label(value)
+	_persist_settings()
+
+func _update_volume_label(value: float) -> void:
+	volume_label.text = "%d%%" % roundi(value * 100.0)
+
+func _on_resolution_selected(_index: int) -> void:
+	_persist_settings()
+
+func _on_fullscreen_toggled(_pressed: bool) -> void:
+	_persist_settings()
+
+func _persist_settings() -> void:
+	var settings := {
+		"master_volume": volume_slider.value,
+		"resolution": SaveService.RESOLUTIONS[resolution_option.selected],
+		"fullscreen": fullscreen_check.button_pressed,
+	}
+	SaveService.save_settings(settings)
+	SaveService.apply_settings(settings)
 
 ## Abre/cierra el inventario. Mientras está abierto, el player no castea
 ## (así el click en las casillas no dispara la Bola de Fuego) y la cámara

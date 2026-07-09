@@ -23,6 +23,7 @@ FX="*res://scripts/core/fx.gd"
 LootDB="*res://scripts/loot/loot_database.gd"
 Loot="*res://scripts/loot/loot_generator.gd"
 SceneManager="*res://scripts/core/scene_manager.gd"
+SaveService="*res://scripts/core/save_service.gd"
 
 [display]
 
