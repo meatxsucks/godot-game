@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="ItemBase" load_steps=2 format=3]
+
+[ext_resource type="Script" uid="uid://tdqxbqoednfp" path="res://scripts/loot/item_base.gd" id="1_res"]
+
+[resource]
+script = ExtResource("1_res")
+id = &"wand_bone"
+name = "Varita de hueso"
+type = &"wand"
+slot = &"weapon"
+two_handed = false
+base_stats = {
+&"spell_damage": 6.0,
+&"cast_speed": 10.0,
+&"crit_chance": 3.0
+}
+lmb_power = &"arc_bolt"
+rmb_power = &"chain_bolt"

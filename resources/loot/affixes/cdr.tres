@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="Affix" load_steps=2 format=3]
+
+[ext_resource type="Script" uid="uid://524mr6efsfku" path="res://scripts/loot/affix.gd" id="1_res"]
+
+[resource]
+script = ExtResource("1_res")
+id = &"cdr"
+name_word = "Fluido"
+kind = 0
+stat = &"cooldown_reduction"
+stat_label = "Reducción de enfriamiento"
+mode = 1
+min_value = 3.0
+max_value = 7.0
+per_level = 0.1
+weight = 40
+min_tier = 2
+item_types = Array[StringName]([])
+tags = Array[StringName]([&"utility"])

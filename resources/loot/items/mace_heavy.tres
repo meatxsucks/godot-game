@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="ItemBase" load_steps=2 format=3]
+
+[ext_resource type="Script" uid="uid://tdqxbqoednfp" path="res://scripts/loot/item_base.gd" id="1_res"]
+
+[resource]
+script = ExtResource("1_res")
+id = &"mace_heavy"
+name = "Mazo pesado"
+type = &"mace"
+slot = &"weapon"
+two_handed = true
+base_stats = {
+&"melee_damage": 14.0
+}
+lmb_power = &"mace_smash"
+rmb_power = &"shockwave"

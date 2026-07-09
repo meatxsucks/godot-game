@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="ItemBase" load_steps=2 format=3]
+
+[ext_resource type="Script" uid="uid://tdqxbqoednfp" path="res://scripts/loot/item_base.gd" id="1_res"]
+
+[resource]
+script = ExtResource("1_res")
+id = &"hat_cloth"
+name = "Sombrero de tela"
+type = &"helmet"
+slot = &"head"
+two_handed = false
+base_stats = {
+&"max_mana": 25.0,
+&"max_health": 10.0
+}
+lmb_power = &""
+rmb_power = &""

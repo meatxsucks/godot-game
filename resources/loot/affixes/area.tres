@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="Affix" load_steps=2 format=3]
+
+[ext_resource type="Script" uid="uid://524mr6efsfku" path="res://scripts/loot/affix.gd" id="1_res"]
+
+[resource]
+script = ExtResource("1_res")
+id = &"area"
+name_word = "del Coloso"
+kind = 1
+stat = &"area"
+stat_label = "Área de efecto"
+mode = 1
+min_value = 4.0
+max_value = 10.0
+per_level = 0.2
+weight = 35
+min_tier = 3
+item_types = Array[StringName]([])
+tags = Array[StringName]([&"utility"])

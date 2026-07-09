@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="ItemBase" load_steps=2 format=3]
+
+[ext_resource type="Script" uid="uid://tdqxbqoednfp" path="res://scripts/loot/item_base.gd" id="1_res"]
+
+[resource]
+script = ExtResource("1_res")
+id = &"potion_mana"
+name = "Poción de maná"
+type = &"potion_mana"
+slot = &"consumable"
+base_stats = {
+&"restore_mana": 50.0
+}

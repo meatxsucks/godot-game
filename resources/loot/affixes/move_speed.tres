@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="Affix" load_steps=2 format=3]
+
+[ext_resource type="Script" uid="uid://524mr6efsfku" path="res://scripts/loot/affix.gd" id="1_res"]
+
+[resource]
+script = ExtResource("1_res")
+id = &"move_speed"
+name_word = "del Viento"
+kind = 1
+stat = &"move_speed"
+stat_label = "Vel. de movimiento"
+mode = 0
+min_value = 3.0
+max_value = 8.0
+per_level = 0.2
+weight = 50
+min_tier = 1
+item_types = Array[StringName]([&"cape"])
+tags = Array[StringName]([&"utility"])

@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="ItemBase" load_steps=2 format=3]
+
+[ext_resource type="Script" uid="uid://tdqxbqoednfp" path="res://scripts/loot/item_base.gd" id="1_res"]
+
+[resource]
+script = ExtResource("1_res")
+id = &"staff_oak"
+name = "Bastón de roble"
+type = &"staff"
+slot = &"weapon"
+two_handed = true
+base_stats = {
+&"spell_damage": 10.0
+}
+lmb_power = &"fireball"
+rmb_power = &"multi_bolt"

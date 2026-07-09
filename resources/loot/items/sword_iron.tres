@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="ItemBase" load_steps=2 format=3]
+
+[ext_resource type="Script" uid="uid://tdqxbqoednfp" path="res://scripts/loot/item_base.gd" id="1_res"]
+
+[resource]
+script = ExtResource("1_res")
+id = &"sword_iron"
+name = "Espada corta"
+type = &"sword"
+slot = &"weapon"
+two_handed = false
+base_stats = {
+&"melee_damage": 8.0,
+&"crit_chance": 5.0
+}
+lmb_power = &"sword_slash"
+rmb_power = &"spin_slash"

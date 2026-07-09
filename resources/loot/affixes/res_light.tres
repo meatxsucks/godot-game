@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="Affix" load_steps=2 format=3]
+
+[ext_resource type="Script" uid="uid://524mr6efsfku" path="res://scripts/loot/affix.gd" id="1_res"]
+
+[resource]
+script = ExtResource("1_res")
+id = &"res_light"
+name_word = "de la Tormenta"
+kind = 1
+stat = &"res_lightning"
+stat_label = "Resist. al rayo"
+mode = 1
+min_value = 5.0
+max_value = 15.0
+per_level = 0.3
+weight = 55
+min_tier = 1
+item_types = Array[StringName]([])
+tags = Array[StringName]([&"defense", &"lightning"])

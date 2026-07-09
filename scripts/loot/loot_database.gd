@@ -1,9 +1,14 @@
 ## Base de datos de contenido de loot (autoload "LootDB").
 ##
-## Por defecto se puebla por código para que el demo funcione out-of-the-box.
-## En producción podés cargar Resources (.tres) desde res://data/ y reemplazar
-## estos arrays — el generador no asume de dónde vienen.
+## Data-driven: todo el contenido vive como Resources `.tres` bajo
+## `res://resources/loot/` (items/, potions/, affixes/, legendaries/).
+## El generador (`loot_generator.gd`) no asume de dónde vienen los arrays.
 extends Node
+
+const ITEMS_DIR := "res://resources/loot/items/"
+const POTIONS_DIR := "res://resources/loot/potions/"
+const AFFIXES_DIR := "res://resources/loot/affixes/"
+const LEGENDARIES_DIR := "res://resources/loot/legendaries/"
 
 var item_bases: Array[ItemBase] = []
 var affixes: Array[Affix] = []
@@ -13,128 +18,34 @@ var legendaries: Array[LegendaryPower] = []
 var potion_bases := {}
 
 func _ready() -> void:
-	_build_item_bases()
-	_build_affixes()
-	_build_legendaries()
-	_build_potions()
+	for res in _list_tres(ITEMS_DIR):
+		item_bases.append(res)
+	for res in _list_tres(AFFIXES_DIR):
+		affixes.append(res)
+	for res in _list_tres(LEGENDARIES_DIR):
+		legendaries.append(res)
+	for res: ItemBase in _list_tres(POTIONS_DIR):
+		potion_bases[res.id] = res
 
-# --- Constructores helper -------------------------------------------------
-
-func _base(id: StringName, name: String, type: StringName, slot: StringName, base_stats: Dictionary, two_handed := false, lmb: StringName = &"", rmb: StringName = &"") -> ItemBase:
-	var b := ItemBase.new()
-	b.id = id
-	b.name = name
-	b.type = type
-	b.slot = slot
-	b.base_stats = base_stats
-	b.two_handed = two_handed
-	b.lmb_power = lmb
-	b.rmb_power = rmb
-	return b
-
-func _affix(id: StringName, word: String, kind: int, stat: StringName, label: String,
-		mode: int, vmin: float, vmax: float, per_level: float, weight: int,
-		min_tier: int, types: Array[StringName] = [], tags: Array[StringName] = []) -> Affix:
-	var a := Affix.new()
-	a.id = id
-	a.name_word = word
-	a.kind = kind
-	a.stat = stat
-	a.stat_label = label
-	a.mode = mode
-	a.min_value = vmin
-	a.max_value = vmax
-	a.per_level = per_level
-	a.weight = weight
-	a.min_tier = min_tier
-	a.item_types = types
-	a.tags = tags
-	return a
-
-func _legendary(id: StringName, title: String, text: String, types: Array[StringName],
-		skill: StringName, effect_id: StringName) -> LegendaryPower:
-	var l := LegendaryPower.new()
-	l.id = id
-	l.title = title
-	l.text = text
-	l.item_types = types
-	l.modifies_skill = skill
-	l.effect_id = effect_id
-	return l
-
-# --- Contenido ------------------------------------------------------------
-
-func _build_item_bases() -> void:
-	# Pool de 6 ítems: TODOS visibles en el personaje ("menos es mejor").
-	# La rareza multiplica los stats (Rarity.STAT_MULT).
-	item_bases = [
-		_base(&"staff_oak", "Bastón de roble", &"staff", &"weapon", {&"spell_damage": 10.0}, true, &"fireball", &"multi_bolt"),
-		_base(&"wand_bone", "Varita de hueso", &"wand", &"weapon", {&"spell_damage": 6.0, &"cast_speed": 10.0, &"crit_chance": 3.0}, false, &"arc_bolt", &"chain_bolt"),
-		_base(&"sword_iron", "Espada corta", &"sword", &"weapon", {&"melee_damage": 8.0, &"crit_chance": 5.0}, false, &"sword_slash", &"spin_slash"),
-		_base(&"mace_heavy", "Mazo pesado", &"mace", &"weapon", {&"melee_damage": 14.0}, true, &"mace_smash", &"shockwave"),
-		_base(&"bow_wood", "Arco de madera", &"bow", &"weapon", {&"ranged_damage": 9.0, &"move_speed": 5.0}, true, &"arrow", &"multi_shot"),
-		_base(&"shield_wood", "Escudo de madera", &"shield", &"offhand", {&"max_health": 30.0, &"res_fire": 10.0, &"res_cold": 10.0, &"res_lightning": 10.0}),
-		_base(&"orb_quartz", "Orbe de cuarzo", &"orb", &"offhand", {&"max_mana": 40.0, &"mana_regen": 4.0}),
-		_base(&"robe_linen", "Túnica de lino", &"armor", &"armor", {&"max_health": 35.0}),
-		_base(&"hat_cloth", "Sombrero de tela", &"helmet", &"head", {&"max_mana": 25.0, &"max_health": 10.0}),
-		_base(&"cape_wool", "Capa de lana", &"cape", &"cape", {&"max_health": 10.0, &"move_speed": 4.0}),
-	]
-
-func _build_potions() -> void:
-	potion_bases = {
-		&"potion_health": _base(&"potion_health", "Poción de vida", &"potion_health", &"consumable", {&"restore_health": 40.0}),
-		&"potion_mana": _base(&"potion_mana", "Poción de maná", &"potion_mana", &"consumable", {&"restore_mana": 50.0}),
-	}
-
-func _build_affixes() -> void:
-	var K := Affix.Kind
-	var M := Affix.Mode
-	var T := Rarity.Tier
-	# Tipos de arma (para afijos de daño ofensivo).
-	var weapons: Array[StringName] = [&"staff", &"wand"]
-	var melee_types: Array[StringName] = [&"sword", &"mace", &"shield"]
-	var ranged_types: Array[StringName] = [&"bow"]
-	affixes = [
-		# Ofensivos
-		_affix(&"flat_spell_dmg", "Arcano", K.PREFIX, &"spell_damage", "Daño mágico", M.FLAT, 3, 9, 0.8, 100, T.COMMON, weapons, [&"offense"]),
-		_affix(&"pct_spell_dmg", "Devastador", K.PREFIX, &"spell_damage", "Daño mágico", M.PERCENT, 5, 12, 0.4, 70, T.RARE, weapons, [&"offense"]),
-		_affix(&"fire_dmg", "Flamígero", K.PREFIX, &"fire_damage", "Daño de fuego", M.FLAT, 4, 12, 1.0, 60, T.UNCOMMON, weapons, [&"offense", &"fire"]),
-		_affix(&"cold_dmg", "Glacial", K.PREFIX, &"cold_damage", "Daño de hielo", M.FLAT, 4, 12, 1.0, 60, T.UNCOMMON, weapons, [&"offense", &"cold"]),
-		# Daño por clase: Guerrero (melee) y Explorador (distancia).
-		_affix(&"melee_dmg", "Feroz", K.PREFIX, &"melee_damage", "Daño melee", M.FLAT, 4, 12, 1.0, 60, T.UNCOMMON, melee_types, [&"offense"]),
-		_affix(&"ranged_dmg", "Certero", K.PREFIX, &"ranged_damage", "Daño distancia", M.FLAT, 4, 12, 1.0, 60, T.UNCOMMON, ranged_types, [&"offense"]),
-		_affix(&"crit_chance", "Letal", K.PREFIX, &"crit_chance", "Prob. crítico", M.PERCENT, 2, 6, 0.1, 55, T.UNCOMMON, [], [&"offense"]),
-		_affix(&"crit_dmg", "Brutal", K.PREFIX, &"crit_damage", "Daño crítico", M.PERCENT, 8, 20, 0.6, 45, T.RARE, [], [&"offense"]),
-		_affix(&"cast_speed", "Veloz", K.PREFIX, &"cast_speed", "Vel. de lanzamiento", M.PERCENT, 3, 8, 0.1, 50, T.UNCOMMON, [], [&"utility"]),
-		_affix(&"cdr", "Fluido", K.PREFIX, &"cooldown_reduction", "Reducción de enfriamiento", M.PERCENT, 3, 7, 0.1, 40, T.RARE, [], [&"utility"]),
-		# Recursos / defensa (sufijos)
-		_affix(&"max_mana", "del Mago", K.SUFFIX, &"max_mana", "Maná máximo", M.FLAT, 8, 25, 2.0, 90, T.COMMON, [], [&"resource"]),
-		_affix(&"mana_regen", "del Flujo", K.SUFFIX, &"mana_regen", "Maná por kill", M.FLAT, 1, 4, 0.2, 60, T.UNCOMMON, [], [&"resource"]),
-		_affix(&"max_health", "del Titán", K.SUFFIX, &"max_health", "Vida máxima", M.FLAT, 15, 45, 3.0, 90, T.COMMON, [], [&"defense"]),
-		_affix(&"res_fire", "del Hogar", K.SUFFIX, &"res_fire", "Resist. al fuego", M.PERCENT, 5, 15, 0.3, 55, T.UNCOMMON, [], [&"defense", &"fire"]),
-		_affix(&"res_cold", "del Invierno", K.SUFFIX, &"res_cold", "Resist. al hielo", M.PERCENT, 5, 15, 0.3, 55, T.UNCOMMON, [], [&"defense", &"cold"]),
-		_affix(&"res_light", "de la Tormenta", K.SUFFIX, &"res_lightning", "Resist. al rayo", M.PERCENT, 5, 15, 0.3, 55, T.UNCOMMON, [], [&"defense", &"lightning"]),
-		_affix(&"area", "del Coloso", K.SUFFIX, &"area", "Área de efecto", M.PERCENT, 4, 10, 0.2, 35, T.EPIC, [], [&"utility"]),
-		# Solo capas: velocidad de movimiento (FLAT = puntos de % directos).
-		_affix(&"move_speed", "del Viento", K.SUFFIX, &"move_speed", "Vel. de movimiento", M.FLAT, 3, 8, 0.2, 50, T.UNCOMMON, [&"cape"], [&"utility"]),
-	]
-
-func _build_legendaries() -> void:
-	var weapons: Array[StringName] = [&"staff", &"wand"]
-	legendaries = [
-		_legendary(&"leg_chain_fire", "Pira en Cadena",
-			"Tus Bolas de Fuego rebotan a 2 enemigos cercanos al impactar, con -40% de daño por rebote.",
-			weapons, &"fireball", &"fireball_chain"),
-		_legendary(&"leg_frost_nova", "Corazón de Escarcha",
-			"Al recibir un golpe, liberas una Nova de Hielo que daña y ralentiza a los enemigos cercanos (cd 6s).",
-			[&"orb", &"armor"], &"", &"on_hit_frost_nova"),
-		_legendary(&"leg_mana_overflow", "Desborde Arcano",
-			"El maná es tu escudo: la mitad del daño recibido se absorbe con maná (1:1) mientras tengas.",
-			[&"orb"], &"", &"mana_to_shield"),
-		_legendary(&"leg_crit_cascade", "Cascada Crítica",
-			"Cada golpe crítico reduce 0.5s el enfriamiento de todos tus hechizos.",
-			weapons, &"", &"crit_cdr"),
-	]
+## Devuelve los Resources cargados de todos los `.tres` de un directorio.
+func _list_tres(dir_path: String) -> Array[Resource]:
+	var result: Array[Resource] = []
+	var dir := DirAccess.open(dir_path)
+	if dir == null:
+		push_error("[LootDB] no se pudo abrir %s" % dir_path)
+		return result
+	dir.list_dir_begin()
+	var file_name := dir.get_next()
+	while file_name != "":
+		if not dir.current_is_dir() and file_name.ends_with(".tres"):
+			var res := load(dir_path + file_name)
+			if res:
+				result.append(res)
+			else:
+				push_error("[LootDB] no se pudo cargar %s%s" % [dir_path, file_name])
+		file_name = dir.get_next()
+	dir.list_dir_end()
+	return result
 
 # --- Consultas para el generador -----------------------------------------
 

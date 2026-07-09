@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="ItemBase" load_steps=2 format=3]
+
+[ext_resource type="Script" uid="uid://tdqxbqoednfp" path="res://scripts/loot/item_base.gd" id="1_res"]
+
+[resource]
+script = ExtResource("1_res")
+id = &"bow_wood"
+name = "Arco de madera"
+type = &"bow"
+slot = &"weapon"
+two_handed = true
+base_stats = {
+&"ranged_damage": 9.0,
+&"move_speed": 5.0
+}
+lmb_power = &"arrow"
+rmb_power = &"multi_shot"
