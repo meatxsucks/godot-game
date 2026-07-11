@@ -21,7 +21,9 @@ func _ready() -> void:
 	if not target_path.is_empty():
 		target = get_node(target_path)
 	else:
-		target = get_parent().get_node_or_null("Player")
+		# El player LOCAL se spawnea unos frames después de la cámara (E1.5);
+		# _process reintenta hasta encontrarlo.
+		target = Players.local(get_tree())
 		
 	# Setup initial camera relative position correctly
 	var cam = $Camera3D
@@ -42,7 +44,10 @@ func set_zoomed(on: bool) -> void:
 
 func _process(delta: float) -> void:
 	if not target:
-		return
+		target = Players.local(get_tree())
+		if not target:
+			return
+		global_position = target.global_position
 	var cam: Camera3D = $Camera3D
 
 	# Seguir al jugador (con shake).

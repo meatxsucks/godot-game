@@ -60,13 +60,18 @@ var selected_class: StringName = &"mage"
 func class_def(id: StringName) -> Dictionary:
 	return CLASSES.get(id, CLASSES[&"mage"])
 
+## Overrides de stats base de una clase (los aplica PlayerStats). En co-op
+## cada player instancia la suya; &"" = la clase seleccionada localmente.
+func class_stats(id: StringName = &"") -> Dictionary:
+	return class_def(id if id != &"" else selected_class).get("stats", {})
+
 ## Overrides de stats base de la clase seleccionada (los aplica PlayerStats).
 func selected_stats() -> Dictionary:
-	return class_def(selected_class).get("stats", {})
+	return class_stats()
 
-## Kit base de la clase (3 slots: Espacio, Q, R).
-func build_class_kit() -> Array[Ability]:
-	match selected_class:
+## Kit base de la clase (3 slots: Espacio, Q, R). &"" = la seleccionada local.
+func build_class_kit(cls: StringName = &"") -> Array[Ability]:
+	match cls if cls != &"" else selected_class:
 		&"warrior":
 			return [
 				ChargeAbility.new(),

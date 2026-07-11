@@ -8,6 +8,7 @@ extends Node3D
 	NetSpawn.Kind.ENEMY: $EnemiesSpawner as MultiplayerSpawner,
 	NetSpawn.Kind.DROP: $DropsSpawner as MultiplayerSpawner,
 	NetSpawn.Kind.PROJECTILE: $ProjectilesSpawner as MultiplayerSpawner,
+	NetSpawn.Kind.PLAYER: $PlayersSpawner as MultiplayerSpawner,
 }
 
 func _ready() -> void:

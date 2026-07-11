@@ -19,6 +19,15 @@ static func nearest(tree: SceneTree, from_position: Vector3) -> Node3D:
 	return nearest_of(alive(tree), from_position)
 
 
+## Jugador controlado por ESTE peer (cámara/HUD se cuelgan de él). En
+## single-player es el único; en co-op, el que tiene autoridad local.
+static func local(tree: SceneTree) -> Node3D:
+	for node in tree.get_nodes_in_group("player"):
+		if node is Node3D and node.is_multiplayer_authority():
+			return node
+	return null
+
+
 ## Más cercano dentro de una lista ya filtrada (p. ej. sin los que están
 ## en zona segura), o null si la lista está vacía.
 static func nearest_of(candidates: Array[Node3D], from_position: Vector3) -> Node3D:

@@ -91,9 +91,15 @@ func _ready() -> void:
 	btn_controls_reset.pressed.connect(_on_controls_reset_pressed)
 	_build_controls_rows()
 
-	player = get_tree().get_first_node_in_group("player")
+	btn_retry.pressed.connect(_on_retry_pressed)
+	btn_menu.pressed.connect(_on_menu_pressed)
+	_try_bind_player()
+
+## El HUD es del jugador LOCAL. En co-op el player se spawnea unos frames
+## después del HUD, así que _process reintenta hasta encontrarlo (E1.5).
+func _try_bind_player() -> void:
+	player = Players.local(get_tree())
 	if player == null:
-		push_warning("[HUD] no se encontró un nodo en el grupo 'player'")
 		return
 	player.health_changed.connect(_on_health_changed)
 	player.mana_changed.connect(_on_mana_changed)
@@ -102,8 +108,6 @@ func _ready() -> void:
 	player.leveled_up.connect(_on_leveled_up)
 	player.kit_changed.connect(_on_kit_changed)
 	player.died.connect(_on_player_died)
-	btn_retry.pressed.connect(_on_retry_pressed)
-	btn_menu.pressed.connect(_on_menu_pressed)
 	_build_slots()
 	inventory_panel.setup(player)
 	_on_health_changed(player.stats.health, player.stats.get_stat(&"max_health"))
@@ -332,6 +336,7 @@ func _process(delta: float) -> void:
 			wave_label.text = tr("Oleada %d — quedan %d") % [wave_manager.current_wave(), left]
 
 	if player == null:
+		_try_bind_player()
 		return
 	for i in _slots.size():
 		var slot := _slots[i]

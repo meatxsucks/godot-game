@@ -11,7 +11,7 @@
 ## globales; los fallback_parent de los tests también están en el origen.
 extends Node
 
-enum Kind { ENEMY, DROP, PROJECTILE }
+enum Kind { ENEMY, DROP, PROJECTILE, PLAYER }
 
 ## SpawnRoot del nivel activo (null = sin replicación, modo clásico).
 var _root: Node = null
@@ -35,6 +35,13 @@ func enemy(scene: PackedScene, props: Dictionary, fallback_parent: Node, scene_p
 func drop(scene: PackedScene, item: LootItem, position: Vector3, fallback_parent: Node) -> Node:
 	return _spawn(Kind.DROP,
 		{"scene": scene.resource_path, "props": {"position": position}, "item": item.to_save_dict()},
+		fallback_parent)
+
+## Player de un peer (E1.5): el nodo queda con autoridad de ese peer en host
+## y clientes (viaja en el diccionario y build() la aplica en ambos lados).
+func player(scene: PackedScene, peer_id: int, props: Dictionary, fallback_parent: Node) -> Node:
+	return _spawn(Kind.PLAYER,
+		{"scene": scene.resource_path, "props": props, "peer": peer_id},
 		fallback_parent)
 
 ## Proyectil / efecto de combate transitorio (bolts, novas, slashes...).
@@ -65,4 +72,6 @@ func build(data: Dictionary) -> Node:
 		node.set(key, load(scene_props[key]))
 	if data.has("item"):
 		node.set("item", LootItem.from_save_dict(data["item"]))
+	if data.has("peer"):
+		node.set_multiplayer_authority(int(data["peer"]))
 	return node

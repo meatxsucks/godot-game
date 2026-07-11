@@ -22,7 +22,12 @@ const ABILITY_ACTIONS: Array[StringName] = [
 ## Capacidad del inventario (loot recogido, aún no equipado).
 const INVENTORY_SIZE := 20
 
+## Clase de ESTE player (E1.5): en co-op cada peer trae la suya en el spawn.
+## &"" = usar la seleccionada localmente (single-player / escena directa).
+@export var player_class: StringName = &""
+
 ## Stats del mago (base + loot equipado). Fuente de verdad del combate.
+## Se reconstruye en _ready con player_class (acá aún no se conoce).
 var stats := PlayerStats.new()
 
 ## Barra de poderes (5 slots) y el cooldown restante de cada uno.
@@ -91,8 +96,11 @@ signal died
 
 func _ready() -> void:
 	add_to_group("player")
+	if player_class == &"":
+		player_class = Game.selected_class
+	stats = PlayerStats.new(player_class)
 	abilities = [UnarmedAbility.new(), UnarmedAbility.new()]
-	abilities.append_array(Game.build_class_kit())
+	abilities.append_array(Game.build_class_kit(player_class))
 	cooldowns.resize(abilities.size())
 	cooldowns.fill(0.0)
 
@@ -119,7 +127,7 @@ func _input(event: InputEvent) -> void:
 
 ## Modelo KayKit animado de la clase. Si no carga, queda la cápsula placeholder.
 func _setup_model() -> void:
-	var def: Dictionary = Game.class_def(Game.selected_class)
+	var def: Dictionary = Game.class_def(player_class)
 	var path: String = def.get("model", "")
 	if path == "" or not ResourceLoader.exists(path):
 		return

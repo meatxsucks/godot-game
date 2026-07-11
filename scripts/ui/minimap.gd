@@ -16,7 +16,8 @@ func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 
 func _process(_delta: float) -> void:
-	var player = get_tree().get_first_node_in_group("player")
+	# El minimapa revela alrededor del jugador LOCAL (E1.5).
+	var player := Players.local(get_tree())
 	if player:
 		_reveal_around(player.global_position)
 	queue_redraw()
@@ -73,9 +74,11 @@ func _draw() -> void:
 		if enemy is Node3D and _is_revealed(enemy.global_position):
 			draw_circle(_world_to_px(enemy.global_position), 2.0, Color(1, 0.25, 0.2))
 
-	# Jugador.
-	var player = get_tree().get_first_node_in_group("player")
-	if player:
-		draw_circle(_world_to_px(player.global_position), 3.0, Color.WHITE)
+	# Jugadores: el local en blanco, los aliados en celeste.
+	var local_player := Players.local(get_tree())
+	for p in get_tree().get_nodes_in_group("player"):
+		if p is Node3D:
+			var color := Color.WHITE if p == local_player else Color(0.5, 0.8, 1.0)
+			draw_circle(_world_to_px(p.global_position), 3.0, color)
 
 	draw_rect(Rect2(Vector2.ZERO, size), Color(0, 0, 0, 0.9), false, 2.0)

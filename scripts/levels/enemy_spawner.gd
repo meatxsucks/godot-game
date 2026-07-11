@@ -70,6 +70,11 @@ func _ready() -> void:
 	add_to_group("wave_manager")
 	_safe_zone = get_tree().get_first_node_in_group("safe_zone")
 	_timer = intermission_time
+	# Las oleadas las dirige SOLO el host: los clientes reciben los enemigos
+	# replicados por el MultiplayerSpawner (E1.5).
+	if not multiplayer.is_server():
+		set_physics_process(false)
+		return
 	_make_portals.call_deferred(1)
 
 func current_wave() -> int:

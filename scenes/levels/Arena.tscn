@@ -1,6 +1,6 @@
 [gd_scene load_steps=17 format=3 uid="uid://darena1234567"]
 
-[ext_resource type="PackedScene" uid="uid://dplayer1234567" path="res://scenes/player/Player.tscn" id="1_player"]
+[ext_resource type="Script" path="res://scripts/levels/arena.gd" id="1_arena"]
 [ext_resource type="Script" path="res://scripts/levels/camera_rig.gd" id="2_camera"]
 [ext_resource type="PackedScene" uid="uid://chudingame001" path="res://scenes/ui/HUD.tscn" id="4_hud"]
 [ext_resource type="PackedScene" uid="uid://cchest0000001" path="res://scenes/world/Chest.tscn" id="5_chest"]
@@ -41,6 +41,7 @@ geometry_parsed_geometry_type = 1
 agent_radius = 0.5
 
 [node name="Arena" type="Node3D"]
+script = ExtResource("1_arena")
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="."]
 environment = SubResource("Environment_arena")
@@ -90,12 +91,8 @@ mesh = SubResource("BoxMesh_wall")
 [node name="Collision" type="CollisionShape3D" parent="NavRegion/WallRight"]
 shape = SubResource("BoxShape3D_wall")
 
-[node name="Player" parent="." instance=ExtResource("1_player")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 24.5)
-
 [node name="CameraRig" type="Node3D" parent="."]
 script = ExtResource("2_camera")
-target_path = NodePath("../Player")
 
 [node name="Camera3D" type="Camera3D" parent="CameraRig"]
 transform = Transform3D(0.707107, -0.353553, 0.612372, 0, 0.866025, 0.5, -0.707107, -0.353553, 0.612372, 12, 12, 12)

@@ -44,9 +44,10 @@ var mana: float = 0.0
 ## Cache de stats efectivos (plano * (1 + %/100)). Se recalcula al equipar.
 var _cache := {}
 
-func _init() -> void:
-	# Overrides de la clase elegida (rol): el Guerrero arranca tanque, etc.
-	base_stats.merge(Game.selected_stats(), true)
+func _init(cls: StringName = &"") -> void:
+	# Overrides de la clase del dueño (rol): el Guerrero arranca tanque, etc.
+	# &"" = la clase seleccionada localmente (single-player).
+	base_stats.merge(Game.class_stats(cls), true)
 	recompute()
 	health = get_stat(&"max_health")
 	mana = get_stat(&"max_mana")

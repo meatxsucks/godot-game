@@ -44,9 +44,29 @@ func join_game(address: String, port: int = DEFAULT_PORT) -> Error:
 	return OK
 
 func close_connection() -> void:
+	player_classes.clear()
 	if multiplayer.multiplayer_peer != null:
 		multiplayer.multiplayer_peer.close()
 		multiplayer.multiplayer_peer = null
+
+# --- Registro de jugadores (E1.5) ----------------------------------------------
+
+signal player_class_registered(peer_id: int, cls: StringName)
+
+## Clase elegida por cada peer (peer_id -> StringName). Solo lo llena el host:
+## cada cliente la registra por RPC recién al cargar el nivel (así el host no
+## le spawnea el player antes de que exista su SpawnRoot).
+var player_classes: Dictionary = {}
+
+@rpc("any_peer", "reliable")
+func register_player_class(cls: StringName) -> void:
+	if not multiplayer.is_server():
+		return
+	var peer_id := multiplayer.get_remote_sender_id()
+	if peer_id == 0: # llamada local (host registrándose a sí mismo)
+		peer_id = 1
+	player_classes[peer_id] = cls
+	player_class_registered.emit(peer_id, cls)
 
 func is_host() -> bool:
 	return multiplayer.multiplayer_peer != null and multiplayer.is_server()
@@ -64,6 +84,7 @@ func _on_peer_connected(id: int) -> void:
 	player_connected.emit(id)
 
 func _on_peer_disconnected(id: int) -> void:
+	player_classes.erase(id)
 	player_disconnected.emit(id)
 
 func _on_connected_to_server() -> void:
