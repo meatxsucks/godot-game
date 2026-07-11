@@ -214,7 +214,7 @@ func _random_spawn_pos() -> Vector3:
 ## segura, al jugador y otros portales (intentos con rechazo).
 func _make_portals(for_wave: int) -> void:
 	var count := clampi(1 + int(for_wave / 2.0), 1, 4)
-	var player = get_tree().get_first_node_in_group("player")
+	var players := Players.alive(get_tree())
 	for i in count:
 		for attempt in 20:
 			var pos := Vector3(
@@ -223,7 +223,8 @@ func _make_portals(for_wave: int) -> void:
 				randf_range(field_min.y, field_max.y))
 			if _safe_zone and _safe_zone.contains(pos):
 				continue
-			if player and pos.distance_to(player.global_position) < 8.0:
+			# Lejos de TODOS los jugadores, no solo del primero.
+			if players.any(func(p: Node3D) -> bool: return pos.distance_to(p.global_position) < 8.0):
 				continue
 			if _portals.any(func(p: Node3D) -> bool: return p.global_position.distance_to(pos) < 8.0):
 				continue
@@ -243,7 +244,7 @@ const REWARD_DROP := preload("res://scenes/loot/LootDrop.tscn")
 ## Recompensa por superar la oleada: el equipo cae AL FINAL, cerca del
 ## jugador (los enemigos ya no dropean equipo a mitad de ronda).
 func _spawn_rewards() -> void:
-	var player = get_tree().get_first_node_in_group("player")
+	var player := Players.nearest(get_tree(), global_position)
 	var center: Vector3 = player.global_position if player else global_position
 	var count := 1 + int(wave / 3.0)
 	for i in count:

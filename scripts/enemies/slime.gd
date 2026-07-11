@@ -119,9 +119,9 @@ func _physics_process(delta: float) -> void:
 	else:
 		velocity.x = move_toward(velocity.x, 0, speed)
 		velocity.z = move_toward(velocity.z, 0, speed)
-		# Los tiradores encaran al jugador aunque estén quietos.
+		# Los tiradores encaran al jugador más cercano aunque estén quietos.
 		if is_ranged:
-			var player = get_tree().get_first_node_in_group("player")
+			var player := Players.nearest(get_tree(), global_position)
 			if player:
 				var look_target: Vector3 = player.global_position
 				look_target.y = global_position.y
@@ -167,11 +167,11 @@ func _play_locked(key: String, max_lock: float = 0.6) -> void:
 
 # --- Ataques ------------------------------------------------------------------
 
-## Golpe por contacto (melee): si el jugador está al alcance, le pega.
+## Golpe por contacto (melee): si el jugador más cercano está al alcance, le pega.
 func _try_attack() -> void:
 	if _attack_timer > 0.0:
 		return
-	var player = get_tree().get_first_node_in_group("player")
+	var player := Players.nearest(get_tree(), global_position)
 	if player == null or not player.has_method("take_damage"):
 		return
 	var reach := 0.6 + 0.6 * size_scale
@@ -186,11 +186,9 @@ func _try_attack() -> void:
 func _try_shoot() -> void:
 	if _ranged_timer > 0.0 or projectile_scene == null:
 		return
-	var player = get_tree().get_first_node_in_group("player")
+	# Targetea al más cercano que NO esté a salvo en la base.
+	var player := Players.nearest_of(_targetable_players(), global_position)
 	if player == null:
-		return
-	# No dispara a jugadores a salvo en la base.
-	if _safe_zone and _safe_zone.contains(player.global_position):
 		return
 	var to_player: Vector3 = player.global_position - global_position
 	to_player.y = 0
@@ -215,6 +213,15 @@ func _try_shoot() -> void:
 			bolt.setup(attack_damage, self)
 	_play_locked("attack")
 
+## Jugadores vivos que se pueden atacar (fuera de la zona segura).
+func _targetable_players() -> Array[Node3D]:
+	var candidates: Array[Node3D] = []
+	for player in Players.alive(get_tree()):
+		if _safe_zone and _safe_zone.contains(player.global_position):
+			continue
+		candidates.append(player)
+	return candidates
+
 # --- Navegación ----------------------------------------------------------------
 
 ## Decide hacia dónde moverse respetando la zona segura y (si es tirador) su
@@ -227,11 +234,10 @@ func _pick_direction(delta: float) -> Vector3:
 		out.y = 0
 		return out.normalized() if out.length_squared() > 0.001 else Vector3.RIGHT
 
-	var player = get_tree().get_first_node_in_group("player")
+	# Persigue al jugador más cercano que no esté a salvo; si todos están
+	# muertos o en la zona segura, espera afuera.
+	var player := Players.nearest_of(_targetable_players(), global_position)
 	if player == null:
-		return Vector3.ZERO
-	# Jugador a salvo: esperar afuera de la zona.
-	if _safe_zone and _safe_zone.contains(player.global_position):
 		return Vector3.ZERO
 
 	var flat_to_player: Vector3 = player.global_position - global_position
@@ -295,10 +301,11 @@ func die() -> void:
 	# Salir del grupo YA: la oleada cuenta vivos por este grupo.
 	remove_from_group("enemies")
 
-	# Recompensa del kill: stamina del super + maná por kill + XP.
-	var player = get_tree().get_first_node_in_group("player")
-	if player and player.has_method("on_enemy_killed"):
-		player.on_enemy_killed(xp_reward)
+	# Recompensa del kill (stamina del super + maná + XP): en co-op la
+	# reciben TODOS los jugadores vivos, no solo el primero.
+	for player in Players.alive(get_tree()):
+		if player.has_method("on_enemy_killed"):
+			player.on_enemy_killed(xp_reward)
 
 	if loot_drop_scene and randf() <= drop_chance:
 		_spawn_drop(Loot.generate_random_item(loot_level), Vector3.ZERO)

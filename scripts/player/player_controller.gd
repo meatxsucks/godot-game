@@ -467,6 +467,10 @@ func restore_mana(amount: float) -> void:
 	stats.mana = minf(stats.get_stat(&"max_mana"), stats.mana + amount)
 	mana_changed.emit(stats.mana, stats.get_stat(&"max_mana"))
 
+## Los enemigos solo targetean jugadores vivos (ver Players.alive, E1.2).
+func is_alive() -> bool:
+	return not _dead
+
 func take_damage(amount: float, _is_crit: bool = false) -> void:
 	# Durante el dash con i-frames o salto, eres intangible.
 	if _dead or _leaping or (_dash_timer > 0.0 and _dash_iframes):
