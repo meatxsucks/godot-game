@@ -45,9 +45,11 @@ func join_game(address: String, port: int = DEFAULT_PORT) -> Error:
 
 func close_connection() -> void:
 	player_classes.clear()
-	if multiplayer.multiplayer_peer != null:
+	if is_online():
 		multiplayer.multiplayer_peer.close()
-		multiplayer.multiplayer_peer = null
+	# NUNCA dejar el peer en null: sin peer, multiplayer.is_server() deja de
+	# dar true y el modo offline se rompe (la Arena no spawnea al player).
+	multiplayer.multiplayer_peer = OfflineMultiplayerPeer.new()
 
 # --- Registro de jugadores (E1.5) ----------------------------------------------
 

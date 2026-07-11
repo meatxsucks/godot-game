@@ -4,8 +4,10 @@ extends Control
 @onready var btn_loot: Button = $VBox/BtnLoot
 @onready var btn_quit: Button = $VBox/BtnQuit
 
-## Co-op ENet local (E1.5). Construida por código para no tocar la escena;
-## cuando entre GodotSteam esto se reemplaza por el lobby de Steam.
+## Co-op ENet local (E1.5). Un solo botón en el menú principal que abre un
+## submenú aparte (así el menú no crece y tapa el título). Construido por
+## código; cuando entre GodotSteam esto se reemplaza por el lobby de Steam.
+var _coop_panel: Control
 var _btn_host: Button
 var _ip_edit: LineEdit
 var _btn_join: Button
@@ -28,29 +30,70 @@ func _ready() -> void:
 func _build_coop_ui() -> void:
 	var vbox: VBoxContainer = $VBox
 
-	_btn_host = Button.new()
-	_btn_host.text = tr("Co-op: hostear (LAN)")
-	_btn_host.pressed.connect(_on_host_pressed)
-	vbox.add_child(_btn_host)
+	# Menú principal: un solo botón que abre el submenú de LAN.
+	var btn_coop := Button.new()
+	btn_coop.text = tr("Co-op (LAN)")
+	btn_coop.pressed.connect(_on_coop_pressed)
+	vbox.add_child(btn_coop)
+	# El Salir queda siempre último.
+	vbox.move_child(btn_quit, vbox.get_child_count() - 1)
 
-	# Todo en vertical, como el resto del menú.
+	# Submenú co-op: pantalla aparte, centrada, oculta hasta que se abre.
+	var center := CenterContainer.new()
+	center.set_anchors_preset(Control.PRESET_FULL_RECT)
+	center.visible = false
+	add_child(center)
+	_coop_panel = center
+
+	var panel := PanelContainer.new()
+	center.add_child(panel)
+	var box := VBoxContainer.new()
+	box.custom_minimum_size = Vector2(220, 0)
+	box.add_theme_constant_override(&"separation", 8)
+	panel.add_child(box)
+
+	var title := Label.new()
+	title.text = tr("Co-op por LAN")
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	box.add_child(title)
+
+	_btn_host = Button.new()
+	_btn_host.text = tr("Hostear")
+	_btn_host.pressed.connect(_on_host_pressed)
+	box.add_child(_btn_host)
+
 	_ip_edit = LineEdit.new()
 	_ip_edit.text = "127.0.0.1"
 	_ip_edit.placeholder_text = tr("IP del host")
 	_ip_edit.alignment = HORIZONTAL_ALIGNMENT_CENTER
-	vbox.add_child(_ip_edit)
+	box.add_child(_ip_edit)
 
 	_btn_join = Button.new()
 	_btn_join.text = tr("Unirse")
 	_btn_join.pressed.connect(_on_join_pressed)
-	vbox.add_child(_btn_join)
+	box.add_child(_btn_join)
 
 	_net_status = Label.new()
 	_net_status.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	vbox.add_child(_net_status)
+	box.add_child(_net_status)
 
-	# El Salir queda siempre último.
-	vbox.move_child(btn_quit, vbox.get_child_count() - 1)
+	var btn_back := Button.new()
+	btn_back.text = tr("Volver")
+	btn_back.pressed.connect(_on_coop_back_pressed)
+	box.add_child(btn_back)
+
+func _on_coop_pressed() -> void:
+	$VBox.visible = false
+	_coop_panel.visible = true
+	_btn_host.grab_focus()
+
+func _on_coop_back_pressed() -> void:
+	Net.close_connection() # cancela un intento de conexión colgado
+	_btn_join.disabled = false
+	_net_status.text = ""
+	_coop_panel.visible = false
+	$VBox.visible = true
+	btn_play.grab_focus()
 
 func _on_host_pressed() -> void:
 	if Net.host_game() == OK:

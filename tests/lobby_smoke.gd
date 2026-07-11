@@ -6,6 +6,11 @@ extends Node
 
 func _ready() -> void:
 	Game.selected_class = &"warrior"
+	# Simula venir del menú: close_connection() NO debe romper el modo
+	# offline (regresión real: dejaba el peer en null y is_server() daba
+	# false → la Arena no spawneaba al player).
+	Net.close_connection()
+	assert(multiplayer.is_server(), "offline sigue siendo 'server' tras cerrar la conexión")
 	var arena: Node3D = load("res://scenes/levels/Arena.tscn").instantiate()
 	add_child(arena)
 
