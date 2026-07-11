@@ -12,6 +12,8 @@ var _btn_host: Button
 var _ip_edit: LineEdit
 var _btn_join: Button
 var _net_status: Label
+## Lista de lobbies de Steam encontrados (botones para unirse).
+var _lobby_list: VBoxContainer
 
 func _ready() -> void:
 	btn_play.pressed.connect(_on_play_pressed)
@@ -53,12 +55,36 @@ func _build_coop_ui() -> void:
 	panel.add_child(box)
 
 	var title := Label.new()
-	title.text = tr("Co-op por LAN")
+	title.text = tr("Co-op")
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	box.add_child(title)
 
+	# --- Steam (solo si el cliente está corriendo) ---
+	if Net.steam_active:
+		var btn_steam_host := Button.new()
+		btn_steam_host.text = tr("Hostear (Steam)")
+		btn_steam_host.pressed.connect(_on_steam_host_pressed)
+		box.add_child(btn_steam_host)
+
+		var btn_steam_list := Button.new()
+		btn_steam_list.text = tr("Buscar partidas (Steam)")
+		btn_steam_list.pressed.connect(Net.request_steam_lobbies)
+		box.add_child(btn_steam_list)
+
+		_lobby_list = VBoxContainer.new()
+		box.add_child(_lobby_list)
+
+		Net.steam_lobby_created.connect(_on_steam_lobby_ready)
+		Net.steam_lobby_list.connect(_on_steam_lobby_list)
+		box.add_child(HSeparator.new())
+
+	var lan_label := Label.new()
+	lan_label.text = tr("LAN (IP directa)")
+	lan_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	box.add_child(lan_label)
+
 	_btn_host = Button.new()
-	_btn_host.text = tr("Hostear")
+	_btn_host.text = tr("Hostear (LAN)")
 	_btn_host.pressed.connect(_on_host_pressed)
 	box.add_child(_btn_host)
 
@@ -110,6 +136,34 @@ func _on_join_pressed() -> void:
 
 func _on_join_succeeded() -> void:
 	SceneManager.change_scene("res://scenes/ui/ClassSelect.tscn")
+
+# --- Steam ------------------------------------------------------------------
+
+func _on_steam_host_pressed() -> void:
+	_net_status.text = tr("Creando lobby de Steam…")
+	Net.host_steam_game() # asíncrono → steam_lobby_created / connection_failed
+
+func _on_steam_lobby_ready(_lobby_id: int) -> void:
+	SceneManager.change_scene("res://scenes/ui/ClassSelect.tscn")
+
+func _on_steam_lobby_list(lobbies: Array) -> void:
+	for child in _lobby_list.get_children():
+		child.queue_free()
+	if lobbies.is_empty():
+		_net_status.text = tr("No hay partidas de Steam abiertas")
+		return
+	_net_status.text = ""
+	for lobby_id: int in lobbies:
+		var btn := Button.new()
+		btn.text = "%s  (%s)" % [Net.lobby_name(lobby_id), Net.lobby_players(lobby_id)]
+		btn.pressed.connect(_on_steam_join_pressed.bind(lobby_id))
+		_lobby_list.add_child(btn)
+
+func _on_steam_join_pressed(lobby_id: int) -> void:
+	if Net.join_steam_game(lobby_id) == OK:
+		_net_status.text = tr("Conectando…")
+	else:
+		_net_status.text = tr("No se pudo unir al lobby")
 
 func _on_join_failed() -> void:
 	Net.close_connection()
