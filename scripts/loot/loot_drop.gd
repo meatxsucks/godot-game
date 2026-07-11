@@ -2,6 +2,12 @@ extends Area3D
 
 var item: LootItem = null
 
+## Dueño del drop (E1.7: loot instanciado por jugador). 0 = para todos
+## (pociones del mundo); != 0 = SOLO ese peer lo ve y lo puede recoger —
+## el resto ni renderiza ni colisiona (el equipo se rollea una vez por
+## jugador, así nadie compite por el botín).
+var owner_peer: int = 0
+
 @onready var light: OmniLight3D = $OmniLight3D
 @onready var visual_mesh: MeshInstance3D = $Visual/Mesh
 @onready var visual: Node3D = $Visual
@@ -10,7 +16,11 @@ var hover_time: float = 0.0
 
 func _ready() -> void:
 	body_entered.connect(_on_body_entered)
-	
+	if owner_peer != 0 and owner_peer != multiplayer.get_unique_id():
+		visible = false
+		monitoring = false # sin colisión: body_entered nunca dispara acá
+		set_process(false)
+
 	if item:
 		var color = item.ui_color()
 		light.light_color = color
@@ -35,9 +45,12 @@ func _on_body_entered(body: Node3D) -> void:
 	if not body.is_in_group("player") or item == null:
 		return
 	# En co-op el drop existe en todas las máquinas: recoge SOLO la máquina
-	# dueña del player que lo tocó (su vida/inventario son locales). Si dos
-	# players lo tocan en el mismo instante puede duplicarse — asumido (E1.6).
+	# dueña del player que lo tocó (su vida/inventario son locales).
 	if not body.is_multiplayer_authority():
+		return
+	# Loot instanciado: si tiene dueño, solo su peer lo recoge (defensa
+	# extra — para los demás ya está invisible y sin colisión).
+	if owner_peer != 0 and owner_peer != multiplayer.get_unique_id():
 		return
 
 	# Consumibles: se aplican AL TOCAR (llenan vida/maná al instante).

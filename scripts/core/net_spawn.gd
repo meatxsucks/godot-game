@@ -31,10 +31,14 @@ func enemy(scene: PackedScene, props: Dictionary, fallback_parent: Node, scene_p
 		{"scene": scene.resource_path, "props": props, "scene_props": scene_props},
 		fallback_parent)
 
-## Drop de botín: el LootItem viaja serializado y se reconstruye contra LootDB.
-func drop(scene: PackedScene, item: LootItem, position: Vector3, fallback_parent: Node) -> Node:
+## Drop de botín: el LootItem viaja serializado y se reconstruye contra
+## LootDB. `owner_peer` != 0 = loot instanciado por jugador (E1.7): solo ese
+## peer lo ve/recoge; 0 = para todos (pociones del mundo).
+func drop(scene: PackedScene, item: LootItem, position: Vector3, fallback_parent: Node, owner_peer: int = 0) -> Node:
 	return _spawn(Kind.DROP,
-		{"scene": scene.resource_path, "props": {"position": position}, "item": item.to_save_dict()},
+		{"scene": scene.resource_path,
+			"props": {"position": position, "owner_peer": owner_peer},
+			"item": item.to_save_dict()},
 		fallback_parent)
 
 ## Player de un peer (E1.5): el nodo queda con autoridad de ese peer en host

@@ -252,20 +252,22 @@ func _clear_portals() -> void:
 
 const REWARD_DROP := preload("res://scenes/loot/LootDrop.tscn")
 
-## Recompensa por superar la oleada: el equipo cae AL FINAL, cerca del
-## jugador (los enemigos ya no dropean equipo a mitad de ronda).
+## Recompensa por superar la oleada: el equipo cae AL FINAL, instanciado
+## POR JUGADOR (E1.7) — cada uno recibe sus tiradas cerca de SU posición
+## y solo ve las propias (los enemigos ya no dropean equipo a mitad de ronda).
 func _spawn_rewards() -> void:
-	var player := Players.nearest(get_tree(), global_position)
-	var center: Vector3 = player.global_position if player else global_position
 	var count := 1 + int(wave / 3.0)
-	for i in count:
-		var angle := TAU * float(i) / count + randf() * 0.5
-		var pos := center + Vector3(cos(angle) * 1.8, 0.0, sin(angle) * 1.8)
-		NetSpawn.drop(REWARD_DROP, Loot.generate_random_item(_loot_level()), pos, self)
-	print("[Waves] recompensa: %d ítems" % count)
+	for player in Players.alive(get_tree()):
+		var peer: int = player.get_multiplayer_authority()
+		var center: Vector3 = player.global_position
+		for i in count:
+			var angle := TAU * float(i) / count + randf() * 0.5
+			var pos := center + Vector3(cos(angle) * 1.8, 0.0, sin(angle) * 1.8)
+			NetSpawn.drop(REWARD_DROP, Loot.generate_random_item(_loot_level()), pos, self, peer)
+	print("[Waves] recompensa: %d ítems por jugador" % count)
 
 func _restock_chests() -> void:
 	for chest in get_tree().get_nodes_in_group("chest"):
 		if chest.has_method("restock"):
-			chest.restock(_loot_level())
+			chest.restock.rpc(_loot_level())
 	print("[Waves] cofres reabastecidos")

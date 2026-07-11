@@ -25,7 +25,9 @@ func _ready() -> void:
 	$InteractArea.body_exited.connect(_on_body_exited)
 
 ## Reabastecimiento entre oleadas: el cofre se cierra y puede volver a
-## abrirse, con botín del nivel de la oleada actual.
+## abrirse, con botín del nivel de la oleada actual. RPC: lo emite el host
+## (dueño de las oleadas) y la tapa se cierra en todas las máquinas.
+@rpc("authority", "call_local", "reliable")
 func restock(new_loot_level: int) -> void:
 	loot_level = new_loot_level
 	_opened = false
@@ -36,7 +38,15 @@ func restock(new_loot_level: int) -> void:
 
 func _physics_process(_delta: float) -> void:
 	if _player_in_range and not _opened and Input.is_action_just_pressed("interact"):
-		_open()
+		# Solo el host spawnea drops replicados: un cliente PIDE abrir (el
+		# cofre existe con el mismo path en todas las máquinas).
+		_request_open.rpc_id(1)
+
+@rpc("any_peer", "call_local", "reliable")
+func _request_open() -> void:
+	if not multiplayer.is_server() or _opened:
+		return
+	_open.rpc() # abre la tapa en TODAS las máquinas; los drops los replica el spawner
 
 func _on_body_entered(body: Node3D) -> void:
 	if body.is_in_group("player"):
@@ -48,16 +58,25 @@ func _on_body_exited(body: Node3D) -> void:
 		_player_in_range = false
 		prompt.visible = false
 
+@rpc("authority", "call_local", "reliable")
 func _open() -> void:
 	_opened = true
 	prompt.visible = false
 	var tween := create_tween()
 	tween.tween_property(lid_pivot, "rotation:x", -1.9, 0.35) \
 		.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-	_spill_content()
+	# El contenido lo genera SOLO el host (los drops llegan replicados).
+	if multiplayer.is_server():
+		_spill_content()
 
-## Genera el contenido y lo "derrama" al suelo en anillo alrededor del cofre.
+## Genera el contenido y lo "derrama" al suelo en anillo alrededor del
+## cofre. Instanciado POR JUGADOR (E1.7): cada jugador vivo recibe SU
+## tirada completa y solo ve la propia (comparten anillo sin molestarse).
 func _spill_content() -> void:
+	for player in Players.alive(get_tree()):
+		_spill_for(player.get_multiplayer_authority())
+
+func _spill_for(owner_peer: int) -> void:
 	var offhand_type: StringName = [&"shield", &"orb"].pick_random()
 	var items: Array[LootItem] = [
 		Loot.generate_random_item(loot_level, &"armor"),
@@ -75,7 +94,7 @@ func _spill_content() -> void:
 		if item == null:
 			continue
 		var drop := NetSpawn.drop(DROP_SCENE, item,
-			global_position + Vector3.UP * 0.9, get_parent())
+			global_position + Vector3.UP * 0.9, get_parent(), owner_peer)
 
 		var angle := TAU * float(i) / items.size() + randf_range(-0.3, 0.3)
 		var dist := randf_range(1.3, 2.2)

@@ -337,10 +337,16 @@ func die() -> void:
 		if player.has_method("on_enemy_killed"):
 			player.on_enemy_killed(xp_reward)
 
-	if loot_drop_scene and randf() <= drop_chance:
-		_spawn_drop(Loot.generate_random_item(loot_level), Vector3.ZERO)
+	# Equipo instanciado (E1.7): tirada independiente POR JUGADOR vivo —
+	# cada uno ve solo su drop, nadie compite por el botín.
+	if loot_drop_scene and drop_chance > 0.0:
+		for player in Players.alive(get_tree()):
+			if randf() <= drop_chance:
+				_spawn_drop(Loot.generate_random_item(loot_level), Vector3.ZERO,
+					player.get_multiplayer_authority())
 
 	# Algunos enemigos botan maná (vida nunca: solo en cofres).
+	# Las pociones del mundo son COMPARTIDAS: recurso al que llega primero.
 	if loot_drop_scene and randf() <= mana_drop_chance:
 		_spawn_drop(Loot.make_potion(&"potion_mana"), Vector3(0.7, 0, 0.2))
 
@@ -355,7 +361,7 @@ func die() -> void:
 	else:
 		queue_free()
 
-func _spawn_drop(item: LootItem, offset: Vector3) -> void:
+func _spawn_drop(item: LootItem, offset: Vector3, owner_peer: int = 0) -> void:
 	if item == null:
 		return
-	NetSpawn.drop(loot_drop_scene, item, global_position + offset, get_parent())
+	NetSpawn.drop(loot_drop_scene, item, global_position + offset, get_parent(), owner_peer)

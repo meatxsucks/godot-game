@@ -104,12 +104,23 @@ func _make_crown() -> void:
 	crown.position.y = 0.75
 	$Visual.add_child(crown)
 
-## Botín real de boss: legendario garantizado + ítem de la oleada + vida.
+## Botín real de boss, instanciado POR JUGADOR (E1.7): cada uno recibe su
+## legendario garantizado + ítem + 2 pociones de vida (solo ve los suyos;
+## comparten posición sin problema porque están ocultos para el resto).
 func die() -> void:
-	_spawn_drop(Loot.generate_random_item(loot_level, &"", Rarity.Tier.LEGENDARY), Vector3.ZERO)
-	_spawn_drop(Loot.generate_random_item(loot_level), Vector3(1.3, 0, 0.4))
-	_spawn_drop(Loot.make_potion(&"potion_health"), Vector3(-1.3, 0, 0.4))
-	_spawn_drop(Loot.make_potion(&"potion_health"), Vector3(0, 0, -1.4))
+	var players := Players.alive(get_tree())
+	if players.is_empty():
+		# Edge (todos muertos al caer el boss): drop compartido clásico.
+		_spawn_drop(Loot.generate_random_item(loot_level, &"", Rarity.Tier.LEGENDARY), Vector3.ZERO)
+		_spawn_drop(Loot.generate_random_item(loot_level), Vector3(1.3, 0, 0.4))
+		_spawn_drop(Loot.make_potion(&"potion_health"), Vector3(-1.3, 0, 0.4))
+		_spawn_drop(Loot.make_potion(&"potion_health"), Vector3(0, 0, -1.4))
+	for player in players:
+		var peer := player.get_multiplayer_authority()
+		_spawn_drop(Loot.generate_random_item(loot_level, &"", Rarity.Tier.LEGENDARY), Vector3.ZERO, peer)
+		_spawn_drop(Loot.generate_random_item(loot_level), Vector3(1.3, 0, 0.4), peer)
+		_spawn_drop(Loot.make_potion(&"potion_health"), Vector3(-1.3, 0, 0.4), peer)
+		_spawn_drop(Loot.make_potion(&"potion_health"), Vector3(0, 0, -1.4), peer)
 
 	# XP del boss para todos los jugadores vivos (co-op).
 	for player in Players.alive(get_tree()):

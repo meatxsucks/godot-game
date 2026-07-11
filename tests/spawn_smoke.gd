@@ -27,6 +27,17 @@ func _ready() -> void:
 	assert(drop.item != null and drop.item.display_name == item.display_name,
 		"el LootItem sobrevive la serialización de spawn")
 
+	# Loot instanciado por jugador (E1.7): drop con dueño ajeno = invisible
+	# y sin colisión; drop mío (peer 1 offline) = normal; sin dueño = normal.
+	var foreign = NetSpawn.drop(load("res://scenes/loot/LootDrop.tscn"),
+		Loot.generate_random_item(1), Vector3(3, 0, 0), self, 2)
+	assert(not foreign.visible and not foreign.monitoring,
+		"el drop de OTRO jugador no se ve ni colisiona acá")
+	var mine = NetSpawn.drop(load("res://scenes/loot/LootDrop.tscn"),
+		Loot.generate_random_item(1), Vector3(4, 0, 0), self, 1)
+	assert(mine.visible and mine.monitoring, "mi drop instanciado se ve y colisiona")
+	assert(drop.visible and drop.monitoring, "el drop sin dueño (compartido) se ve")
+
 	# Proyectil: transform completa vía props.
 	var xform := Transform3D(Basis.looking_at(Vector3.RIGHT, Vector3.UP), Vector3(0, 0.55, 0))
 	var bolt = NetSpawn.projectile(load("res://scenes/magic/Fireball.tscn"), {"transform": xform}, self)
