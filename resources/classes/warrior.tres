@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="ClassDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/core/class_def.gd" id="1_def"]
+
+[resource]
+script = ExtResource("1_def")
+id = &"warrior"
+display_name = "Guerrero"
+description = "Tanque cuerpo a cuerpo: tajos, embestida y un Grito de Guerra que golpea y lo CURA. Aguanta de todo."
+color = Color(1.0, 0.5, 0.3, 1)
+menu_order = 1
+model = "res://assets/kaykit/Knight.glb"
+anims = {"idle": "Idle", "run": "Running_A", "attack": "1H_Melee_Attack_Slice_Horizontal", "death": "Death_A"}
+stats = {&"max_health": 170.0, &"max_mana": 60.0, &"mana_regen": 5.0, &"spell_damage": 8.0, &"melee_damage": 8.0, &"res_fire": 10.0, &"res_cold": 10.0, &"res_lightning": 10.0}
+kit = Array[StringName]([&"charge", &"war_cry", &"whirlwind"])

@@ -133,8 +133,10 @@ func _input(event: InputEvent) -> void:
 
 ## Modelo KayKit animado de la clase. Si no carga, queda la cápsula placeholder.
 func _setup_model() -> void:
-	var def: Dictionary = Game.class_def(player_class)
-	var path: String = def.get("model", "")
+	var def: ClassDef = Game.class_def(player_class)
+	if def == null:
+		return
+	var path: String = def.model
 	if path == "" or not ResourceLoader.exists(path):
 		return
 	var scene = load(path)
@@ -144,7 +146,7 @@ func _setup_model() -> void:
 	visual.add_child(model)
 	model.rotation.y = PI # KayKit mira +Z; nuestro Visual apunta -Z al cursor
 	_model_anim = model.find_child("AnimationPlayer", true, false)
-	_anims = def.get("anims", {})
+	_anims = def.anims
 	# Placeholders fuera (el Wand queda invisible como marcador de spawn).
 	$Visual/Body.visible = false
 	wand.visible = false

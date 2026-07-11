@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="EnemyDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/enemies/enemy_def.gd" id="1_def"]
+
+[resource]
+script = ExtResource("1_def")
+id = &"archer"
+hp = 20.0
+speed = 2.6
+scale = 1.0
+dmg = 10.0
+xp = 15.0
+color = Color(0.6, 0.25, 0.8, 1)
+model = "res://assets/kaykit/Skeleton_Mage.glb"
+anims = {"idle": "Idle", "run": "Running_A", "attack": "Spellcast_Shoot", "hit": "Hit_A", "death": "Death_A", "spawn": "Spawn_Ground"}
+ranged = true
+weight_base = 0
+weight_per_wave = 18
+weight_from_wave = 1

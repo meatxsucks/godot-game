@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="ClassDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/core/class_def.gd" id="1_def"]
+
+[resource]
+script = ExtResource("1_def")
+id = &"ranger"
+display_name = "Explorador"
+description = "Arquero ágil: flechas rápidas, abanicos, perforantes y lluvia mortal. Crítico y velocidad."
+color = Color(0.4, 0.9, 0.5, 1)
+menu_order = 2
+model = "res://assets/kaykit/Rogue.glb"
+anims = {"idle": "Idle", "run": "Running_A", "attack": "1H_Ranged_Shoot", "death": "Death_A"}
+stats = {&"max_health": 110.0, &"max_mana": 90.0, &"mana_regen": 7.0, &"spell_damage": 9.0, &"ranged_damage": 8.0, &"crit_chance": 12.0, &"crit_damage": 70.0, &"move_speed": 12.0}
+kit = Array[StringName]([&"dash", &"piercing_arrow", &"arrow_rain"])

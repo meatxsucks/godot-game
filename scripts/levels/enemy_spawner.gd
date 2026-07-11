@@ -30,29 +30,14 @@ const PORTAL_SCENE := preload("res://scenes/world/SpawnPortal.tscn")
 ## (después el modo sigue endless).
 @export var boss_wave: int = 5
 
-## Animaciones KayKit Skeletons por rol.
-const ANIMS_MELEE := {"idle": "Idle", "run": "Running_A", "attack": "Unarmed_Melee_Attack_Punch_A", "hit": "Hit_A", "death": "Death_A", "spawn": "Spawn_Ground"}
-const ANIMS_WARRIOR := {"idle": "Idle", "run": "Running_A", "attack": "2H_Melee_Attack_Slice", "hit": "Hit_A", "death": "Death_A", "spawn": "Spawn_Ground"}
-const ANIMS_CASTER := {"idle": "Idle", "run": "Running_A", "attack": "Spellcast_Shoot", "hit": "Hit_A", "death": "Death_A", "spawn": "Spawn_Ground"}
-
 const ENEMY_ARROW := preload("res://scenes/magic/EnemyArrow.tscn")
 
-## Variantes base (escalan por oleada): vida, velocidad, escala, daño, XP,
-## modelo KayKit + anims, y si es tirador a distancia.
-const VARIANTS := {
-	&"normal": {"hp": 30.0, "speed": 3.0, "scale": 1.0, "dmg": 8.0, "xp": 10.0,
-		"color": Color(0.2, 0.8, 0.2), "model": "res://assets/kaykit/Skeleton_Minion.glb",
-		"anims": ANIMS_MELEE, "ranged": false},
-	&"fast": {"hp": 16.0, "speed": 4.6, "scale": 0.85, "dmg": 5.0, "xp": 8.0,
-		"color": Color(0.4, 0.9, 0.75), "model": "res://assets/kaykit/Skeleton_Rogue.glb",
-		"anims": ANIMS_MELEE, "ranged": false},
-	&"tank": {"hp": 75.0, "speed": 1.9, "scale": 1.25, "dmg": 15.0, "xp": 25.0,
-		"color": Color(0.1, 0.45, 0.15), "model": "res://assets/kaykit/Skeleton_Warrior.glb",
-		"anims": ANIMS_WARRIOR, "ranged": false},
-	&"archer": {"hp": 20.0, "speed": 2.6, "scale": 1.0, "dmg": 10.0, "xp": 15.0,
-		"color": Color(0.6, 0.25, 0.8), "model": "res://assets/kaykit/Skeleton_Mage.glb",
-		"anims": ANIMS_CASTER, "ranged": true},
-}
+## Variantes de enemigo data-driven: TODOS los .tres de este directorio
+## entran a la ruleta de oleadas (peso por oleada en cada EnemyDef).
+## Agregar un enemigo = crear un .tres — ver [[Crear un enemigo]] en el vault.
+const ENEMIES_DIR := "res://resources/enemies/"
+
+var _enemy_defs: Array[EnemyDef] = []
 
 enum State { INTERMISSION, SPAWNING, FIGHTING }
 
@@ -70,6 +55,7 @@ func _ready() -> void:
 	add_to_group("wave_manager")
 	_safe_zone = get_tree().get_first_node_in_group("safe_zone")
 	_timer = intermission_time
+	_load_enemy_defs()
 	# Las oleadas las dirige SOLO el host: los clientes reciben los enemigos
 	# replicados por el MultiplayerSpawner (E1.5).
 	if not multiplayer.is_server():
@@ -150,26 +136,43 @@ func _spawn_boss() -> void:
 func _loot_level() -> int:
 	return 1 + int(wave / 2.0)
 
-## Mezcla de variantes por progresión: temprano casi todo normal; arqueros
-## desde la oleada 2, más rápidos desde la 3 y tanques desde la 4.
-func _pick_variant() -> Dictionary:
-	var archer_weight := maxi(0, wave - 1) * 18
-	var fast_weight := 10 + maxi(0, wave - 2) * 20
-	var tank_weight := maxi(0, wave - 3) * 15
-	var total := 100 + archer_weight + fast_weight + tank_weight
+func _load_enemy_defs() -> void:
+	_enemy_defs.clear()
+	var dir := DirAccess.open(ENEMIES_DIR)
+	if dir == null:
+		push_error("[Waves] no se pudo abrir %s" % ENEMIES_DIR)
+		return
+	dir.list_dir_begin()
+	var file_name := dir.get_next()
+	while file_name != "":
+		if not dir.current_is_dir() and file_name.ends_with(".tres"):
+			var def: EnemyDef = load(ENEMIES_DIR + file_name)
+			if def and def.id != &"":
+				_enemy_defs.append(def)
+			else:
+				push_error("[Waves] EnemyDef inválida: %s" % file_name)
+		file_name = dir.get_next()
+	dir.list_dir_end()
+
+## Ruleta ponderada por oleada: cada EnemyDef declara su progresión
+## (weight_base / per_wave / from_wave) — sin código por variante.
+func _pick_variant() -> EnemyDef:
+	var total := 0
+	for def in _enemy_defs:
+		total += def.weight(wave)
+	if total <= 0:
+		return _enemy_defs[0] if not _enemy_defs.is_empty() else null
 	var roll := randi() % total
-	if roll < 100:
-		return VARIANTS[&"normal"]
-	roll -= 100
-	if roll < archer_weight:
-		return VARIANTS[&"archer"]
-	roll -= archer_weight
-	if roll < fast_weight:
-		return VARIANTS[&"fast"]
-	return VARIANTS[&"tank"]
+	for def in _enemy_defs:
+		roll -= def.weight(wave)
+		if roll < 0:
+			return def
+	return _enemy_defs[0]
 
 func _spawn_one() -> void:
 	var variant := _pick_variant()
+	if variant == null:
+		return
 	var hp_mult := 1.0 + 0.15 * (wave - 1)
 	var dmg_mult := 1.0 + 0.10 * (wave - 1)
 
@@ -189,21 +192,21 @@ func _spawn_one() -> void:
 	var atk_speed := 1.0 + 0.06 * (wave - 1)
 
 	var props := {
-		"max_health": variant["hp"] * hp_mult,
-		"speed": variant["speed"],
-		"size_scale": variant["scale"],
-		"attack_damage": variant["dmg"] * dmg_mult,
+		"max_health": variant.hp * hp_mult,
+		"speed": variant.speed,
+		"size_scale": variant.scale,
+		"attack_damage": variant.dmg * dmg_mult,
 		"attack_interval": maxf(0.45, 1.0 / atk_speed),
-		"body_color": variant["color"],
+		"body_color": variant.color,
 		"loot_level": _loot_level(),
-		"xp_reward": variant["xp"] * (1.0 + 0.1 * (wave - 1)),
-		"model_path": variant["model"],
-		"anims": variant["anims"],
-		"is_ranged": variant["ranged"],
+		"xp_reward": variant.xp * (1.0 + 0.1 * (wave - 1)),
+		"model_path": variant.model,
+		"anims": variant.anims,
+		"is_ranged": variant.ranged,
 		"position": pos,
 	}
 	var scene_props := {}
-	if variant["ranged"]:
+	if variant.ranged:
 		scene_props["projectile_scene"] = ENEMY_ARROW.resource_path
 		props["ranged_interval"] = maxf(1.0, 2.5 / atk_speed)
 		# +1 flecha cada 3 oleadas (1 → 2 en la 4, 3 en la 7...).
