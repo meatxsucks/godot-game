@@ -33,18 +33,17 @@ func _build_coop_ui() -> void:
 	_btn_host.pressed.connect(_on_host_pressed)
 	vbox.add_child(_btn_host)
 
-	var row := HBoxContainer.new()
+	# Todo en vertical, como el resto del menú.
 	_ip_edit = LineEdit.new()
 	_ip_edit.text = "127.0.0.1"
 	_ip_edit.placeholder_text = tr("IP del host")
-	_ip_edit.custom_minimum_size.x = 150
-	_ip_edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	row.add_child(_ip_edit)
+	_ip_edit.alignment = HORIZONTAL_ALIGNMENT_CENTER
+	vbox.add_child(_ip_edit)
+
 	_btn_join = Button.new()
 	_btn_join.text = tr("Unirse")
 	_btn_join.pressed.connect(_on_join_pressed)
-	row.add_child(_btn_join)
-	vbox.add_child(row)
+	vbox.add_child(_btn_join)
 
 	_net_status = Label.new()
 	_net_status.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
