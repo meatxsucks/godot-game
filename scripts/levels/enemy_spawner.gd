@@ -128,17 +128,18 @@ func _start_wave() -> void:
 	wave_started.emit(wave)
 
 func _spawn_boss() -> void:
-	var boss := BOSS_SCENE.instantiate()
-	boss.loot_level = _loot_level() + 2
-	# Escalar también al boss si la oleada final se configura más tarde.
-	boss.max_health = boss.max_health * (1.0 + 0.05 * (wave - boss_wave if wave > boss_wave else 0))
-	add_child(boss)
 	var pos: Vector3
 	if _portals.is_empty():
 		pos = _random_spawn_pos()
 	else:
 		pos = (_portals.pick_random() as Node3D).global_position
-	boss.global_position = pos
+	var boss := NetSpawn.enemy(BOSS_SCENE,
+		{"loot_level": _loot_level() + 2, "position": pos}, self)
+	# Escalar también al boss si la oleada final se configura más tarde.
+	# Post-spawn (su _ready ya corrió): hay que reponer current_health.
+	if wave > boss_wave:
+		boss.max_health *= 1.0 + 0.05 * (wave - boss_wave)
+		boss.current_health = boss.max_health
 
 ## Nivel del botín de la oleada actual (sube cada 2 rondas).
 func _loot_level() -> int:
@@ -182,25 +183,27 @@ func _spawn_one() -> void:
 	# y los arqueros disparan abanicos de más flechas.
 	var atk_speed := 1.0 + 0.06 * (wave - 1)
 
-	var slime := slime_scene.instantiate()
-	slime.max_health = variant["hp"] * hp_mult
-	slime.speed = variant["speed"]
-	slime.size_scale = variant["scale"]
-	slime.attack_damage = variant["dmg"] * dmg_mult
-	slime.attack_interval = maxf(0.45, 1.0 / atk_speed)
-	slime.body_color = variant["color"]
-	slime.loot_level = _loot_level()
-	slime.xp_reward = variant["xp"] * (1.0 + 0.1 * (wave - 1))
-	slime.model_path = variant["model"]
-	slime.anims = variant["anims"]
-	slime.is_ranged = variant["ranged"]
+	var props := {
+		"max_health": variant["hp"] * hp_mult,
+		"speed": variant["speed"],
+		"size_scale": variant["scale"],
+		"attack_damage": variant["dmg"] * dmg_mult,
+		"attack_interval": maxf(0.45, 1.0 / atk_speed),
+		"body_color": variant["color"],
+		"loot_level": _loot_level(),
+		"xp_reward": variant["xp"] * (1.0 + 0.1 * (wave - 1)),
+		"model_path": variant["model"],
+		"anims": variant["anims"],
+		"is_ranged": variant["ranged"],
+		"position": pos,
+	}
+	var scene_props := {}
 	if variant["ranged"]:
-		slime.projectile_scene = ENEMY_ARROW
-		slime.ranged_interval = maxf(1.0, 2.5 / atk_speed)
+		scene_props["projectile_scene"] = ENEMY_ARROW.resource_path
+		props["ranged_interval"] = maxf(1.0, 2.5 / atk_speed)
 		# +1 flecha cada 3 oleadas (1 → 2 en la 4, 3 en la 7...).
-		slime.projectile_count = 1 + int(wave / 3.0)
-	add_child(slime)
-	slime.global_position = pos
+		props["projectile_count"] = 1 + int(wave / 3.0)
+	NetSpawn.enemy(slime_scene, props, self, scene_props)
 	_to_spawn -= 1
 
 func _random_spawn_pos() -> Vector3:
@@ -248,11 +251,9 @@ func _spawn_rewards() -> void:
 	var center: Vector3 = player.global_position if player else global_position
 	var count := 1 + int(wave / 3.0)
 	for i in count:
-		var drop := REWARD_DROP.instantiate()
-		drop.item = Loot.generate_random_item(_loot_level())
-		add_child(drop)
 		var angle := TAU * float(i) / count + randf() * 0.5
-		drop.global_position = center + Vector3(cos(angle) * 1.8, 0.0, sin(angle) * 1.8)
+		var pos := center + Vector3(cos(angle) * 1.8, 0.0, sin(angle) * 1.8)
+		NetSpawn.drop(REWARD_DROP, Loot.generate_random_item(_loot_level()), pos, self)
 	print("[Waves] recompensa: %d ítems" % count)
 
 func _restock_chests() -> void:

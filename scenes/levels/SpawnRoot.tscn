@@ -1,0 +1,21 @@
+[gd_scene load_steps=2 format=3 uid="uid://cspawnroot0001"]
+
+[ext_resource type="Script" path="res://scripts/levels/spawn_root.gd" id="1_root"]
+
+[node name="SpawnRoot" type="Node3D"]
+script = ExtResource("1_root")
+
+[node name="Enemies" type="Node3D" parent="."]
+
+[node name="Drops" type="Node3D" parent="."]
+
+[node name="Projectiles" type="Node3D" parent="."]
+
+[node name="EnemiesSpawner" type="MultiplayerSpawner" parent="."]
+spawn_path = NodePath("../Enemies")
+
+[node name="DropsSpawner" type="MultiplayerSpawner" parent="."]
+spawn_path = NodePath("../Drops")
+
+[node name="ProjectilesSpawner" type="MultiplayerSpawner" parent="."]
+spawn_path = NodePath("../Projectiles")

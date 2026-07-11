@@ -24,11 +24,11 @@ func _cast(player) -> Variant:
 		return false
 	FX.shake(0.4)
 	var result: Array = player.stats.roll_spell_damage(&"fire_damage", 1.5)
-	# La posición va ANTES de add_child: la tormenta calcula sus objetivos
-	# en _ready (asignarla después la hacía caer alrededor del origen).
-	var storm = SCENE.instantiate()
-	storm.position = player.get_front_point()
-	player.get_parent().add_child(storm)
+	# La posición viaja en props y se aplica ANTES de entrar al árbol: la
+	# tormenta calcula sus objetivos en _ready (asignarla después la hacía
+	# caer alrededor del origen).
+	var storm := NetSpawn.projectile(SCENE,
+		{"position": player.get_front_point()}, player.get_parent())
 	if storm.has_method("setup"):
 		storm.setup(result[0], player)
 	return true

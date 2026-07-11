@@ -77,12 +77,12 @@ func _summon_minions() -> void:
 	if get_tree().get_nodes_in_group("enemies").size() >= summon_cap:
 		return
 	for i in 2:
-		var minion := SLIME_SCENE.instantiate()
-		minion.loot_level = loot_level
-		minion.drop_chance = 0.25
-		get_parent().add_child(minion)
 		var angle := randf() * TAU
-		minion.global_position = global_position + Vector3(cos(angle) * 2.0, 0.0, sin(angle) * 2.0)
+		NetSpawn.enemy(SLIME_SCENE, {
+			"loot_level": loot_level,
+			"drop_chance": 0.25,
+			"position": global_position + Vector3(cos(angle) * 2.0, 0.0, sin(angle) * 2.0),
+		}, get_parent())
 
 # --- Corona y botín ------------------------------------------------------------
 

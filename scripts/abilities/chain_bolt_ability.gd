@@ -34,12 +34,10 @@ func _cast(player) -> Variant:
 	
 	# Suelta rayo en cadena
 	var result: Array = player.stats.roll_spell_damage(&"lightning_damage", 0.65)
-	var projectile = SCENE.instantiate()
-	player.get_parent().add_child(projectile)
-	projectile.global_transform = player.wand.global_transform
-	projectile.global_position.y = PROJECTILE_HEIGHT
-	if "chains_left" in projectile:
-		projectile.chains_left = 2
+	var xform: Transform3D = player.wand.global_transform
+	xform.origin.y = PROJECTILE_HEIGHT
+	var projectile := NetSpawn.projectile(SCENE,
+		{"transform": xform, "chains_left": 2}, player.get_parent())
 	if projectile.has_method("setup"):
 		projectile.setup(result[0], player, result[1])
 	return true

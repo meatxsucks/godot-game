@@ -15,11 +15,4 @@ func _init() -> void:
 	element = &"fire"
 
 func _cast(player) -> Variant:
-	var result: Array = player.stats.roll_spell_damage(&"fire_damage", 0.55)
-	var projectile = SCENE.instantiate()
-	player.get_parent().add_child(projectile)
-	projectile.global_transform = player.wand.global_transform
-	projectile.global_position.y = PROJECTILE_HEIGHT
-	if projectile.has_method("setup"):
-		projectile.setup(result[0], player, result[1])
-	return true
+	return _spawn_projectile(player, SCENE, &"fire_damage", 0.55)

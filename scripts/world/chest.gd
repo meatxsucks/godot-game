@@ -74,10 +74,8 @@ func _spill_content() -> void:
 		var item := items[i]
 		if item == null:
 			continue
-		var drop := DROP_SCENE.instantiate()
-		drop.item = item
-		get_parent().add_child(drop)
-		drop.global_position = global_position + Vector3.UP * 0.9
+		var drop := NetSpawn.drop(DROP_SCENE, item,
+			global_position + Vector3.UP * 0.9, get_parent())
 
 		var angle := TAU * float(i) / items.size() + randf_range(-0.3, 0.3)
 		var dist := randf_range(1.3, 2.2)

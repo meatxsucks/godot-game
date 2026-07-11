@@ -26,6 +26,7 @@ Loot="*res://scripts/loot/loot_generator.gd"
 SceneManager="*res://scripts/core/scene_manager.gd"
 SaveService="*res://scripts/core/save_service.gd"
 Net="*res://scripts/core/net.gd"
+NetSpawn="*res://scripts/core/net_spawn.gd"
 
 [display]
 
@@ -106,13 +107,8 @@ interact={
 
 [internationalization]
 
-locale/default_locale="es"
-; Godot cae al locale de fallback cuando el activo no tiene traducción
-; registrada. El default de Godot es "en" — con el español como idioma
-; fuente (sin Translation propia) eso hacía que jugar en "es" mostrara
-; inglés igual (encontrado por el smoke L10nSmoke). Fallback = "es" hace
-; que, al no encontrar nada, Godot devuelva el string fuente tal cual.
 locale/fallback="es"
+locale/default_locale="es"
 
 [rendering]
 

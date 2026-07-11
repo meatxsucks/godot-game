@@ -28,9 +28,8 @@ func _spawn_sequence(player: Node, tree: SceneTree, dir: Vector3, i: int) -> voi
 		return
 	
 	var result: Array = player.stats.roll_spell_damage(&"melee_damage", 0.4)
-	var nova = SCENE.instantiate()
-	nova.position = player.global_position + dir * (2.0 + i * 2.5)
-	player.get_parent().add_child(nova)
+	var nova := NetSpawn.projectile(SCENE,
+		{"position": player.global_position + dir * (2.0 + i * 2.5)}, player.get_parent())
 	if nova.has_method("setup"):
 		nova.setup(result[0], player, result[1])
 		

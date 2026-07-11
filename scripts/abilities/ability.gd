@@ -57,10 +57,9 @@ func consume_cooldown_refund() -> float:
 ## Helper compartido: instancia un proyectil en la varita/mano del personaje
 ## con daño rodado desde sus stats. `stat` decide qué daño del loot suma.
 func _spawn_projectile(player, scene: PackedScene, stat: StringName, multiplier: float) -> bool:
-	var projectile = scene.instantiate()
-	player.get_parent().add_child(projectile)
-	projectile.global_transform = player.wand.global_transform
-	projectile.global_position.y = PROJECTILE_HEIGHT
+	var xform: Transform3D = player.wand.global_transform
+	xform.origin.y = PROJECTILE_HEIGHT
+	var projectile := NetSpawn.projectile(scene, {"transform": xform}, player.get_parent())
 
 	var result: Array = player.stats.roll_spell_damage(stat, multiplier)
 	if projectile.has_method("setup"):
@@ -72,9 +71,8 @@ func _spawn_projectile(player, scene: PackedScene, stat: StringName, multiplier:
 ## La posición va ANTES de add_child (el _ready arma el tween en su sitio).
 func _spawn_nova(player, scene: PackedScene, stat: StringName, multiplier: float) -> bool:
 	var result: Array = player.stats.roll_spell_damage(stat, multiplier)
-	var nova = scene.instantiate()
-	nova.position = player.global_position
-	player.get_parent().add_child(nova)
+	var nova := NetSpawn.projectile(scene,
+		{"position": player.global_position}, player.get_parent())
 	if nova.has_method("setup"):
 		nova.setup(result[0], player, result[1])
 	return true

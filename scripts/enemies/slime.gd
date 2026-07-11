@@ -204,11 +204,11 @@ func _try_shoot() -> void:
 	var spread := 0.22
 	var base_angle := -spread * (projectile_count - 1) * 0.5
 	for i in projectile_count:
-		var bolt = projectile_scene.instantiate()
-		get_parent().add_child(bolt)
-		bolt.global_position = origin
-		bolt.global_transform.basis = Basis.looking_at(aim.normalized(), Vector3.UP)
-		bolt.rotate_y(base_angle + spread * i)
+		# Basis(UP, ang) * looking_at == look_at + rotate_y de antes.
+		var bolt_basis := Basis(Vector3.UP, base_angle + spread * i) \
+			* Basis.looking_at(aim.normalized(), Vector3.UP)
+		var bolt := NetSpawn.projectile(projectile_scene,
+			{"transform": Transform3D(bolt_basis, origin)}, get_parent())
 		if bolt.has_method("setup"):
 			bolt.setup(attack_damage, self)
 	_play_locked("attack")
@@ -328,7 +328,4 @@ func die() -> void:
 func _spawn_drop(item: LootItem, offset: Vector3) -> void:
 	if item == null:
 		return
-	var drop = loot_drop_scene.instantiate()
-	drop.item = item
-	get_parent().add_child(drop)
-	drop.global_position = global_position + offset
+	NetSpawn.drop(loot_drop_scene, item, global_position + offset, get_parent())

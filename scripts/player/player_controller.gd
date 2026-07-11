@@ -496,9 +496,8 @@ func take_damage(amount: float, _is_crit: bool = false) -> void:
 	if _frost_guard_timer <= 0.0 and stats.has_legendary(&"on_hit_frost_nova"):
 		_frost_guard_timer = 6.0
 		var result := stats.roll_spell_damage(&"cold_damage", 1.0)
-		var nova := FROST_GUARD_SCENE.instantiate()
-		get_parent().add_child(nova)
-		nova.global_position = global_position
+		var nova := NetSpawn.projectile(FROST_GUARD_SCENE,
+			{"position": global_position}, get_parent())
 		if nova.has_method("setup"):
 			nova.setup(result[0], self, result[1])
 

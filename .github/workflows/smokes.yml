@@ -39,7 +39,7 @@ jobs:
             exit 1
           fi
 
-      - name: Smokes headless (LootSmoke, KitSmoke, HitSmoke, SaveSmoke, L10nSmoke, PlayersSmoke)
+      - name: Smokes headless (LootSmoke, KitSmoke, HitSmoke, SaveSmoke, L10nSmoke, PlayersSmoke, SpawnSmoke)
         run: |
           run_smoke() {
             local scene="$1" expected="$2"
@@ -58,6 +58,7 @@ jobs:
           run_smoke SaveSmoke.tscn "SAVE SMOKE OK"
           run_smoke L10nSmoke.tscn "L10N SMOKE OK"
           run_smoke PlayersSmoke.tscn "PLAYERS SMOKE OK"
+          run_smoke SpawnSmoke.tscn "SPAWN SMOKE OK"
 
       - name: Runtime de Arena.tscn (no debe crashear)
         run: |

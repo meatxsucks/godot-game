@@ -1,4 +1,4 @@
-[gd_scene load_steps=16 format=3 uid="uid://darena1234567"]
+[gd_scene load_steps=17 format=3 uid="uid://darena1234567"]
 
 [ext_resource type="PackedScene" uid="uid://dplayer1234567" path="res://scenes/player/Player.tscn" id="1_player"]
 [ext_resource type="Script" path="res://scripts/levels/camera_rig.gd" id="2_camera"]
@@ -8,6 +8,7 @@
 [ext_resource type="PackedScene" uid="uid://csafezone0001" path="res://scenes/world/SafeZone.tscn" id="7_zone"]
 [ext_resource type="Script" path="res://scripts/levels/nav_region.gd" id="8_nav"]
 [ext_resource type="Script" path="res://scripts/levels/world_generator.gd" id="9_world"]
+[ext_resource type="PackedScene" uid="uid://cspawnroot0001" path="res://scenes/levels/SpawnRoot.tscn" id="10_spawnroot"]
 
 [sub_resource type="PlaneMesh" id="PlaneMesh_floor"]
 size = Vector2(64, 64)
@@ -61,6 +62,8 @@ surface_material_override/0 = SubResource("StandardMaterial3D_floor")
 [node name="CollisionShape3D" type="CollisionShape3D" parent="NavRegion/Floor"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 0)
 shape = SubResource("BoxShape3D_floor")
+
+[node name="SpawnRoot" parent="." instance=ExtResource("10_spawnroot")]
 
 [node name="SafeZone" parent="." instance=ExtResource("7_zone")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 24)

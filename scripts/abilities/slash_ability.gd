@@ -17,11 +17,9 @@ func _init() -> void:
 
 func _cast(player) -> Variant:
 	var result: Array = player.stats.roll_spell_damage(&"melee_damage", 0.55)
-	var slash = SCENE.instantiate()
-	player.get_parent().add_child(slash)
-	slash.global_position = player.global_position
 	# Orientado como el Visual del player
-	slash.global_transform.basis = player.visual.global_transform.basis
+	var xform := Transform3D(player.visual.global_transform.basis, player.global_position)
+	var slash := NetSpawn.projectile(SCENE, {"transform": xform}, player.get_parent())
 	if slash.has_method("setup"):
 		slash.setup(result[0], player, result[1])
 	
