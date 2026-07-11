@@ -38,6 +38,17 @@ var skills := SkillSet.new()
 var level: int = 1
 var xp: float = 0.0
 
+## Escala global del daño de los poderes por nivel (feedback 2026-07-11:
+## pegaban muy fuerte de entrada). Arrancan al 60% del daño y suben 5% por
+## nivel (100% en nivel 9), con tope de 1.5x en nivel 19. Un solo knob para
+## balancear la curva completa.
+const LEVEL_DMG_BASE := 0.6
+const LEVEL_DMG_PER_LEVEL := 0.05
+const LEVEL_DMG_CAP := 1.5
+
+func level_damage_scale() -> float:
+	return minf(LEVEL_DMG_CAP, LEVEL_DMG_BASE + LEVEL_DMG_PER_LEVEL * (level - 1))
+
 var health: float = 0.0
 var mana: float = 0.0
 
@@ -151,7 +162,8 @@ func get_stat(name: StringName) -> float:
 ## `multiplier` escala el golpe (proyectil spam más débil, super más fuerte).
 func roll_spell_damage(element: StringName = &"fire_damage", multiplier: float = 1.0) -> Array:
 	var dmg := (get_stat(&"spell_damage") + get_stat(element)) * multiplier \
-			* skills.damage_multiplier(element)
+			* skills.damage_multiplier(element) \
+			* level_damage_scale()
 	var is_crit := randf() * 100.0 < get_stat(&"crit_chance")
 	if is_crit:
 		dmg *= 1.0 + get_stat(&"crit_damage") / 100.0

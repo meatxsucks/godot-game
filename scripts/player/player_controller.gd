@@ -1,7 +1,9 @@
 extends CharacterBody3D
 
 @export var speed: float = 6.0
-@export var acceleration: float = 10.0
+## Alta a propósito: el personaje arranca y frena casi en seco (feedback
+## 2026-07-11: con 10.0 "resbalaba" y el movimiento se veía flotante).
+@export var acceleration: float = 60.0
 
 ## Dash Arcano: multiplicador de velocidad y duración del impulso.
 const DASH_SPEED_MULT := 4.0
