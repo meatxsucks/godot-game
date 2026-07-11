@@ -28,7 +28,7 @@ func _ready() -> void:
 
 func host_game(port: int = DEFAULT_PORT) -> Error:
 	var peer := _create_peer()
-	var err := peer.create_server(port, MAX_PLAYERS)
+	var err: Error = peer.create_server(port, MAX_PLAYERS)
 	if err != OK:
 		return err
 	multiplayer.multiplayer_peer = peer
@@ -37,7 +37,7 @@ func host_game(port: int = DEFAULT_PORT) -> Error:
 
 func join_game(address: String, port: int = DEFAULT_PORT) -> Error:
 	var peer := _create_peer()
-	var err := peer.create_client(address, port)
+	var err: Error = peer.create_client(address, port)
 	if err != OK:
 		return err
 	multiplayer.multiplayer_peer = peer
