@@ -227,7 +227,7 @@ theme_override_font_sizes/font_size = 10
 text = "Derrotaste al Rey Slime. Su botín legendario es tuyo."
 horizontal_alignment = 1
 
-[node name="Buttons" type="HBoxContainer" parent="Root/Victory/Panel/VBox"]
+[node name="Buttons" type="VBoxContainer" parent="Root/Victory/Panel/VBox"]
 layout_mode = 2
 theme_override_constants/separation = 10
 alignment = 1
@@ -265,7 +265,7 @@ theme_override_font_sizes/font_size = 24
 text = "PAUSA"
 horizontal_alignment = 1
 
-[node name="Buttons" type="HBoxContainer" parent="Root/Pause/Panel/VBox"]
+[node name="Buttons" type="VBoxContainer" parent="Root/Pause/Panel/VBox"]
 layout_mode = 2
 theme_override_constants/separation = 10
 alignment = 1
@@ -382,7 +382,7 @@ text = "Pantalla completa"
 unique_name_in_owner = true
 layout_mode = 2
 
-[node name="Buttons" type="HBoxContainer" parent="Root/Options/Panel/VBox"]
+[node name="Buttons" type="VBoxContainer" parent="Root/Options/Panel/VBox"]
 layout_mode = 2
 theme_override_constants/separation = 10
 alignment = 1
@@ -455,7 +455,7 @@ layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 6
 
-[node name="Buttons" type="HBoxContainer" parent="Root/Controls/Panel/VBox"]
+[node name="Buttons" type="VBoxContainer" parent="Root/Controls/Panel/VBox"]
 layout_mode = 2
 theme_override_constants/separation = 10
 alignment = 1
@@ -493,7 +493,7 @@ theme_override_font_sizes/font_size = 24
 text = "HAS MUERTO"
 horizontal_alignment = 1
 
-[node name="Buttons" type="HBoxContainer" parent="Root/GameOver/Panel/VBox"]
+[node name="Buttons" type="VBoxContainer" parent="Root/GameOver/Panel/VBox"]
 layout_mode = 2
 theme_override_constants/separation = 10
 alignment = 1
