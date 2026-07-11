@@ -71,6 +71,11 @@ func register_player_class(cls: StringName) -> void:
 func is_host() -> bool:
 	return multiplayer.multiplayer_peer != null and multiplayer.is_server()
 
+## true si hay una sesión de red real (co-op). Offline/single-player = false.
+func is_online() -> bool:
+	return multiplayer.multiplayer_peer != null \
+		and not (multiplayer.multiplayer_peer is OfflineMultiplayerPeer)
+
 func _create_peer() -> MultiplayerPeer:
 	if use_steam:
 		return _create_steam_peer()

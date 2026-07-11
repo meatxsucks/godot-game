@@ -26,6 +26,9 @@ const INVENTORY_SIZE := 20
 ## &"" = usar la seleccionada localmente (single-player / escena directa).
 @export var player_class: StringName = &""
 
+## Donde apareció (para respawn en co-op sin recargar la escena).
+var _spawn_pos: Vector3 = Vector3.ZERO
+
 ## Stats del mago (base + loot equipado). Fuente de verdad del combate.
 ## Se reconstruye en _ready con player_class (acá aún no se conoce).
 var stats := PlayerStats.new()
@@ -96,6 +99,7 @@ signal died
 
 func _ready() -> void:
 	add_to_group("player")
+	_spawn_pos = global_position
 	if player_class == &"":
 		player_class = Game.selected_class
 	stats = PlayerStats.new(player_class)
@@ -534,6 +538,19 @@ func _die() -> void:
 		tween.tween_property(visual, "rotation:x", -PI / 2.0, 0.5) \
 			.set_trans(Tween.TRANS_BOUNCE).set_ease(Tween.EASE_OUT)
 	died.emit()
+
+## Revive al jugador LOCAL en su punto de spawn (retry en co-op, sin
+## recargar la escena: la partida sigue para el resto de los peers).
+func respawn() -> void:
+	_dead = false
+	stats.health = stats.get_stat(&"max_health")
+	stats.mana = stats.get_stat(&"max_mana")
+	global_position = _spawn_pos
+	velocity = Vector3.ZERO
+	visual.rotation.x = 0.0 # deshace la caída del fallback sin modelo
+	if _model_anim and _anims.has("idle"):
+		_model_anim.play(_anims["idle"], 0.1)
+	_emit_resource_signals()
 
 # --- Loteo / inventario -----------------------------------------------------
 

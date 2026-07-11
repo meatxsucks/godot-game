@@ -34,6 +34,11 @@ func _process(delta: float) -> void:
 func _on_body_entered(body: Node3D) -> void:
 	if not body.is_in_group("player") or item == null:
 		return
+	# En co-op el drop existe en todas las máquinas: recoge SOLO la máquina
+	# dueña del player que lo tocó (su vida/inventario son locales). Si dos
+	# players lo tocan en el mismo instante puede duplicarse — asumido (E1.6).
+	if not body.is_multiplayer_authority():
+		return
 
 	# Consumibles: se aplican AL TOCAR (llenan vida/maná al instante).
 	if item.is_consumable():
@@ -42,7 +47,7 @@ func _on_body_entered(body: Node3D) -> void:
 		if body.has_method("restore_mana"):
 			body.restore_mana(item.effective(&"restore_mana"))
 		FX.burst(global_position + Vector3(0, 0.5, 0), item.ui_color(), 10, 0.06)
-		queue_free()
+		_despawn()
 		return
 
 	# Equipo: al inventario (la decisión de equipar es del jugador).
@@ -51,4 +56,18 @@ func _on_body_entered(body: Node3D) -> void:
 	if not body.pick_up(item):
 		return # inventario lleno: el drop queda en el suelo
 	print("[Loot] recogido: %s" % item.display_name)
-	queue_free()
+	_despawn()
+
+## Solo el host puede liberar un nodo replicado (el MultiplayerSpawner avisa
+## el despawn al resto); un cliente que recogió le pide el despawn por RPC.
+func _despawn() -> void:
+	item = null # ya entregado: ignorar toques hasta que el host lo libere
+	if multiplayer.is_server():
+		queue_free()
+	else:
+		_request_despawn.rpc_id(1)
+
+@rpc("any_peer", "reliable")
+func _request_despawn() -> void:
+	if multiplayer.is_server():
+		queue_free()

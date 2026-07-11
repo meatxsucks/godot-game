@@ -138,13 +138,14 @@ func _input(event: InputEvent) -> void:
 		_toggle_inventory()
 
 ## Pausa/reanuda el juego (ESC). El HUD corre en PROCESS_MODE_ALWAYS para
-## seguir recibiendo input y poder des-pausar.
+## seguir recibiendo input y poder des-pausar. En co-op el menú se abre
+## SIN congelar el árbol (la partida sigue para el resto de los peers).
 func _toggle_pause() -> void:
 	pause_panel.visible = not pause_panel.visible
 	if not pause_panel.visible:
 		options_panel.visible = false
 		controls_panel.visible = false
-	get_tree().paused = pause_panel.visible
+	get_tree().paused = pause_panel.visible and not Net.is_online()
 
 func _on_pause_quit_pressed() -> void:
 	get_tree().paused = false
@@ -408,6 +409,12 @@ func _on_player_died() -> void:
 
 func _on_retry_pressed() -> void:
 	get_tree().paused = false
+	# En co-op no se recarga la escena (la partida sigue para el resto):
+	# el jugador local revive en su punto de spawn.
+	if Net.is_online():
+		game_over.visible = false
+		player.respawn()
+		return
 	# Misma clase, arena fresca.
 	SceneManager.change_scene("res://scenes/levels/Arena.tscn")
 
