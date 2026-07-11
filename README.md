@@ -12,21 +12,26 @@ ARPG isométrico *wave-based* hecho en **Godot 4.4** (Forward+). Mezcla el comba
 2. Abre `project.godot` con el editor e importa el proyecto.
 3. Presiona **F5** — arranca en el menú principal.
 
-### Co-op por LAN (hasta 4 jugadores) 🧪
+### Co-op (hasta 4 jugadores) — LAN y Steam 🧪
 
-Multiplayer **host-authoritative** sobre ENet (IP directa / LAN). Desde el
-menú principal: **Co-op (LAN)** abre el submenú de red.
+Multiplayer **host-authoritative**. Desde el menú principal, **Co-op (LAN)**
+abre el submenú de red con dos vías:
 
-1. Un jugador elige **Hostear** → selecciona su clase → entra a la Arena.
-2. El resto pone la **IP del host** (misma máquina: `127.0.0.1`) → **Unirse**
-   → elige su clase (cada uno juega la suya) → entra.
-3. Para probar solo: en el editor, **Debug → Run Multiple Instances → 2**.
+- **Steam** (si el cliente está corriendo): **Hostear (Steam)** crea un
+  lobby público; **Buscar partidas (Steam)** lista las abiertas y un click
+  te une. Usa el AppID de pruebas 480 (Spacewar) con filtro por juego;
+  probar Steam↔Steam requiere dos cuentas.
+- **LAN / IP directa**: un jugador **Hostea**, el resto pone la **IP del
+  host** (misma máquina: `127.0.0.1`) → **Unirse**. Para probar solo: en el
+  editor, **Debug → Run Multiple Instances → 2**.
 
-Los enemigos persiguen al jugador vivo **más cercano**, la XP de los kills
-es para todos, el loot se lo lleva quien lo toca, y cámara/HUD/minimapa son
-de cada jugador. La pausa en co-op no congela la partida y al morir puedes
-**revivir en la base** sin cortar la sesión. *(Matchmaking por Steam
-pendiente — requiere el addon GodotSteam.)*
+Cada uno elige su propia clase al entrar. Los enemigos persiguen al jugador
+vivo **más cercano**, la XP de los kills es para todos, y el **loot es
+instanciado por jugador** (estilo Diablo 3): el equipo se rollea una vez
+por jugador y cada uno ve y recoge SOLO el suyo — las pociones del mundo sí
+se comparten. Cámara/HUD/minimapa son de cada jugador, la pausa en co-op no
+congela la partida y al morir puedes **revivir en la base** sin cortar la
+sesión.
 
 ## Controles
 
@@ -63,7 +68,7 @@ pendiente — requiere el addon GodotSteam.)*
 ### Loot y equipo — "menos es mejor"
 - **6 ítems, TODOS visibles en tu personaje** (3 slots: arma · torso · escudo/orbe): Bastón, Varita, **Espadón de guerra** (2H), Escudo, Orbe y Túnica (se ve como capa).
 - **El ARMA define tu ataque básico**: espada = corte, bastón = Bola de Fuego, varita = Descarga rápida; sin arma = golpe débil. Cambiar de arma cambia el click (y el círculo del HUD).
-- **El equipo cae como RECOMPENSA al superar cada oleada** (cerca de ti) — los enemigos ya no sueltan equipo a mitad de ronda. Boss y cofres siguen premiando.
+- **El equipo cae como RECOMPENSA al superar cada oleada** (cerca de ti) — los enemigos ya no sueltan equipo a mitad de ronda. Boss y cofres siguen premiando. En co-op **cada jugador recibe sus propias tiradas** y solo ve su botín.
 - **Vida y maná se recogen AL TOCAR**: las pociones del suelo llenan tus barras al instante (estilo Diablo), sin pasar por el inventario.
 
 - 5 rarezas: **Común** (blanco) → **Poco común** (verde) → **Raro** (azul) → **Épico** (morado) → **Legendario** (naranja, con poder único **activo**: bolas de fuego que rebotan en cadena, nova de hielo defensiva al recibir golpes, maná que absorbe daño como escudo, o críticos que recortan cooldowns). Más rareza = más afijos y mejores valores.
@@ -98,8 +103,8 @@ scripts/
 ├── core/
 │   ├── game_state.gd        # Autoload "Game": clase elegida + carga los ClassDef (.tres)
 │   ├── class_def.gd         # ClassDef: clase jugable data-driven (resources/classes/)
-│   ├── net.gd               # Autoload "Net": transporte co-op (host/join ENet, registro
-│   │                        #   de clase por peer); swap a Steam aislado
+│   ├── net.gd               # Autoload "Net": transporte co-op — LAN (ENet) y Steam
+│   │                        #   (SteamMultiplayerPeer + lobby); registro de clase por peer
 │   ├── net_spawn.gd         # Autoload "NetSpawn": punto único de spawn replicado
 │   │                        #   (enemigos/drops/proyectiles/players vía MultiplayerSpawner)
 │   ├── players.gd           # Helpers estáticos: alive()/nearest()/local() sobre el
