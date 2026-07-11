@@ -167,7 +167,7 @@ func _physics_process(delta: float) -> void:
 		return
 	_frost_guard_timer = maxf(0.0, _frost_guard_timer - delta)
 	_move(delta)
-	_aim_at_mouse()
+	_update_facing(delta)
 	_update_abilities(delta)
 	_update_animation(delta)
 	
@@ -377,7 +377,13 @@ func get_front_point(distance: float = 5.5) -> Vector3:
 func set_inspect(on: bool) -> void:
 	_inspect = on
 
-func _aim_at_mouse() -> void:
+## Vueltas por segundo del giro suavizado del cuerpo.
+const TURN_SPEED := 14.0
+
+## Orientación estilo ARPG clásico (feedback 2026-07-11: corría "de lado"):
+## al correr el cuerpo mira hacia donde se MUEVE; al atacar o estar quieto,
+## hacia el apuntado (mouse/stick). Giro suavizado con lerp_angle.
+func _update_facing(delta: float) -> void:
 	# Inventario abierto: el personaje mira a la cámara (se le ve el frente).
 	if _inspect:
 		var cam := get_viewport().get_camera_3d()
@@ -396,10 +402,26 @@ func _aim_at_mouse() -> void:
 		_use_pad_aim = true
 		_pad_aim = _camera_align(Vector3(stick.x, 0, stick.y))
 
-	var hit := get_aim_point()
-	hit.y = visual.global_position.y
-	if hit.distance_squared_to(visual.global_position) > 0.1:
-		visual.look_at(hit, Vector3.UP)
+	var look_dir: Vector3
+	var moving := Vector2(velocity.x, velocity.z).length_squared() > 0.6
+	if _attack_lock > 0.0 or not moving:
+		look_dir = get_aim_point() - visual.global_position
+	else:
+		look_dir = velocity
+	look_dir.y = 0.0
+	if look_dir.length_squared() < 0.001:
+		return
+	var target_yaw := atan2(-look_dir.x, -look_dir.z)
+	visual.rotation.y = lerp_angle(visual.rotation.y, target_yaw, minf(1.0, TURN_SPEED * delta))
+
+## Encara el apuntado YA (sin suavizado). Se llama antes de castear: los
+## proyectiles salen de la varita (hija del Visual) y deben ir al cursor
+## aunque el cuerpo viniera mirando hacia el movimiento.
+func _face_aim() -> void:
+	var look_dir := get_aim_point() - visual.global_position
+	look_dir.y = 0.0
+	if look_dir.length_squared() > 0.001:
+		visual.rotation.y = atan2(-look_dir.x, -look_dir.z)
 
 # --- Barra de poderes -------------------------------------------------------
 
@@ -415,6 +437,7 @@ func _update_abilities(delta: float) -> void:
 			_try_cast(i)
 
 func _try_cast(slot: int) -> void:
+	_face_aim()
 	var ability := abilities[slot]
 	if not ability.execute(self):
 		return
