@@ -12,6 +12,22 @@ ARPG isométrico *wave-based* hecho en **Godot 4.4** (Forward+). Mezcla el comba
 2. Abre `project.godot` con el editor e importa el proyecto.
 3. Presiona **F5** — arranca en el menú principal.
 
+### Co-op por LAN (hasta 4 jugadores) 🧪
+
+Multiplayer **host-authoritative** sobre ENet (IP directa / LAN). Desde el
+menú principal: **Co-op (LAN)** abre el submenú de red.
+
+1. Un jugador elige **Hostear** → selecciona su clase → entra a la Arena.
+2. El resto pone la **IP del host** (misma máquina: `127.0.0.1`) → **Unirse**
+   → elige su clase (cada uno juega la suya) → entra.
+3. Para probar solo: en el editor, **Debug → Run Multiple Instances → 2**.
+
+Los enemigos persiguen al jugador vivo **más cercano**, la XP de los kills
+es para todos, el loot se lo lleva quien lo toca, y cámara/HUD/minimapa son
+de cada jugador. La pausa en co-op no congela la partida y al morir puedes
+**revivir en la base** sin cortar la sesión. *(Matchmaking por Steam
+pendiente — requiere el addon GodotSteam.)*
+
 ## Controles
 
 **Teclado + mouse o 🎮 mando** (soporte completo de joystick):
@@ -71,7 +87,7 @@ ARPG isométrico *wave-based* hecho en **Godot 4.4** (Forward+). Mezcla el comba
 - **Enemigos**: **esqueletos KayKit animados** en 4 variantes — esbirro (8 dmg), pícaro veloz (5 dmg), guerrero tanque (15 dmg, 75 HP) y el **mago esqueleto a distancia** que mantiene el rango y te dispara proyectiles (¡esquívalos con el dash!). Emergen del suelo al spawnear, navegan con navmesh y las rondas avanzadas traen mezclas más duras.
 - **Boss final**: tras 4 oleadas, en la **oleada 5** llega el **Rey Slime** — 600 HP, corona dorada, golpe sísmico telegrafiado (¡sal del círculo rojo!) e invocación de secuaces. Derrotarlo = **¡NIVEL SUPERADO!** con **legendario garantizado**; puedes seguir en modo endless.
 - **Minimapa con niebla de guerra** (abajo a la derecha): el mapa se va **desbloqueando a medida que exploras**; muestra la base, cofres, enemigos cercanos y los portales de la próxima oleada.
-- **Muerte**: a 0 de vida → Game Over (Reintentar con la misma clase, o volver al Menú).
+- **Muerte**: a 0 de vida → Game Over (Reintentar con la misma clase, o volver al Menú). En co-op, Reintentar te **revive en la base** sin cortar la partida del resto.
 
 ---
 
@@ -80,7 +96,16 @@ ARPG isométrico *wave-based* hecho en **Godot 4.4** (Forward+). Mezcla el comba
 ```
 scripts/
 ├── core/
-│   ├── game_state.gd        # Autoload "Game": clase elegida, stats/kit/modelo por clase
+│   ├── game_state.gd        # Autoload "Game": clase elegida + carga los ClassDef (.tres)
+│   ├── class_def.gd         # ClassDef: clase jugable data-driven (resources/classes/)
+│   ├── net.gd               # Autoload "Net": transporte co-op (host/join ENet, registro
+│   │                        #   de clase por peer); swap a Steam aislado
+│   ├── net_spawn.gd         # Autoload "NetSpawn": punto único de spawn replicado
+│   │                        #   (enemigos/drops/proyectiles/players vía MultiplayerSpawner)
+│   ├── players.gd           # Helpers estáticos: alive()/nearest()/local() sobre el
+│   │                        #   grupo "player" (nada usa get_first_node_in_group)
+│   ├── save_service.gd      # Autoload "SaveService": guardado + opciones
+│   ├── l10n.gd              # Autoload "L10n": localización EN+ES
 │   ├── fx.gd                # Autoload "FX": números de daño, partículas, screen shake
 │   └── scene_manager.gd     # Autoload "SceneManager": transiciones con fade
 ├── player/
@@ -103,14 +128,18 @@ scripts/
 │   └── meteor_storm.gd      # Lluvia de impactos tematizable (Meteoros / Lluvia de Flechas)
 ├── enemies/
 │   ├── slime.gd             # Navega con navmesh, ataque por contacto, variantes por
-│   │                        #   exports, slow de hielo, drop de loot/maná, zona segura
+│   │                        #   exports, slow de hielo, drop de loot/maná, zona segura;
+│   │                        #   en co-op la IA corre solo en el host (réplicas visuales)
+│   ├── enemy_def.gd         # EnemyDef: variante data-driven (resources/enemies/)
 │   ├── boss.gd              # Rey Slime (extends slime): golpe sísmico telegrafiado,
 │   │                        #   invoca secuaces, botín legendario garantizado
 │   └── health_bar_3d.gd     # Barra de vida flotante (2 quads, mira a cámara)
 ├── levels/
-│   ├── camera_rig.gd        # Cámara isométrica que sigue al player con lerp
+│   ├── arena.gd             # Orquestador del nivel: spawnea un player por peer
+│   ├── spawn_root.gd        # Contenedores replicados (SpawnRoot.tscn, en el origen)
+│   ├── camera_rig.gd        # Cámara isométrica que sigue al player LOCAL con lerp
 │   ├── enemy_spawner.gd     # Sistema de OLEADAS: descanso→spawn→combate, escalado,
-│   │                        #   portales procedurales, boss en la oleada 5, restock
+│   │                        #   ruleta de EnemyDef por pesos, boss en la oleada 5
 │   ├── world_generator.gd   # Mundo procedural por semilla (rocas/pilares/árboles)
 │   └── nav_region.gd        # Bakea el navmesh en runtime (piso+muros+obstáculos)
 ├── loot/
@@ -134,9 +163,11 @@ scripts/
     └── item_slot_ui.gd      # Casilla de ítem (borde por rareza + drag & drop)
 ```
 
-**Autoloads** (orden en `project.godot`): `Game`, `LootDB`, `Loot`, `SceneManager`.
+**Autoloads** (orden en `project.godot`): `L10n`, `Game`, `FX`, `LootDB`, `Loot`, `SceneManager`, `SaveService`, `Net`, `NetSpawn`.
 
-**Flujo de escenas**: `MainMenu.tscn` → `ClassSelect.tscn` → `levels/Arena.tscn` (con `ui/HUD.tscn` instanciado adentro).
+**Flujo de escenas**: `MainMenu.tscn` → `ClassSelect.tscn` → `levels/Arena.tscn` (con `ui/HUD.tscn` instanciado adentro). El player NO está en la escena: lo spawnea `arena.gd` (uno por peer en co-op).
+
+**Contenido data-driven**: clases (`resources/classes/`), enemigos (`resources/enemies/`) y loot (`resources/loot/`) son Resources `.tres` — agregar contenido no requiere tocar código. Guías paso a paso por tipo en el vault de Obsidian (`spec/` → carpeta `Guías/`).
 
 ---
 
@@ -153,8 +184,8 @@ scripts/
 
 | Asset | Escena | Placeholder actual | Qué RESPETAR al reemplazar |
 |-------|--------|--------------------|-----------------------------|
-| **Jugador (3 clases)** | `scenes/player/Player.tscn` | ✅ **Ya usa KayKit Adventurers** (CC0): Mage/Knight/Rogue animados (`assets/kaykit/`, mapeo en `game_state.gd → CLASSES.model/anims`) | El modelo se instancia bajo `Visual` en runtime (rotado 180°: KayKit mira +Z). `Visual/Wand` = **punto de spawn de proyectiles** (invisible). **Paper-doll**: los accesorios integrados del GLB (armas/escudos/sombreros) los gestiona `equipment_visuals.gd` (mapa `VISUALS`: clase → ítem → mesh) — si agregas un modelo con accesorios, respeta ese mapa. |
-| **Enemigos** | `scenes/enemies/Slime.tscn` | ✅ **Esqueletos KayKit** por variante (Minion/Rogue/Warrior/Mage, mapeados en `enemy_spawner.gd → VARIANTS`) con anims idle/run/attack/hit/death/spawn; **fallback a esfera tintada** si no hay modelo | El modelo va bajo `Visual` (rotado 180°). Para cambiar un enemigo: GLB + nombres de anims en `VARIANTS`. |
+| **Jugador (3 clases)** | `scenes/player/Player.tscn` | ✅ **Ya usa KayKit Adventurers** (CC0): Mage/Knight/Rogue animados (`assets/kaykit/`, mapeo en los `.tres` de `resources/classes/` → campos `model`/`anims`) | El modelo se instancia bajo `Visual` en runtime (rotado 180°: KayKit mira +Z). `Visual/Wand` = **punto de spawn de proyectiles** (invisible). **Paper-doll**: los accesorios integrados del GLB (armas/escudos/sombreros) los gestiona `equipment_visuals.gd` (mapa `VISUALS`: clase → ítem → mesh) — si agregas un modelo con accesorios, respeta ese mapa. |
+| **Enemigos** | `scenes/enemies/Slime.tscn` | ✅ **Esqueletos KayKit** por variante (Minion/Rogue/Warrior/Mage, mapeados en los `.tres` de `resources/enemies/` → campos `model`/`anims`) con anims idle/run/attack/hit/death/spawn; **fallback a esfera tintada** si no hay modelo | El modelo va bajo `Visual` (rotado 180°). Para cambiar un enemigo: editar su `.tres` (GLB + nombres de anims), **sin tocar código**. |
 | **Rey Slime** (boss) | `scenes/enemies/Boss.tscn` | Esfera dorada + corona (cono EN CÓDIGO en `boss.gd → _make_crown`) | Misma estructura que Slime (hereda su script). El disco rojo del golpe sísmico se genera por código (`_telegraph_slam`). |
 | **Bola de Fuego** | `scenes/magic/Fireball.tscn` | Esfera emisiva + OmniLight | Es un `Area3D` que avanza por su `-Z`. Cambia mesh/luz libremente; ideal punto para `GPUParticles3D` (estela). |
 | **Descarga Arcana** | `scenes/magic/ArcBolt.tscn` | Esfera celeste chica | Igual que Fireball (comparten script). |
@@ -193,12 +224,21 @@ scripts/
 
 ```bash
 # Validar el proyecto sin abrir el editor
-godot --headless --path . --editor --quit-after 200
+godot --headless --path . --editor --quit-after 250
 
-# Smoke tests (equipo 2H/rareza, kits por clase, y colisión de proyectiles)
-godot --headless --path . res://tests/LootSmoke.tscn   # imprime "SMOKE OK"
-godot --headless --path . res://tests/KitSmoke.tscn    # imprime "KIT SMOKE OK"
-godot --headless --path . res://tests/HitSmoke.tscn    # imprime "HIT SMOKE OK"
+# Smoke tests (los 9 corren también en CI en cada push)
+godot --headless --path . res://tests/LootSmoke.tscn     # "SMOKE OK"         loot 2H/rareza
+godot --headless --path . res://tests/KitSmoke.tscn      # "KIT SMOKE OK"     kits por clase
+godot --headless --path . res://tests/HitSmoke.tscn      # "HIT SMOKE OK"     colisión proyectiles
+godot --headless --path . res://tests/SaveSmoke.tscn     # "SAVE SMOKE OK"    guardado
+godot --headless --path . res://tests/L10nSmoke.tscn     # "L10N SMOKE OK"    localización
+godot --headless --path . res://tests/PlayersSmoke.tscn  # "PLAYERS SMOKE OK" targeting multi-player
+godot --headless --path . res://tests/SpawnSmoke.tscn    # "SPAWN SMOKE OK"   spawn replicado
+godot --headless --path . res://tests/SyncSmoke.tscn     # "SYNC SMOKE OK"    sincronización/autoridad
+godot --headless --path . res://tests/LobbySmoke.tscn    # "LOBBY SMOKE OK"   spawn de players offline
 ```
 
-Hecho con Godot 4.4 · Proyecto en desarrollo activo 🚧
+La documentación viva del proyecto (GDD, arquitectura, TODO, changelog y
+las guías de contenido) está en `spec/` — symlinks al vault de Obsidian.
+
+Hecho con Godot 4.4 · Co-op LAN 🧪 · Proyecto en desarrollo activo 🚧
