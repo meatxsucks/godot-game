@@ -1,4 +1,4 @@
-[gd_scene load_steps=2 format=3 uid="uid://cspawnsmoke001"]
+[gd_scene load_steps=2 format=3 uid="uid://bobroke44xrc7"]
 
 [ext_resource type="Script" path="res://tests/spawn_smoke.gd" id="1_spawn"]
 

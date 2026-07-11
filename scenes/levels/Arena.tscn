@@ -8,7 +8,7 @@
 [ext_resource type="PackedScene" uid="uid://csafezone0001" path="res://scenes/world/SafeZone.tscn" id="7_zone"]
 [ext_resource type="Script" path="res://scripts/levels/nav_region.gd" id="8_nav"]
 [ext_resource type="Script" path="res://scripts/levels/world_generator.gd" id="9_world"]
-[ext_resource type="PackedScene" uid="uid://cspawnroot0001" path="res://scenes/levels/SpawnRoot.tscn" id="10_spawnroot"]
+[ext_resource type="PackedScene" uid="uid://bobrojg5fkrc7" path="res://scenes/levels/SpawnRoot.tscn" id="10_spawnroot"]
 
 [sub_resource type="PlaneMesh" id="PlaneMesh_floor"]
 size = Vector2(64, 64)
