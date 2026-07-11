@@ -110,6 +110,9 @@ func _ready() -> void:
 	stats_changed.emit()
 
 func _input(event: InputEvent) -> void:
+	# Solo el jugador local procesa input (las réplicas llegan por red).
+	if not is_multiplayer_authority():
+		return
 	# Mover el mouse devuelve el apuntado al cursor.
 	if event is InputEventMouseMotion:
 		_use_pad_aim = false
@@ -140,6 +143,10 @@ func _setup_model() -> void:
 	equipment_visuals.setup(self, model)
 
 func _physics_process(delta: float) -> void:
+	# Réplica remota (E1.4): posición y rotación llegan por el sincronizador;
+	# el input/movimiento solo corre en el peer dueño del nodo.
+	if not is_multiplayer_authority():
+		return
 	if _dead:
 		return
 	_frost_guard_timer = maxf(0.0, _frost_guard_timer - delta)

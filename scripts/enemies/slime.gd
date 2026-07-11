@@ -47,6 +47,8 @@ var _dying: bool = false
 
 var _model_anim: AnimationPlayer = null
 var _anim_lock: float = 0.0
+## Última posición vista por la réplica (deriva la anim de correr/idle).
+var _last_client_pos: Vector3 = Vector3.ZERO
 
 @onready var _nav_agent: NavigationAgent3D = $NavAgent
 
@@ -94,11 +96,19 @@ func _setup_model() -> void:
 		_anim_lock = minf(_model_anim.current_animation_length, 1.0)
 
 ## Ralentización de hielo. factor 0.65 = 35% más lento durante `duration`.
+## Solo el host: en clientes los proyectiles réplica no afectan el estado.
 func apply_slow(factor: float, duration: float) -> void:
+	if not is_multiplayer_authority():
+		return
 	_slow_mult = minf(_slow_mult, factor)
 	_slow_timer = maxf(_slow_timer, duration)
 
 func _physics_process(delta: float) -> void:
+	# Réplica en cliente (E1.4): el host simula la IA; acá solo se refresca
+	# lo visual desde el estado sincronizado (posición/rotación/vida).
+	if not is_multiplayer_authority():
+		_client_update(delta)
+		return
 	if _dying:
 		return
 	if _slow_timer > 0.0:
@@ -142,6 +152,25 @@ func _physics_process(delta: float) -> void:
 		_try_attack()
 
 	_update_animation(delta, direction)
+
+## Refresco visual de la réplica (cliente): barra de vida y animación desde
+## el estado que sincroniza el host. La muerte se anticipa localmente para
+## ver la animación; el despawn real lo manda el MultiplayerSpawner del host.
+func _client_update(delta: float) -> void:
+	_health_bar.set_ratio(clampf(current_health / max_health, 0.0, 1.0))
+	if current_health <= 0.0:
+		if not _dying:
+			_dying = true
+			_health_bar.visible = false
+			if _model_anim and anims.has("death"):
+				_model_anim.play(anims["death"], 0.1)
+		return
+	var moved := global_position - _last_client_pos
+	_last_client_pos = global_position
+	moved.y = 0.0
+	# velocity solo alimenta el speed_scale de la anim (acá no hay física).
+	velocity = moved / maxf(delta, 0.0001)
+	_update_animation(delta, velocity if moved.length_squared() > 0.0001 else Vector3.ZERO)
 
 # --- Animación (con modelo) --------------------------------------------------
 
@@ -277,7 +306,8 @@ func _pick_direction(delta: float) -> Vector3:
 # --- Daño y muerte --------------------------------------------------------------
 
 func take_damage(amount: float, is_crit: bool = false) -> void:
-	if _dying:
+	# El daño lo resuelve SOLO el host; la vida viaja por el sincronizador.
+	if _dying or not is_multiplayer_authority():
 		return
 	current_health -= amount
 	_health_bar.set_ratio(current_health / max_health)

@@ -1,6 +1,14 @@
-[gd_scene load_steps=5 format=3 uid="uid://bm1uo3hi52wha"]
+[gd_scene load_steps=6 format=3 uid="uid://bm1uo3hi52wha"]
 
 [ext_resource type="Script" path="res://scripts/player/player_controller.gd" id="1_player"]
+
+[sub_resource type="SceneReplicationConfig" id="SceneReplicationConfig_sync"]
+properties/0/path = NodePath(".:position")
+properties/0/spawn = true
+properties/0/replication_mode = 1
+properties/1/path = NodePath("Visual:rotation")
+properties/1/spawn = true
+properties/1/replication_mode = 1
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_player"]
 radius = 0.4
@@ -40,3 +48,6 @@ mesh = SubResource("CapsuleMesh_player")
 [node name="Wand" type="MeshInstance3D" parent="Visual"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.2, -0.6)
 mesh = SubResource("BoxMesh_wand")
+
+[node name="Sync" type="MultiplayerSynchronizer" parent="."]
+replication_config = SubResource("SceneReplicationConfig_sync")

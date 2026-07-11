@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://bsyncsmoke001"]
+
+[ext_resource type="Script" path="res://tests/sync_smoke.gd" id="1_sync"]
+
+[node name="SyncSmoke" type="Node3D"]
+script = ExtResource("1_sync")

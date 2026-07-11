@@ -22,6 +22,9 @@ func _ready() -> void:
 
 func _physics_process(delta: float) -> void:
 	super(delta)
+	# Los timers de slam/invocación son IA: solo corren en el host.
+	if not is_multiplayer_authority():
+		return
 	_slam_timer -= delta
 	if _slam_timer <= 0.0:
 		_slam_timer = slam_interval
