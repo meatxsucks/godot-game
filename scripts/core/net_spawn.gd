@@ -49,10 +49,36 @@ func player(scene: PackedScene, peer_id: int, props: Dictionary, fallback_parent
 		fallback_parent)
 
 ## Proyectil / efecto de combate transitorio (bolts, novas, slashes...).
-## El setup() con daño/fuente se hace sobre el nodo devuelto: solo corre en el
-## host, que es quien resuelve el daño — los clientes reciben el visual.
-func projectile(scene: PackedScene, props: Dictionary, fallback_parent: Node) -> Node:
-	return _spawn(Kind.PROJECTILE, {"scene": scene.resource_path, "props": props}, fallback_parent)
+## Con `source` != null el spawn aplica él mismo el setup(damage, source,
+## crit) de combate — y si el que castea es un CLIENTE, el pedido viaja por
+## RPC al host (única autoridad del MultiplayerSpawner: spawner.spawn() en
+## un cliente falla con "!is_multiplayer_authority()"). En ese caso devuelve
+## null: el visual llega replicado y el daño lo resuelve el host.
+func projectile(scene: PackedScene, props: Dictionary, fallback_parent: Node,
+		damage: float = 0.0, source: Node = null, crit: bool = false) -> Node:
+	if _root and Net.is_online() and not multiplayer.is_server():
+		_request_projectile.rpc_id(1, scene.resource_path, props, damage, crit)
+		return null
+	var node := _spawn(Kind.PROJECTILE, {"scene": scene.resource_path, "props": props}, fallback_parent)
+	if source != null and node.has_method("setup"):
+		node.setup(damage, source, crit)
+	return node
+
+## Un cliente pide castear: el host spawnea (el visual se replica a todos)
+## y hace el setup() con el player del peer que lo pidió como fuente.
+@rpc("any_peer", "reliable")
+func _request_projectile(scene_path: String, props: Dictionary, damage: float, crit: bool) -> void:
+	if not multiplayer.is_server() or _root == null:
+		return
+	var peer := multiplayer.get_remote_sender_id()
+	var source: Node = null
+	for player in get_tree().get_nodes_in_group("player"):
+		if player.get_multiplayer_authority() == peer:
+			source = player
+			break
+	var node := _spawn(Kind.PROJECTILE, {"scene": scene_path, "props": props}, _root)
+	if node and source != null and node.has_method("setup"):
+		node.setup(damage, source, crit)
 
 func _spawn(kind: Kind, data: Dictionary, fallback_parent: Node) -> Node:
 	if _root:

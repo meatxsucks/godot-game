@@ -71,6 +71,10 @@ func enemies_left() -> int:
 	return _to_spawn + get_tree().get_nodes_in_group("enemies").size()
 
 func _physics_process(delta: float) -> void:
+	# Con peers todavía cargando su nivel el reloj no corre: un enemigo
+	# spawneado ahora no se replicaría para ellos (partida "pegada").
+	if Net.is_online() and not Net.all_peers_registered():
+		return
 	match _state:
 		State.INTERMISSION:
 			_timer -= delta

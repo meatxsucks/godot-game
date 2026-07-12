@@ -8,6 +8,24 @@ extends Control
 func _ready() -> void:
 	for id in Game.class_ids():
 		cards.add_child(_make_card(id))
+	_add_back_button()
+	# Si el host corta mientras elegimos clase, volver al menú (sin esto el
+	# cliente quedaba en una pantalla muerta).
+	if Net.is_online() and not multiplayer.is_server():
+		Net.server_disconnected.connect(_on_back_pressed)
+
+## Volver al menú principal. En co-op también corta la sesión: elegir clase
+## es el último paso antes de entrar a la Arena, salir de acá = salir de la
+## partida (el host spawnea a todos recién cuando nadie falta por cargar).
+func _add_back_button() -> void:
+	var btn_back := Button.new()
+	btn_back.text = tr("Volver")
+	btn_back.pressed.connect(_on_back_pressed)
+	cards.get_parent().add_child(btn_back)
+
+func _on_back_pressed() -> void:
+	Net.close_connection()
+	SceneManager.change_scene("res://scenes/ui/MainMenu.tscn")
 
 func _make_card(id: StringName) -> Control:
 	var def: ClassDef = Game.class_def(id)

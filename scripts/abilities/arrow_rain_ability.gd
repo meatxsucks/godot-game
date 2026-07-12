@@ -25,8 +25,7 @@ func _cast(player) -> Variant:
 	var result: Array = player.stats.roll_spell_damage(&"ranged_damage", 1.2)
 	# La posición viaja en props: se aplica ANTES de entrar al árbol (los
 	# objetivos se calculan en _ready).
-	var rain := NetSpawn.projectile(SCENE,
-		{"position": player.get_front_point()}, player.get_parent())
-	if rain.has_method("setup"):
-		rain.setup(result[0], player)
+	NetSpawn.projectile(SCENE,
+		{"position": player.get_front_point()}, player.get_parent(),
+		result[0], player)
 	return true

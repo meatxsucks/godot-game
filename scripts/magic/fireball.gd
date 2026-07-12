@@ -60,9 +60,15 @@ func _on_body_entered(body: Node3D) -> void:
 
 	if body.has_method("take_damage"):
 		_hit_bodies[body] = true
-		body.take_damage(damage, is_crit)
+		# Daño a JUGADORES: lo aplica solo la copia local del peer dueño
+		# (su vida es local); en las demás copias el impacto es solo visual.
+		# El daño a enemigos se auto-filtra (take_damage ignora réplicas).
+		if not body.is_in_group("player") or body.is_multiplayer_authority():
+			body.take_damage(damage, is_crit)
 		FX.burst(global_position, impact_color, 8, 0.05)
-		if source and source.has_method("add_super_charge"):
+		# El super lo acredita solo la copia con autoridad (host/offline):
+		# las réplicas duplicarían el crédito.
+		if is_multiplayer_authority() and source and source.has_method("add_super_charge"):
 			source.add_super_charge(super_charge_on_hit)
 		if chains_left > 0:
 			_chain_from(body)

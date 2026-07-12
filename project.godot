@@ -27,6 +27,7 @@ SceneManager="*res://scripts/core/scene_manager.gd"
 SaveService="*res://scripts/core/save_service.gd"
 Net="*res://scripts/core/net.gd"
 NetSpawn="*res://scripts/core/net_spawn.gd"
+AbilityLab="*res://scripts/core/ability_lab.gd"
 
 [display]
 
@@ -113,3 +114,14 @@ locale/default_locale="es"
 [rendering]
 
 textures/canvas_textures/default_texture_filter=0
+
+[steam]
+
+initialization/app_data/app_type=0
+initialization/app_data/app_id=0
+initialization/app_data/demo_id=0
+initialization/app_data/playtest_id=0
+initialization/app_data/tool_id=0
+initialization/processes/initialize_on_startup=false
+initialization/processes/embed_callbacks=false
+multiplayer_peer/max_channels=4

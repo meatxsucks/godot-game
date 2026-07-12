@@ -45,5 +45,6 @@ func _on_body_entered(body: Node3D) -> void:
 		body.take_damage(damage, is_crit)
 		if slow_factor < 1.0 and body.has_method("apply_slow"):
 			body.apply_slow(slow_factor, slow_time)
-		if source and source.has_method("add_super_charge"):
+		# Solo la copia con autoridad acredita el super (réplicas = visual).
+		if is_multiplayer_authority() and source and source.has_method("add_super_charge"):
 			source.add_super_charge(4.0)

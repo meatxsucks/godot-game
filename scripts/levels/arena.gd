@@ -14,21 +14,35 @@ func _ready() -> void:
 	if multiplayer.is_server():
 		Net.player_class_registered.connect(_on_class_registered)
 		Net.player_disconnected.connect(_on_player_left)
-		_spawn_player(1, Game.selected_class)
-		# Clientes que registraron su clase antes de que cargara este nivel.
-		for peer_id: int in Net.player_classes:
-			if peer_id != 1:
-				_spawn_player(peer_id, Net.player_classes[peer_id])
+		if not Net.is_online():
+			_spawn_player(1, Game.selected_class)
+			return
+		# Co-op: los players entran TODOS juntos, recién cuando cada peer
+		# conectado registró su clase (= su nivel cargó y tiene SpawnRoot).
+		# Un spawn temprano se pierde para el que aún carga: el
+		# MultiplayerSpawner no reenvía spawns viejos.
+		Net.player_classes[1] = Game.selected_class
+		_try_spawn_all()
 	else:
 		Net.register_player_class.rpc_id(1, Game.selected_class)
 
-func _on_class_registered(peer_id: int, cls: StringName) -> void:
-	_spawn_player(peer_id, cls)
+func _on_class_registered(_peer_id: int, _cls: StringName) -> void:
+	_try_spawn_all()
 
 func _on_player_left(peer_id: int) -> void:
 	var player := _find_player(peer_id)
 	if player:
 		player.queue_free()
+	# Si el que se fue era el último sin cargar, los demás ya pueden entrar.
+	if multiplayer.is_server() and Net.is_online():
+		_try_spawn_all()
+
+## Spawnea a todos los registrados cuando ya no falta nadie por cargar.
+func _try_spawn_all() -> void:
+	if not Net.all_peers_registered():
+		return
+	for peer_id: int in Net.player_classes:
+		_spawn_player(peer_id, Net.player_classes[peer_id])
 
 func _spawn_player(peer_id: int, cls: StringName) -> void:
 	if _find_player(peer_id):

@@ -21,7 +21,9 @@ var source: Node = null
 var _pending_impacts: Array[Vector3] = []
 
 ## Configura la tormenta con el daño por meteoro calculado por el lanzador.
-func setup(p_damage: float, p_source: Node = null) -> void:
+## `_crit` se acepta por uniformidad con el resto de los setup() (NetSpawn
+## los llama con 3 argumentos); los meteoros no critean.
+func setup(p_damage: float, p_source: Node = null, _crit: bool = false) -> void:
 	damage = p_damage
 	source = p_source
 

@@ -36,8 +36,7 @@ func _cast(player) -> Variant:
 	var result: Array = player.stats.roll_spell_damage(&"lightning_damage", 0.65)
 	var xform: Transform3D = player.wand.global_transform
 	xform.origin.y = PROJECTILE_HEIGHT
-	var projectile := NetSpawn.projectile(SCENE,
-		{"transform": xform, "chains_left": 2}, player.get_parent())
-	if projectile.has_method("setup"):
-		projectile.setup(result[0], player, result[1])
+	NetSpawn.projectile(SCENE,
+		{"transform": xform, "chains_left": 2}, player.get_parent(),
+		result[0], player, result[1])
 	return true

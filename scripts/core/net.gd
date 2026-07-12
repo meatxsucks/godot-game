@@ -50,6 +50,9 @@ func join_game(address: String, port: int = DEFAULT_PORT) -> Error:
 
 func close_connection() -> void:
 	player_classes.clear()
+	if steam_active and steam_lobby_id != 0:
+		Steam.leaveLobby(steam_lobby_id)
+	steam_lobby_id = 0
 	if is_online():
 		multiplayer.multiplayer_peer.close()
 	# NUNCA dejar el peer en null: sin peer, multiplayer.is_server() deja de
@@ -78,6 +81,23 @@ func register_player_class(cls: StringName) -> void:
 func is_host() -> bool:
 	return multiplayer.multiplayer_peer != null and multiplayer.is_server()
 
+## true si todos los peers conectados ya registraron su clase — o sea, su
+## nivel cargó y tienen SpawnRoot. El host gatea con esto los spawns de
+## players y oleadas: el MultiplayerSpawner NO reenvía un spawn viejo a un
+## peer que cargó tarde, así que spawnear antes de tiempo = nodos invisibles
+## para ese peer (partida "pegada").
+func all_peers_registered() -> bool:
+	for peer_id: int in multiplayer.get_peers():
+		if not player_classes.has(peer_id):
+			return false
+	return true
+
+## Nombre a mostrar de ESTE peer en la sala de espera.
+func local_display_name() -> String:
+	if steam_active:
+		return Steam.getPersonaName()
+	return "Jugador %d" % multiplayer.get_unique_id()
+
 ## true si hay una sesión de red real (co-op). Offline/single-player = false.
 func is_online() -> bool:
 	return multiplayer.multiplayer_peer != null \
@@ -92,6 +112,10 @@ func _create_peer() -> MultiplayerPeer:
 
 signal steam_lobby_created(lobby_id: int)
 signal steam_lobby_list(lobbies: Array)
+
+## Lobby de Steam activo (0 = ninguno). Lo usa la sala de espera para
+## cerrarlo a nuevos miembros cuando la partida arranca.
+var steam_lobby_id: int = 0
 
 func _init_steam() -> void:
 	if not ClassDB.class_exists("SteamMultiplayerPeer"):
@@ -124,6 +148,7 @@ func _on_steam_lobby_created(result: int, lobby_id: int) -> void:
 	if peer.host_with_lobby(lobby_id) != OK:
 		connection_failed.emit()
 		return
+	steam_lobby_id = lobby_id
 	multiplayer.multiplayer_peer = peer
 	server_created.emit()
 	steam_lobby_created.emit(lobby_id)
@@ -134,8 +159,15 @@ func join_steam_game(lobby_id: int) -> Error:
 	var err: Error = peer.connect_to_lobby(lobby_id)
 	if err != OK:
 		return err
+	steam_lobby_id = lobby_id
 	multiplayer.multiplayer_peer = peer
 	return OK
+
+## Cierra el lobby de Steam a nuevos miembros (al empezar la partida: un
+## late-join se perdería todo lo ya spawneado).
+func lock_steam_lobby() -> void:
+	if steam_active and steam_lobby_id != 0:
+		Steam.setLobbyJoinable(steam_lobby_id, false)
 
 ## Pide la lista de partidas nuestras. Asíncrono → steam_lobby_list emite
 ## Array de lobby_ids (usar lobby_name/lobby_players para mostrar).
@@ -147,8 +179,8 @@ func _on_steam_lobby_match_list(lobbies: Array) -> void:
 	steam_lobby_list.emit(lobbies)
 
 func lobby_name(lobby_id: int) -> String:
-	var name := Steam.getLobbyData(lobby_id, "name")
-	return name if name != "" else str(lobby_id)
+	var label := Steam.getLobbyData(lobby_id, "name")
+	return label if label != "" else str(lobby_id)
 
 func lobby_players(lobby_id: int) -> String:
 	return "%d/%d" % [Steam.getNumLobbyMembers(lobby_id), Steam.getLobbyMemberLimit(lobby_id)]

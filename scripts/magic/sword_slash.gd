@@ -65,5 +65,6 @@ func _physics_process(_delta: float) -> void:
 			continue
 		if body.has_method("take_damage"):
 			body.take_damage(damage, is_crit)
-			if source and source.has_method("add_super_charge"):
+			# Solo la copia con autoridad acredita el super (réplicas = visual).
+			if is_multiplayer_authority() and source and source.has_method("add_super_charge"):
 				source.add_super_charge(4.0)

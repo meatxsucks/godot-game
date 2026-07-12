@@ -83,4 +83,7 @@ func make_ability(id: StringName) -> Ability:
 		&"arrow_rain": return ArrowRainAbility.new()
 		&"frost_nova": return FrostNovaAbility.new()
 		&"meteor_storm": return MeteorStormAbility.new()
-		_: return UnarmedAbility.new()
+		_:
+			# Poderes del Laboratorio (data-driven, prefijo lab_).
+			var lab := AbilityLab.make_ability(id)
+			return lab if lab else UnarmedAbility.new()

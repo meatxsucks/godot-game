@@ -18,8 +18,7 @@ func _init() -> void:
 func _cast(player) -> Variant:
 	var result: Array = player.stats.roll_spell_damage(&"melee_damage", 0.5)
 	var xform := Transform3D(player.visual.global_transform.basis, player.global_position)
-	var punch := NetSpawn.projectile(SCENE,
-		{"transform": xform, "reach": 1.2, "hit_radius": 1.0}, player.get_parent())
-	if punch.has_method("setup"):
-		punch.setup(result[0], player, result[1])
+	NetSpawn.projectile(SCENE,
+		{"transform": xform, "reach": 1.2, "hit_radius": 1.0}, player.get_parent(),
+		result[0], player, result[1])
 	return true

@@ -1,0 +1,19 @@
+{
+	"id": "lab_anillo_de_chispas",
+	"name": "Anillo de Chispas",
+	"description": "Abanico completo de 6 descargas eléctricas lentas que rebotan una vez. Ejemplo del Laboratorio de Poderes (creado a mano).",
+	"color": "#6bd0ff",
+	"element": "lightning",
+	"behavior": "projectile",
+	"template": "arc_bolt",
+	"cooldown": 4.0,
+	"mana_cost": 18.0,
+	"damage_mult": 0.5,
+	"count": 6,
+	"spread_deg": 180.0,
+	"step_delay": 0.15,
+	"props": {
+		"speed": 8.0,
+		"chains_left": 1
+	}
+}

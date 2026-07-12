@@ -56,14 +56,14 @@ func consume_cooldown_refund() -> float:
 
 ## Helper compartido: instancia un proyectil en la varita/mano del personaje
 ## con daño rodado desde sus stats. `stat` decide qué daño del loot suma.
+## El daño viaja DENTRO del spawn (en un cliente el nodo devuelto es null:
+## el pedido se fue por RPC al host — ver NetSpawn.projectile).
 func _spawn_projectile(player, scene: PackedScene, stat: StringName, multiplier: float) -> bool:
 	var xform: Transform3D = player.wand.global_transform
 	xform.origin.y = PROJECTILE_HEIGHT
-	var projectile := NetSpawn.projectile(scene, {"transform": xform}, player.get_parent())
-
 	var result: Array = player.stats.roll_spell_damage(stat, multiplier)
-	if projectile.has_method("setup"):
-		projectile.setup(result[0], player, result[1])
+	NetSpawn.projectile(scene, {"transform": xform}, player.get_parent(),
+		result[0], player, result[1])
 	return true
 
 ## Helper compartido: AoE expansivo centrado en el personaje (novas, tajos,
@@ -71,8 +71,6 @@ func _spawn_projectile(player, scene: PackedScene, stat: StringName, multiplier:
 ## La posición va ANTES de add_child (el _ready arma el tween en su sitio).
 func _spawn_nova(player, scene: PackedScene, stat: StringName, multiplier: float) -> bool:
 	var result: Array = player.stats.roll_spell_damage(stat, multiplier)
-	var nova := NetSpawn.projectile(scene,
-		{"position": player.global_position}, player.get_parent())
-	if nova.has_method("setup"):
-		nova.setup(result[0], player, result[1])
+	NetSpawn.projectile(scene, {"position": player.global_position},
+		player.get_parent(), result[0], player, result[1])
 	return true

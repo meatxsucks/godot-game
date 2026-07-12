@@ -107,6 +107,8 @@ func _ready() -> void:
 	stats = PlayerStats.new(player_class)
 	abilities = [UnarmedAbility.new(), UnarmedAbility.new()]
 	abilities.append_array(Game.build_class_kit(player_class))
+	# Laboratorio de Poderes: si hay un poder en prueba, ocupa el slot Q.
+	AbilityLab.apply_test_loadout(abilities)
 	cooldowns.resize(abilities.size())
 	cooldowns.fill(0.0)
 
@@ -469,8 +471,15 @@ func get_cooldown_total(slot: int) -> float:
 
 # --- Super (stamina) --------------------------------------------------------
 
-## Acredita stamina del super (impactos de habilidades, kills).
+## Acredita stamina del super (impactos de habilidades, kills). La stamina
+## es LOCAL del peer dueño: cuando el host la acredita sobre una réplica
+## (él resuelve el daño en co-op), el crédito se reenvía por RPC al dueño.
+@rpc("any_peer", "reliable")
 func add_super_charge(amount: float) -> void:
+	if not is_multiplayer_authority():
+		if multiplayer.is_server():
+			add_super_charge.rpc_id(get_multiplayer_authority(), amount)
+		return
 	super_charge = clampf(super_charge + amount, 0.0, SUPER_MAX)
 	super_charge_changed.emit(super_charge, SUPER_MAX)
 
@@ -487,7 +496,14 @@ func consume_super_charge() -> bool:
 # pociones (vida solo de cofres) y con el maná por kill del stat mana_regen.
 
 ## Recompensa por matar un enemigo: stamina del super + maná por kill + XP.
+## El host la reparte a TODOS los players; sobre una réplica se reenvía al
+## peer dueño (XP, maná y stamina son locales de cada jugador).
+@rpc("any_peer", "reliable")
 func on_enemy_killed(xp_reward: float = 10.0) -> void:
+	if not is_multiplayer_authority():
+		if multiplayer.is_server():
+			on_enemy_killed.rpc_id(get_multiplayer_authority(), xp_reward)
+		return
 	add_super_charge(12.0)
 	restore_mana(stats.get_stat(&"mana_regen"))
 
@@ -517,7 +533,14 @@ func restore_mana(amount: float) -> void:
 func is_alive() -> bool:
 	return not _dead
 
+@rpc("any_peer", "reliable")
 func take_damage(amount: float, _is_crit: bool = false) -> void:
+	# La vida es LOCAL del peer dueño: el golpe que el host resuelve sobre
+	# una réplica (melee de enemigos, IA host-only) se reenvía al dueño.
+	if not is_multiplayer_authority():
+		if multiplayer.is_server():
+			take_damage.rpc_id(get_multiplayer_authority(), amount, _is_crit)
+		return
 	# Durante el dash con i-frames o salto, eres intangible.
 	if _dead or _leaping or (_dash_timer > 0.0 and _dash_iframes):
 		return
@@ -542,10 +565,9 @@ func take_damage(amount: float, _is_crit: bool = false) -> void:
 	if _frost_guard_timer <= 0.0 and stats.has_legendary(&"on_hit_frost_nova"):
 		_frost_guard_timer = 6.0
 		var result := stats.roll_spell_damage(&"cold_damage", 1.0)
-		var nova := NetSpawn.projectile(FROST_GUARD_SCENE,
-			{"position": global_position}, get_parent())
-		if nova.has_method("setup"):
-			nova.setup(result[0], self, result[1])
+		NetSpawn.projectile(FROST_GUARD_SCENE,
+			{"position": global_position}, get_parent(),
+			result[0], self, result[1])
 
 	# Flash rojo al recibir daño.
 	_body_material.albedo_color = Color(1.0, 0.25, 0.25)

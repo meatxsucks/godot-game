@@ -208,5 +208,31 @@
   "El loot generado aparece acá.": "Generated loot appears here.",
 
   "[E] Abrir": "[E] Open",
-  "ZONA SEGURA": "SAFE ZONE"
+  "ZONA SEGURA": "SAFE ZONE",
+
+  "Sala de espera": "Waiting room",
+  "Comenzar partida": "Start game",
+  "Salir de la sala": "Leave room",
+  "Esperando jugadores… (pueden unirse %d más)": "Waiting for players… (%d more can join)",
+  "%d jugadores conectados. ¡Listos para empezar!": "%d players connected. Ready to start!",
+  "Conectado. Esperando a que el host comience…": "Connected. Waiting for the host to start…",
+  " (host)": " (host)",
+  " — tú": " — you",
+
+  "Laboratorio de poderes": "Power lab",
+  "Describe el poder que imaginas y la IA lo convierte en una habilidad jugable.": "Describe the power you imagine and the AI turns it into a playable ability.",
+  "Ej: una nova de hielo que empuja y deja 3 pilares de fuego": "E.g.: an ice nova that pushes and leaves 3 fire pillars",
+  "Generar con IA": "Generate with AI",
+  "Generando…": "Generating…",
+  "API key de Anthropic (se guarda solo en tu máquina)": "Anthropic API key (stored only on your machine)",
+  "Falta la API key (pégala arriba).": "Missing API key (paste it above).",
+  "Describe el poder primero.": "Describe the power first.",
+  "Error de red (%d). ¿Sin internet?": "Network error (%d). No internet?",
+  "La API respondió %d: %s": "The API answered %d: %s",
+  "La IA no devolvió un poder válido: %s": "The AI didn't return a valid power: %s",
+  "Guardado: %s": "Saved: %s",
+  "Probar": "Try",
+  "Borrar": "Delete",
+  "Aún no hay poderes creados.": "No powers created yet.",
+  "Se probará en la Arena en el slot Q.": "It will be tested in the Arena on the Q slot."
 }

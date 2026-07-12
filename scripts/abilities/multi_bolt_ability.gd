@@ -33,9 +33,8 @@ func _spawn_sequence(player: Node, tree: SceneTree, target: Vector3, right: Vect
 	var spawn_pos = target + offset
 
 	var result: Array = player.stats.roll_spell_damage(&"fire_damage", 0.5)
-	var nova := NetSpawn.projectile(SCENE, {"position": spawn_pos}, player.get_parent())
-	if nova.has_method("setup"):
-		nova.setup(result[0], player, result[1])
+	NetSpawn.projectile(SCENE, {"position": spawn_pos}, player.get_parent(),
+		result[0], player, result[1])
 	
 	var fx = player.get_node_or_null("/root/FX")
 	if fx:

@@ -19,9 +19,8 @@ func _cast(player) -> Variant:
 	var result: Array = player.stats.roll_spell_damage(&"melee_damage", 0.55)
 	# Orientado como el Visual del player
 	var xform := Transform3D(player.visual.global_transform.basis, player.global_position)
-	var slash := NetSpawn.projectile(SCENE, {"transform": xform}, player.get_parent())
-	if slash.has_method("setup"):
-		slash.setup(result[0], player, result[1])
+	NetSpawn.projectile(SCENE, {"transform": xform}, player.get_parent(),
+		result[0], player, result[1])
 	
 	# Lunge forward (micro-dash sin i-frames)
 	var dir: Vector3 = -player.visual.global_transform.basis.z
