@@ -27,6 +27,7 @@ const BUILTIN_VISUALS := {
 	&"mage": {&"hat_cloth": "Mage_Hat", &"cape_wool": "Mage_Cape"},
 	&"warrior": {&"hat_cloth": "Knight_Helmet", &"cape_wool": "Knight_Cape"},
 	&"ranger": {&"cape_wool": "Rogue_Cape"},
+	&"alchemist": {&"hat_cloth": "Skeleton_Mage_Hat"},
 }
 
 ## Mesh del torso por clase (la Túnica lo tiñe para verse puesta).
@@ -34,6 +35,7 @@ const BODY_MESH := {
 	&"mage": "Mage_Body",
 	&"warrior": "Knight_Body",
 	&"ranger": "Rogue_Body",
+	&"alchemist": "Skeleton_Mage_Body",
 }
 const ROBE_TINT := Color(0.7, 0.78, 1.2)
 
@@ -43,6 +45,7 @@ const ACCESSORY_MESHES := {
 	&"mage": ["Spellbook", "Spellbook_open", "1H_Wand", "2H_Staff", "Mage_Hat", "Mage_Cape"],
 	&"warrior": ["1H_Sword_Offhand", "Badge_Shield", "Rectangle_Shield", "Round_Shield", "Spike_Shield", "1H_Sword", "2H_Sword", "Knight_Helmet", "Knight_Cape"],
 	&"ranger": ["Knife_Offhand", "1H_Crossbow", "2H_Crossbow", "Knife", "Throwable", "Rogue_Cape"],
+	&"alchemist": ["Skeleton_Mage_Hat"],
 }
 
 var _player: Node = null

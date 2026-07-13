@@ -1,12 +1,14 @@
-## Frasco Vivificante del Alquimista (E7.1): estalla en el punto apuntado y
+## Frasco de ácido del Alquimista (E7.1): estalla en el punto apuntado y
 ## afecta a AMBOS bandos en la misma área — CURA a los aliados (la cura es
-## el daño rolleado: escala con stats/afijos) y aplica sus tags (Sangrado)
-## a los enemigos. Co-op: cada peer cura a SU player local (patrón de los
-## proyectiles enemigos); los tags los resuelve solo la copia del host.
+## el daño rolleado: escala con stats/afijos), y a los enemigos les hace
+## DAÑO de ácido además de aplicar/detonar sus tags. Co-op: cada peer cura
+## a SU player local; daño y tags los resuelve la copia del host.
 extends Node3D
 
 @export var radius: float = 3.0
 @export var splash_color: Color = Color(0.5, 1.0, 0.6)
+## Daño a enemigos como fracción del roll (la cura a aliados es el 100%).
+@export var enemy_damage_ratio: float = 0.6
 
 var damage: float = 10.0
 var source: Node = null
@@ -60,7 +62,9 @@ func _physics_process(_delta: float) -> void:
 				body.heal(damage)
 				FX.burst(body.global_position + Vector3.UP, splash_color, 10, 0.06)
 		elif is_multiplayer_authority() and body.has_method("apply_status"):
-			# Tags a enemigos: solo la copia con autoridad (host/offline).
+			# Enemigos: daño de ácido + tags (solo la copia con autoridad).
+			if enemy_damage_ratio > 0.0 and body.has_method("take_damage"):
+				body.take_damage(damage * enemy_damage_ratio, is_crit)
 			var to_detonate: Array = detonates
 			if source and source.has_method("elixir_primed") and source.elixir_primed():
 				to_detonate = ["burn", "frozen", "marked", "bleed"]

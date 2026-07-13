@@ -6,10 +6,11 @@
 script = ExtResource("1_def")
 id = &"alchemist"
 display_name = "Alquimista"
-description = "Soporte de party: sus frascos CURAN a los aliados y hacen sangrar a los enemigos, y su Elixir hace que los golpes de todos detonen cualquier estado."
-color = Color(0.5, 1.0, 0.6, 1)
+description = "Un condenado que experimentó consigo mismo hasta quedar en los huesos. Sus frascos de ácido DAÑAN y desangran enemigos mientras CURAN aliados, y su Elixir detona todos los estados en una onda."
+color = Color(0.55, 0.9, 0.25, 1)
 menu_order = 3
-model = "res://assets/kaykit/Mage.glb"
+model = "res://assets/kaykit/Skeleton_Mage.glb"
 anims = {"idle": "Idle", "run": "Running_A", "attack": "Spellcast_Shoot", "death": "Death_A"}
-stats = {&"max_health": 115.0, &"max_mana": 120.0, &"mana_regen": 10.0, &"spell_damage": 9.0, &"crit_chance": 5.0}
+model_tint = Color(0.72, 1.0, 0.62, 1)
+stats = {&"max_health": 115.0, &"max_mana": 130.0, &"mana_regen": 13.0, &"spell_damage": 11.0, &"crit_chance": 5.0}
 kit = Array[StringName]([&"dash", &"alchemist_flask", &"shared_elixir"])

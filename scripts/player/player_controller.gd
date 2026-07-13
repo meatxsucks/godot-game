@@ -160,6 +160,17 @@ func _setup_model() -> void:
 	model.rotation.y = PI # KayKit mira +Z; nuestro Visual apunta -Z al cursor
 	_model_anim = model.find_child("AnimationPlayer", true, false)
 	_anims = def.anims
+
+	# Tinte de la clase (ej. el Alquimista esqueleto va verde ácido para no
+	# confundirse con los esqueletos enemigos).
+	if def.model_tint != Color.WHITE:
+		for mesh: MeshInstance3D in model.find_children("*", "MeshInstance3D", true, false):
+			for i in mesh.mesh.get_surface_count():
+				var base_mat := mesh.mesh.surface_get_material(i)
+				if base_mat and base_mat is BaseMaterial3D:
+					var tinted: BaseMaterial3D = base_mat.duplicate()
+					tinted.albedo_color = tinted.albedo_color * def.model_tint
+					mesh.set_surface_override_material(i, tinted)
 	# Placeholders fuera (el Wand queda invisible como marcador de spawn).
 	$Visual/Body.visible = false
 	wand.visible = false

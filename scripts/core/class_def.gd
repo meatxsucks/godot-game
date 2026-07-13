@@ -17,6 +17,10 @@ extends Resource
 @export_file("*.glb") var model: String = ""
 ## Animaciones del modelo (keys: idle/run/attack/death).
 @export var anims: Dictionary = {}
+## Tinte multiplicativo del modelo (WHITE = sin tinte). Diferencia clases
+## que comparten modelo con otros usos (ej. Alquimista esqueleto vs los
+## esqueletos enemigos).
+@export var model_tint: Color = Color.WHITE
 ## Overrides de stats base (keys StringName, ver PlayerStats.base_stats).
 @export var stats: Dictionary = {}
 ## Kit de 3 poderes (Espacio, Q, R) por id — ver Game.make_ability.

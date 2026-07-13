@@ -63,7 +63,7 @@ sesión.
 | 🔵 **Mago** | Cañón de cristal: daño y maná altos, poca vida | Bola de Fuego · Descarga Arcana · Dash Arcano · Nova de Escarcha · ☄️ Tormenta de Meteoros |
 | 🟠 **Guerrero** | Tanque melee: mucha vida y resistencias. LMB/RMB según el arma equipada | **Embestida** (daña lo que atraviesa) · **Grito de Guerra** (golpea en área y se CURA 25%) · 👑 **Golpe de Titán** (un solo impacto colosal) |
 | 🟢 **Explorador** | Arquero ágil: crítico y velocidad | Flecha · Disparo Múltiple (abanico ×3) · Voltereta · **Flecha Perforante** (atraviesa filas) · 🏹 Lluvia de Flechas |
-| 🧪 **Alquimista** | Soporte de party: cura y habilita combos | LMB/RMB según arma · Dash · **Frasco Vivificante** (CURA aliados y hace sangrar enemigos en la misma área) · ⚗️ **Elixir Compartido** (la party recupera vida/maná y por 5s los golpes de TODOS detonan cualquier estado) |
+| 🧪 **Alquimista** | Esqueleto condenado, soporte con ácido: daña, cura y habilita combos | LMB/RMB según arma · Dash · **Frasco Vivificante** (DAÑA y desangra enemigos, CURA aliados en la misma área) · ⚗️ **Elixir Compartido** (onda ácida que daña y DETONA todos los estados + la party recupera vida/maná y por 5s los golpes de todos detonan cualquier tag) |
 
 ### Recursos limitados (¡no hay regeneración!)
 - La **vida** y el **maná no se regeneran solos**. Son recursos que se administran.
