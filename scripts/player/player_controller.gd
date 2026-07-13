@@ -547,6 +547,26 @@ func add_gold(amount: int) -> void:
 	stats.gold += amount
 	gold_changed.emit(stats.gold)
 
+# --- Elixir Compartido (Alquimista, E7.1) -----------------------------------
+
+## Hasta cuándo (ticks locales) los golpes de ESTE player detonan cualquier
+## tag. Se setea por RPC en TODAS sus copias: el host lo lee al resolver.
+var _elixir_until_ms: int = 0
+
+func elixir_primed() -> bool:
+	return Time.get_ticks_msec() < _elixir_until_ms
+
+## El Alquimista se lo da a cada aliado: cura % y prima los golpes. Corre en
+## todas las copias del nodo; la cura solo la aplica el peer dueño.
+@rpc("any_peer", "call_local", "reliable")
+func receive_elixir(heal_pct: float, mana_pct: float, prime_seconds: float) -> void:
+	_elixir_until_ms = Time.get_ticks_msec() + int(prime_seconds * 1000.0)
+	FX.burst(global_position + Vector3.UP, Color(0.5, 1.0, 0.6), 16, 0.08)
+	if not is_multiplayer_authority():
+		return
+	heal(stats.get_stat(&"max_health") * heal_pct)
+	restore_mana(stats.get_stat(&"max_mana") * mana_pct)
+
 ## Cura instantánea (pociones). No supera el máximo.
 func heal(amount: float) -> void:
 	if amount <= 0.0:

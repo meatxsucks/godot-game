@@ -88,8 +88,11 @@ func _apply_status_tags(body: Node3D) -> void:
 	if not is_multiplayer_authority() or not body.has_method("apply_status"):
 		return
 	var peer: int = source.get_multiplayer_authority() if source else 0
-	if not detonates.is_empty():
-		body.detonate_status(detonates, peer)
+	var to_detonate: Array = detonates
+	if source and source.has_method("elixir_primed") and source.elixir_primed():
+		to_detonate = ["burn", "frozen", "marked", "bleed"]
+	if not to_detonate.is_empty():
+		body.detonate_status(to_detonate, peer)
 	for tag: StringName in applies:
 		body.apply_status(tag, damage, peer)
 

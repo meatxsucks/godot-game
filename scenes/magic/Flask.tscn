@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://cflask0000001"]
+
+[ext_resource type="Script" path="res://scripts/magic/flask.gd" id="1_flask"]
+
+[node name="Flask" type="Node3D"]
+script = ExtResource("1_flask")

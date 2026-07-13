@@ -86,6 +86,8 @@ func make_ability(id: StringName) -> Ability:
 		&"whirlwind": return WhirlwindAbility.new()
 		&"piercing_arrow": return PiercingArrowAbility.new()
 		&"arrow_rain": return ArrowRainAbility.new()
+		&"alchemist_flask": return AlchemistFlaskAbility.new()
+		&"shared_elixir": return SharedElixirAbility.new()
 		&"frost_nova": return FrostNovaAbility.new()
 		&"meteor_storm": return MeteorStormAbility.new()
 		_:

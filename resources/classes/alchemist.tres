@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="ClassDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/core/class_def.gd" id="1_def"]
+
+[resource]
+script = ExtResource("1_def")
+id = &"alchemist"
+display_name = "Alquimista"
+description = "Soporte de party: sus frascos CURAN a los aliados y hacen sangrar a los enemigos, y su Elixir hace que los golpes de todos detonen cualquier estado."
+color = Color(0.5, 1.0, 0.6, 1)
+menu_order = 3
+model = "res://assets/kaykit/Mage.glb"
+anims = {"idle": "Idle", "run": "Running_A", "attack": "Spellcast_Shoot", "death": "Death_A"}
+stats = {&"max_health": 115.0, &"max_mana": 120.0, &"mana_regen": 10.0, &"spell_damage": 9.0, &"crit_chance": 5.0}
+kit = Array[StringName]([&"dash", &"alchemist_flask", &"shared_elixir"])

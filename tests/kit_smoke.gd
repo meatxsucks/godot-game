@@ -3,7 +3,7 @@
 extends Node
 
 func _ready() -> void:
-	for cls in [&"mage", &"warrior", &"ranger"]:
+	for cls in [&"mage", &"warrior", &"ranger", &"alchemist"]:
 		Game.selected_class = cls
 		var kit := Game.build_class_kit()
 		assert(kit.size() == 3, "kit de clase de %s tiene 3 slots" % cls)
