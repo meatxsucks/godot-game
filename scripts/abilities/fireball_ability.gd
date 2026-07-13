@@ -13,6 +13,7 @@ func _init() -> void:
 	mana_cost = 0.0
 	hold_to_cast = true
 	element = &"fire"
+	applies = [&"burn"]
 
 func _cast(player) -> Variant:
 	return _spawn_projectile(player, SCENE, &"fire_damage", 0.55)

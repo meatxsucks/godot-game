@@ -100,6 +100,10 @@ func validate(raw: Dictionary) -> Dictionary:
 		spec[key] = _clamped(raw.get(key), NUM_LIMITS[key])
 	spec["count"] = int(spec["count"])
 
+	# Tags de estado (E3): la IA puede declarar qué aplica/detona.
+	spec["applies"] = _tag_list(raw.get("applies"))
+	spec["detonates"] = _tag_list(raw.get("detonates"))
+
 	var props := {}
 	var raw_props: Variant = raw.get("props", {})
 	if raw_props is Dictionary:
@@ -115,6 +119,17 @@ func validate(raw: Dictionary) -> Dictionary:
 					props[key] = int(props[key])
 	spec["props"] = props
 	return spec
+
+## Filtra una lista de tags contra los que existen (whitelist E3).
+const TAG_IDS := ["burn", "frozen", "marked", "bleed"]
+
+func _tag_list(value: Variant) -> Array:
+	var tags: Array = []
+	if value is Array:
+		for tag in value:
+			if TAG_IDS.has(str(tag)) and not tags.has(str(tag)):
+				tags.append(str(tag))
+	return tags
 
 func _pick(value: Variant, allowed: Array, fallback: String) -> String:
 	var text := str(value)

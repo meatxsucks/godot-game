@@ -15,6 +15,9 @@ extends Area3D
 ## Quién lanzó el proyectil (para evitar fuego amigo / auto-impacto).
 var source: Node = null
 var is_crit: bool = false
+## Tags de estado (E3) que este golpe aplica/detona (llegan por props).
+var applies: Array = []
+var detonates: Array = []
 ## Rebotes restantes (legendario "Pira en Cadena"): al impactar salta al
 ## enemigo más cercano con el 60% del daño.
 var chains_left: int = 0
@@ -65,6 +68,7 @@ func _on_body_entered(body: Node3D) -> void:
 		# El daño a enemigos se auto-filtra (take_damage ignora réplicas).
 		if not body.is_in_group("player") or body.is_multiplayer_authority():
 			body.take_damage(damage, is_crit)
+		_apply_status_tags(body)
 		FX.burst(global_position, impact_color, 8, 0.05)
 		# El super lo acredita solo la copia con autoridad (host/offline):
 		# las réplicas duplicarían el crédito.
@@ -77,6 +81,17 @@ func _on_body_entered(body: Node3D) -> void:
 
 	# Muere al impactar contra cualquier cuerpo físico (enemigo o pared).
 	queue_free()
+
+## Tags de estado (E3): detonar primero (no lo recién puesto), luego aplicar.
+## Solo la copia con autoridad (host/offline) — los tags son estado del host.
+func _apply_status_tags(body: Node3D) -> void:
+	if not is_multiplayer_authority() or not body.has_method("apply_status"):
+		return
+	var peer: int = source.get_multiplayer_authority() if source else 0
+	if not detonates.is_empty():
+		body.detonate_status(detonates, peer)
+	for tag: StringName in applies:
+		body.apply_status(tag, damage, peer)
 
 ## Legendario "Pira en Cadena": se duplica apuntando al enemigo más cercano
 ## (≤8m, distinto al golpeado) con 60% del daño y un rebote menos.

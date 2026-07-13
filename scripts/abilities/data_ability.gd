@@ -60,6 +60,11 @@ func _init(spec: Dictionary = {}) -> void:
 	spread_deg = spec.get("spread_deg", 20.0)
 	step_delay = spec.get("step_delay", 0.15)
 	extra_props = spec.get("props", {})
+	# Tags de estado (E3): los poderes del lab comban con todo el juego.
+	for tag in spec.get("applies", []):
+		applies.append(StringName(tag))
+	for tag in spec.get("detonates", []):
+		detonates.append(StringName(tag))
 
 func _damage_stat() -> StringName:
 	return ELEMENT_STATS.get(element, &"fire_damage")
@@ -91,7 +96,7 @@ func _cast_projectiles(player) -> bool:
 		var result: Array = player.stats.roll_spell_damage(_damage_stat(), damage_mult)
 		var props := {"transform": xform}
 		props.merge(extra_props)
-		NetSpawn.projectile(scene, props, player.get_parent(), result[0], player, result[1])
+		NetSpawn.projectile(scene, _tag_props(props), player.get_parent(), result[0], player, result[1])
 	return true
 
 ## AoE centrado en el personaje.
@@ -99,7 +104,7 @@ func _cast_nova(player) -> bool:
 	var result: Array = player.stats.roll_spell_damage(_damage_stat(), damage_mult)
 	var props := {"position": player.global_position}
 	props.merge(extra_props)
-	NetSpawn.projectile(_scene(), props, player.get_parent(), result[0], player, result[1])
+	NetSpawn.projectile(_scene(), _tag_props(props), player.get_parent(), result[0], player, result[1])
 	return true
 
 ## Secuencia de impactos en línea recta hacia donde mira (estilo Temblor).
@@ -116,7 +121,7 @@ func _line_step(player: Node, tree: SceneTree, dir: Vector3, i: int) -> void:
 	var result: Array = player.stats.roll_spell_damage(_damage_stat(), damage_mult)
 	var props := {"position": player.global_position + dir * (2.0 + i * 2.5)}
 	props.merge(extra_props)
-	NetSpawn.projectile(_scene(), props, player.get_parent(), result[0], player, result[1])
+	NetSpawn.projectile(_scene(), _tag_props(props), player.get_parent(), result[0], player, result[1])
 	tree.create_timer(step_delay).timeout.connect(_line_step.bind(player, tree, dir, i + 1))
 
 ## Lluvia sobre el punto frente al personaje (plantillas meteor_storm/arrow_rain).
@@ -124,5 +129,5 @@ func _cast_storm(player) -> bool:
 	var result: Array = player.stats.roll_spell_damage(_damage_stat(), damage_mult)
 	var props := {"position": player.get_front_point()}
 	props.merge(extra_props)
-	NetSpawn.projectile(_scene(), props, player.get_parent(), result[0], player, result[1])
+	NetSpawn.projectile(_scene(), _tag_props(props), player.get_parent(), result[0], player, result[1])
 	return true

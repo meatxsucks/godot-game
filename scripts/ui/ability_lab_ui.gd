@@ -156,6 +156,10 @@ sobre el punto apuntado).
 - template: visual que reutiliza. Proyectiles: fireball, arrow, arc_bolt, axe. AoE/línea: \
 nova, whirlwind, war_cry, slash. Storm: meteor_storm, arrow_rain.
 - element decide qué skill entrena: fire, lightning, cold, melee, ranged.
+- applies/detonates: tags de estado del combate (burn=quemado con ticks, \
+frozen=congela/ralentiza, marked=el próximo golpe critea, bleed=sangrado \
+apilable). Aplicar y detonar es la base de los combos: detonar consume el \
+tag por daño extra. Usa 0-2 tags coherentes con el elemento.
 - props (opcional, solo las que apliquen): proyectiles → speed, lifetime, pierces, \
 chains_left; AoE → max_radius, expand_time, slow_factor (<1 ralentiza), slow_time; \
 tajos → reach, arc_degrees, hit_radius; storm → meteor_count, spawn_radius, duration, \
@@ -182,6 +186,10 @@ func _spec_schema() -> Dictionary:
 			"count": {"type": "integer"},
 			"spread_deg": {"type": "number"},
 			"step_delay": {"type": "number"},
+			"applies": {"type": "array",
+				"items": {"type": "string", "enum": ["burn", "frozen", "marked", "bleed"]}},
+			"detonates": {"type": "array",
+				"items": {"type": "string", "enum": ["burn", "frozen", "marked", "bleed"]}},
 			"props": {
 				"type": "object",
 				"properties": {
@@ -200,6 +208,6 @@ func _spec_schema() -> Dictionary:
 		},
 		"required": ["id", "name", "description", "color", "element", "behavior",
 			"template", "cooldown", "mana_cost", "damage_mult", "count",
-			"spread_deg", "step_delay", "props"],
+			"spread_deg", "step_delay", "applies", "detonates", "props"],
 		"additionalProperties": false,
 	}

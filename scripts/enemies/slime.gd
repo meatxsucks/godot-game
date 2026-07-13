@@ -56,6 +56,7 @@ func _ready() -> void:
 	add_to_group("enemies")
 	current_health = max_health
 	_safe_zone = get_tree().get_first_node_in_group("safe_zone")
+	_tags = StatusTags.new(self)
 
 	# Material propio de la instancia (esfera fallback, tintada por variante).
 	var mesh: MeshInstance3D = $Visual/Mesh
@@ -111,6 +112,8 @@ func _physics_process(delta: float) -> void:
 		return
 	if _dying:
 		return
+	# Tags de estado (E3): ticks de Quemado/Sangrado y expiraciones.
+	_tags.update(delta)
 	if _slow_timer > 0.0:
 		_slow_timer -= delta
 		if _slow_timer <= 0.0:
@@ -303,12 +306,60 @@ func _pick_direction(delta: float) -> Vector3:
 
 	return direction
 
+# --- Tags de estado (E3, GDD §4) ------------------------------------------------
+
+## Tags activos de este enemigo (Quemado/Congelado/Marcado/Sangrado).
+var _tags: StatusTags
+
+## Pone un tag (lo llaman los proyectiles al golpear). Solo host; el FX de
+## aplicación se replica a todos.
+func apply_status(tag: StringName, base_damage: float, applier_peer: int = 0) -> void:
+	if _dying or not is_multiplayer_authority():
+		return
+	if _tags.apply(tag, base_damage, applier_peer):
+		_tag_fx.rpc(tag, false)
+
+## Detona tags activos: los consume y aplica el daño extra como crítico.
+## El combo cruzado de party (aplicó OTRO jugador) ya viene bonificado.
+func detonate_status(tags: Array, detonator_peer: int = 0) -> void:
+	if _dying or not is_multiplayer_authority():
+		return
+	var bonus := _tags.detonate(tags, detonator_peer)
+	if bonus > 0.0:
+		_tag_fx.rpc(tags[0], true)
+		take_damage(bonus, true)
+
+## Daño de tick (Quemado/Sangrado): directo, sin animación de hit (el spam
+## de "hit" congelaría al enemigo) y con el color del tag.
+func _status_tick(tag_def: TagDef, amount: float) -> void:
+	if _dying or amount <= 0.0:
+		return
+	current_health -= amount
+	_health_bar.set_ratio(current_health / max_health)
+	FX.damage_number(global_position, amount, false, tag_def.color)
+	if current_health <= 0:
+		die()
+
+## FX del tag en TODAS las máquinas (aplicar = ráfaga chica; detonar = grande).
+@rpc("authority", "call_local", "reliable")
+func _tag_fx(tag: StringName, detonated: bool) -> void:
+	var tag_def := StatusTags.def(tag)
+	if tag_def == null:
+		return
+	var origin := global_position + Vector3(0, 0.6 * size_scale, 0)
+	FX.burst(origin, tag_def.color, 18 if detonated else 8, 0.09 if detonated else 0.05)
+
 # --- Daño y muerte --------------------------------------------------------------
 
 func take_damage(amount: float, is_crit: bool = false) -> void:
 	# El daño lo resuelve SOLO el host; la vida viaja por el sincronizador.
 	if _dying or not is_multiplayer_authority():
 		return
+	# Marcado (E3): el próximo golpe se amplifica y consume el tag.
+	var amplifier := _tags.consume_amplifier()
+	if amplifier > 1.0:
+		amount *= amplifier
+		is_crit = true
 	current_health -= amount
 	_health_bar.set_ratio(current_health / max_health)
 	FX.damage_number(global_position, amount, is_crit)

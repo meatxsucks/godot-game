@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="TagDef" load_steps=2 format=3 uid="uid://tagburn000001"]
+
+[ext_resource type="Script" path="res://scripts/enemies/tag_def.gd" id="1_tag"]
+
+[resource]
+script = ExtResource("1_tag")
+id = &"burn"
+display_name = "Quemado"
+color = Color(1.0, 0.45, 0.1, 1)
+duration = 4.0
+max_stacks = 1
+tick_interval = 0.5
+tick_damage_ratio = 0.15
+detonate_mult = 2.0
+slow_factor = 1.0
+amplify_next_hit = 1.0

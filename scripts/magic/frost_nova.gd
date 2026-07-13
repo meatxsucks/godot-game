@@ -11,6 +11,9 @@ extends Area3D
 var damage: float = 10.0
 var source: Node = null
 var is_crit: bool = false
+## Tags de estado (E3) que este golpe aplica/detona (llegan por props).
+var applies: Array = []
+var detonates: Array = []
 
 ## Cuerpos ya golpeados por esta nova (un solo golpe por enemigo).
 var _already_hit := {}
@@ -45,6 +48,13 @@ func _on_body_entered(body: Node3D) -> void:
 		body.take_damage(damage, is_crit)
 		if slow_factor < 1.0 and body.has_method("apply_slow"):
 			body.apply_slow(slow_factor, slow_time)
+		# Tags (E3): detonar primero, aplicar después — solo con autoridad.
+		if is_multiplayer_authority() and body.has_method("apply_status"):
+			var peer: int = source.get_multiplayer_authority() if source else 0
+			if not detonates.is_empty():
+				body.detonate_status(detonates, peer)
+			for tag: StringName in applies:
+				body.apply_status(tag, damage, peer)
 		# Solo la copia con autoridad acredita el super (réplicas = visual).
 		if is_multiplayer_authority() and source and source.has_method("add_super_charge"):
 			source.add_super_charge(4.0)

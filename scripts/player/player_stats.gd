@@ -122,7 +122,9 @@ func add_xp(amount: float) -> int:
 		_apply_level_up()
 	return ups
 
-## Bonos por nivel (todas las clases se benefician) + cura del 25% del máximo.
+## Bonos por nivel (todas las clases se benefician). El level-up RELLENA
+## vida y maná al 100% (GDD §7, E6.3): en un juego sin regeneración pasiva,
+## subir de nivel es el respiro.
 func _apply_level_up() -> void:
 	base_stats[&"max_health"] = float(base_stats[&"max_health"]) + 10.0
 	base_stats[&"max_mana"] = float(base_stats[&"max_mana"]) + 5.0
@@ -130,7 +132,8 @@ func _apply_level_up() -> void:
 	base_stats[&"melee_damage"] = float(base_stats[&"melee_damage"]) + 1.0
 	base_stats[&"ranged_damage"] = float(base_stats[&"ranged_damage"]) + 1.0
 	recompute()
-	health = minf(get_stat(&"max_health"), health + get_stat(&"max_health") * 0.25)
+	health = get_stat(&"max_health")
+	mana = get_stat(&"max_mana")
 
 ## Recalcula el cache combinando base + planos + porcentajes de cada ítem.
 func recompute() -> void:

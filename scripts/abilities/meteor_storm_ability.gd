@@ -15,6 +15,8 @@ func _init() -> void:
 	mana_cost = 0.0
 	element = &"fire"
 	is_super = true
+	# El ejemplo del GDD §4: la R de fuego DETONA a los Quemados.
+	detonates = [&"burn"]
 
 func _can_cast(player) -> bool:
 	return player.super_charge >= player.SUPER_MAX
@@ -28,6 +30,6 @@ func _cast(player) -> Variant:
 	# tormenta calcula sus objetivos en _ready (asignarla después la hacía
 	# caer alrededor del origen).
 	NetSpawn.projectile(SCENE,
-		{"position": player.get_front_point()}, player.get_parent(),
+		_tag_props({"position": player.get_front_point()}), player.get_parent(),
 		result[0], player)
 	return true

@@ -13,6 +13,7 @@ func _init() -> void:
 	cooldown = 5.0
 	mana_cost = 25.0
 	element = &"cold"
+	applies = [&"frozen"]
 
 func _cast(player) -> Variant:
 	return _spawn_nova(player, SCENE, &"cold_damage", 1.0)

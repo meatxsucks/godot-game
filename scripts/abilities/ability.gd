@@ -27,6 +27,12 @@ var element: StringName = &""
 ## El HUD lo usa para mostrar el círculo de carga en cualquier kit.
 var is_super: bool = false
 
+## Tags de estado (E3, GDD §4) que esta habilidad APLICA al golpear y los
+## que DETONA (consume por daño extra). Los combos salen de combinar esto
+## entre armas y clases — nunca se hardcodea un combo.
+var applies: Array[StringName] = []
+var detonates: Array[StringName] = []
+
 ## Descuento de cooldown generado por el último casteo (ej. legendario
 ## "Cascada Crítica"). El player lo consume al armar el timer del slot.
 var _cooldown_refund: float = 0.0
@@ -54,6 +60,15 @@ func consume_cooldown_refund() -> float:
 	_cooldown_refund = 0.0
 	return refund
 
+## Suma los tags de la habilidad a las props del spawn (viajan serializados;
+## el proyectil los usa al golpear, solo en el host).
+func _tag_props(props: Dictionary) -> Dictionary:
+	if not applies.is_empty():
+		props["applies"] = Array(applies)
+	if not detonates.is_empty():
+		props["detonates"] = Array(detonates)
+	return props
+
 ## Helper compartido: instancia un proyectil en la varita/mano del personaje
 ## con daño rodado desde sus stats. `stat` decide qué daño del loot suma.
 ## El daño viaja DENTRO del spawn (en un cliente el nodo devuelto es null:
@@ -62,7 +77,7 @@ func _spawn_projectile(player, scene: PackedScene, stat: StringName, multiplier:
 	var xform: Transform3D = player.wand.global_transform
 	xform.origin.y = PROJECTILE_HEIGHT
 	var result: Array = player.stats.roll_spell_damage(stat, multiplier)
-	NetSpawn.projectile(scene, {"transform": xform}, player.get_parent(),
+	NetSpawn.projectile(scene, _tag_props({"transform": xform}), player.get_parent(),
 		result[0], player, result[1])
 	return true
 
@@ -71,6 +86,6 @@ func _spawn_projectile(player, scene: PackedScene, stat: StringName, multiplier:
 ## La posición va ANTES de add_child (el _ready arma el tween en su sitio).
 func _spawn_nova(player, scene: PackedScene, stat: StringName, multiplier: float) -> bool:
 	var result: Array = player.stats.roll_spell_damage(stat, multiplier)
-	NetSpawn.projectile(scene, {"position": player.global_position},
+	NetSpawn.projectile(scene, _tag_props({"position": player.global_position}),
 		player.get_parent(), result[0], player, result[1])
 	return true

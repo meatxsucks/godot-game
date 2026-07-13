@@ -16,6 +16,9 @@ extends Node3D
 
 var damage: float = 30.0
 var source: Node = null
+## Tags de estado (E3) que cada impacto aplica/detona (llegan por props).
+var applies: Array = []
+var detonates: Array = []
 
 ## Impactos encolados: la consulta física debe correr en _physics_process.
 var _pending_impacts: Array[Vector3] = []
@@ -79,6 +82,13 @@ func _do_impact(target: Vector3) -> void:
 			continue
 		if body.has_method("take_damage"):
 			body.take_damage(damage)
+			# Tags (E3): detonar primero, aplicar después — solo con autoridad.
+			if is_multiplayer_authority() and body.has_method("apply_status"):
+				var peer: int = source.get_multiplayer_authority() if source else 0
+				if not detonates.is_empty():
+					body.detonate_status(detonates, peer)
+				for tag: StringName in applies:
+					body.apply_status(tag, damage, peer)
 
 func _flash(target: Vector3) -> void:
 	var light := OmniLight3D.new()
