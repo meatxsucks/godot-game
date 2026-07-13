@@ -39,7 +39,7 @@ jobs:
             exit 1
           fi
 
-      - name: Smokes headless (LootSmoke, KitSmoke, HitSmoke, SaveSmoke, L10nSmoke, PlayersSmoke, SpawnSmoke, SyncSmoke, LobbySmoke)
+      - name: Smokes headless (los 11 — ver spec/AGENTS.md)
         run: |
           run_smoke() {
             local scene="$1" expected="$2"
@@ -61,6 +61,8 @@ jobs:
           run_smoke SpawnSmoke.tscn "SPAWN SMOKE OK"
           run_smoke SyncSmoke.tscn "SYNC SMOKE OK"
           run_smoke LobbySmoke.tscn "LOBBY SMOKE OK"
+          run_smoke LabSmoke.tscn "LAB SMOKE OK"
+          run_smoke TagsSmoke.tscn "TAGS SMOKE OK"
 
       - name: Runtime de Arena.tscn (no debe crashear)
         run: |
