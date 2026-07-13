@@ -8,6 +8,7 @@ extends Control
 
 @onready var status: Label = %Status
 @onready var player_list: VBoxContainer = %PlayerList
+@onready var btn_invite: Button = %BtnInvite
 @onready var btn_start: Button = %BtnStart
 @onready var btn_class: Button = %BtnClass
 @onready var btn_leave: Button = %BtnLeave
@@ -18,6 +19,10 @@ var _infos: Dictionary = {}
 func _ready() -> void:
 	btn_start.visible = multiplayer.is_server()
 	btn_start.pressed.connect(_on_start_pressed)
+	# Invitar por el overlay de Steam: la vía principal para jugar con
+	# amigos (solo aparece en partidas Steam; cualquier miembro invita).
+	btn_invite.visible = Net.steam_active and Net.steam_lobby_id != 0
+	btn_invite.pressed.connect(Net.invite_steam_friends)
 	btn_class.pressed.connect(_on_class_pressed)
 	btn_leave.pressed.connect(_leave)
 

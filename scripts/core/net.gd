@@ -53,6 +53,10 @@ func close_connection() -> void:
 	if steam_active and steam_lobby_id != 0:
 		Steam.leaveLobby(steam_lobby_id)
 	steam_lobby_id = 0
+	# Higiene: un join por invitación que quedó a medias no debe disparar
+	# el cambio de escena en la próxima conexión.
+	if connection_succeeded.is_connected(_go_class_select):
+		connection_succeeded.disconnect(_go_class_select)
 	if is_online():
 		multiplayer.multiplayer_peer.close()
 	# NUNCA dejar el peer en null: sin peer, multiplayer.is_server() deja de
@@ -129,7 +133,17 @@ func _init_steam() -> void:
 		return
 	Steam.lobby_created.connect(_on_steam_lobby_created)
 	Steam.lobby_match_list.connect(_on_steam_lobby_match_list)
+	# Invitación aceptada (o "Unirse a la partida" en la lista de amigos)
+	# con el juego ABIERTO.
+	if Steam.has_signal("join_requested"):
+		Steam.join_requested.connect(_on_steam_join_requested)
 	print("[Net] Steam OK como %s" % Steam.getPersonaName())
+	# Invitación aceptada con el juego CERRADO: Steam lo lanza con
+	# "+connect_lobby <id>" en la línea de comandos.
+	var args := OS.get_cmdline_args()
+	for i in args.size() - 1:
+		if args[i] == "+connect_lobby":
+			_on_steam_join_requested.call_deferred(int(args[i + 1]), 0)
 
 ## Hostear por Steam. Asíncrono: crea el lobby y al confirmarse se arma el
 ## peer y se emite steam_lobby_created (o connection_failed si falló).
@@ -168,6 +182,25 @@ func join_steam_game(lobby_id: int) -> Error:
 func lock_steam_lobby() -> void:
 	if steam_active and steam_lobby_id != 0:
 		Steam.setLobbyJoinable(steam_lobby_id, false)
+
+## Abre el overlay de Steam para INVITAR amigos al lobby actual — la vía
+## natural de un co-op de historia (el buscador público queda de respaldo).
+## Cualquier miembro del lobby puede invitar, no solo el host.
+func invite_steam_friends() -> void:
+	if steam_active and steam_lobby_id != 0:
+		Steam.activateGameOverlayInviteDialog(steam_lobby_id)
+
+## El jugador aceptó una invitación / "Unirse a la partida": entrar al lobby
+## del amigo desde CUALQUIER escena y seguir el flujo normal (clase → sala).
+func _on_steam_join_requested(lobby_id: int, _friend_id: int) -> void:
+	if lobby_id == 0:
+		return
+	close_connection() # suelta cualquier sesión/partida anterior
+	if join_steam_game(lobby_id) == OK:
+		connection_succeeded.connect(_go_class_select, CONNECT_ONE_SHOT)
+
+func _go_class_select() -> void:
+	SceneManager.change_scene("res://scenes/ui/ClassSelect.tscn")
 
 ## Pide la lista de partidas nuestras. Asíncrono → steam_lobby_list emite
 ## Array de lobby_ids (usar lobby_name/lobby_players para mostrar).
