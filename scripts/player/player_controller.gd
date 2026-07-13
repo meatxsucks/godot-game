@@ -83,6 +83,12 @@ var _inspect: bool = false
 ## Arma actual del slot básico (el LMB cambia según el arma equipada).
 var _last_weapon_id: StringName = &"__init__"
 
+## Paper-doll (EquipmentVisuals) del modelo, si cargó.
+var _equipment_visuals: Node = null
+## Ids de bases equipadas que llegaron por red (solo réplicas los usan).
+var remote_equipment_ids: Array = []
+var _last_equipment_sent: Array = []
+
 ## UI / HUD puede conectarse a estas señales.
 signal stats_changed
 signal health_changed(current: float, maximum: float)
@@ -121,6 +127,10 @@ func _ready() -> void:
 	_setup_model()
 	# El ataque básico y secundario dependen del arma equipada (arranca desarmado).
 	stats_changed.connect(_refresh_weapon_skills)
+	# Paper-doll remoto: el dueño difunde sus ids equipados a las réplicas
+	# (el equipo real es local — sin esto el otro jugador no se ve como está).
+	if is_multiplayer_authority():
+		stats_changed.connect(_broadcast_equipment)
 	_refresh_weapon_skills()
 	_emit_resource_signals()
 	stats_changed.emit()
@@ -156,14 +166,17 @@ func _setup_model() -> void:
 		_model_anim.play(_anims["idle"])
 
 	# Paper-doll: el equipo se ve puesto (arranca con las manos vacías).
-	var equipment_visuals := EquipmentVisuals.new()
-	add_child(equipment_visuals)
-	equipment_visuals.setup(self, model)
+	_equipment_visuals = EquipmentVisuals.new()
+	add_child(_equipment_visuals)
+	_equipment_visuals.setup(self, model)
 
 func _physics_process(delta: float) -> void:
 	# Réplica remota (E1.4): posición y rotación llegan por el sincronizador;
-	# el input/movimiento solo corre en el peer dueño del nodo.
+	# el input/movimiento solo corre en el peer dueño del nodo. La réplica
+	# igual anima correr/idle midiendo cuánto se movió (sin esto el otro
+	# jugador se veía deslizándose congelado).
 	if not is_multiplayer_authority():
+		_animate_replica(delta)
 		return
 	if _dead:
 		return
@@ -177,6 +190,18 @@ func _physics_process(delta: float) -> void:
 		_speed_modifier_timer -= delta
 	else:
 		_speed_modifier = 1.0
+
+## Réplica: deriva la velocidad del delta de posición que llega por el
+## sincronizador y reutiliza _update_animation (velocity es lo que lee).
+var _replica_last_pos := Vector3.INF
+
+func _animate_replica(delta: float) -> void:
+	if _replica_last_pos == Vector3.INF:
+		_replica_last_pos = global_position
+		return
+	velocity = (global_position - _replica_last_pos) / maxf(delta, 0.0001)
+	_replica_last_pos = global_position
+	_update_animation(delta)
 
 ## Idle/correr según la velocidad. El ataque congela la pose SOLO de pie:
 ## si te mueves, el correr tiene prioridad (así no se ve "quieto" al atacar).
@@ -675,6 +700,37 @@ func equip(item: LootItem) -> LootItem:
 func _emit_resource_signals() -> void:
 	health_changed.emit(stats.health, stats.get_stat(&"max_health"))
 	mana_changed.emit(stats.mana, stats.get_stat(&"max_mana"))
+
+# --- Paper-doll en red (el equipo real es LOCAL; el visual se difunde) --------
+
+## Ids de bases equipadas para el visual: locales en el dueño, los recibidos
+## por RPC en una réplica. EquipmentVisuals dibuja desde esta lista.
+func equipped_visual_ids() -> Array:
+	if not is_multiplayer_authority():
+		return remote_equipment_ids
+	var ids: Array = []
+	for slot in stats.equipment:
+		var item = stats.equipment[slot]
+		if item and item.base:
+			ids.append(item.base.id)
+	return ids
+
+## Difunde el visual cuando cambia el equipo (conectado a stats_changed:
+## cubre equipar, desequipar y cargar partida; dedup para no spamear).
+func _broadcast_equipment() -> void:
+	if not Net.is_online():
+		return
+	var ids := equipped_visual_ids()
+	if ids == _last_equipment_sent:
+		return
+	_last_equipment_sent = ids.duplicate()
+	_sync_equipment.rpc(ids)
+
+@rpc("authority", "reliable")
+func _sync_equipment(ids: Array) -> void:
+	remote_equipment_ids = ids
+	if _equipment_visuals:
+		_equipment_visuals.refresh()
 
 # --- Guardado (SaveService) --------------------------------------------------
 

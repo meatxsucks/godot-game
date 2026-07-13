@@ -212,7 +212,10 @@
 
   "Sala de espera": "Waiting room",
   "Comenzar partida": "Start game",
+  "Cambiar clase": "Change class",
   "Salir de la sala": "Leave room",
+  "•  Jugador %d — eligiendo clase…": "•  Player %d — choosing class…",
+  "Esperando a que todos elijan clase…": "Waiting for everyone to pick a class…",
   "Esperando jugadores… (pueden unirse %d más)": "Waiting for players… (%d more can join)",
   "%d jugadores conectados. ¡Listos para empezar!": "%d players connected. Ready to start!",
   "Conectado. Esperando a que el host comience…": "Connected. Waiting for the host to start…",

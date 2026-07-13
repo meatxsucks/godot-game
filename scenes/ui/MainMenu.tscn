@@ -46,30 +46,28 @@ horizontal_alignment = 1
 
 [node name="VBox" type="VBoxContainer" parent="."]
 layout_mode = 1
-anchors_preset = 8
+anchors_preset = 5
 anchor_left = 0.5
-anchor_top = 0.5
 anchor_right = 0.5
-anchor_bottom = 0.5
 offset_left = -150.0
-offset_top = 20.0
+offset_top = 252.0
 offset_right = 150.0
-offset_bottom = 220.0
+offset_bottom = 300.0
 grow_horizontal = 2
-grow_vertical = 2
-theme_override_constants/separation = 16
+grow_vertical = 1
+theme_override_constants/separation = 8
 
 [node name="BtnPlay" type="Button" parent="VBox"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 28
+theme_override_font_sizes/font_size = 20
 text = "Comenzar"
 
 [node name="BtnLoot" type="Button" parent="VBox"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 28
+theme_override_font_sizes/font_size = 20
 text = "Demo de Loot"
 
 [node name="BtnQuit" type="Button" parent="VBox"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 28
+theme_override_font_sizes/font_size = 20
 text = "Salir"

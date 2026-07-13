@@ -60,6 +60,11 @@ unique_name_in_owner = true
 layout_mode = 2
 text = "Comenzar partida"
 
+[node name="BtnClass" type="Button" parent="Center/Panel/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Cambiar clase"
+
 [node name="BtnLeave" type="Button" parent="Center/Panel/VBox"]
 unique_name_in_owner = true
 layout_mode = 2

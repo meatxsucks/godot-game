@@ -13,6 +13,11 @@ var classes: Dictionary = {}
 ## Clase elegida en ClassSelect. Default Mago (permite correr la Arena directo).
 var selected_class: StringName = &"mage"
 
+## Semilla del escenario procedural. En co-op la reparte el HOST al comenzar
+## (misma semilla = mismo mapa en todas las máquinas, estilo Valheim/NMS).
+## 0 = aleatoria (single-player o escena directa).
+var world_seed: int = 0
+
 func _ready() -> void:
 	var dir := DirAccess.open(CLASSES_DIR)
 	if dir == null:

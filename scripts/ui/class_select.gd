@@ -12,18 +12,23 @@ func _ready() -> void:
 	# Si el host corta mientras elegimos clase, volver al menú (sin esto el
 	# cliente quedaba en una pantalla muerta).
 	if Net.is_online() and not multiplayer.is_server():
-		Net.server_disconnected.connect(_on_back_pressed)
+		Net.server_disconnected.connect(_on_server_lost)
 
-## Volver al menú principal. En co-op también corta la sesión: elegir clase
-## es el último paso antes de entrar a la Arena, salir de acá = salir de la
-## partida (el host spawnea a todos recién cuando nadie falta por cargar).
 func _add_back_button() -> void:
 	var btn_back := Button.new()
 	btn_back.text = tr("Volver")
 	btn_back.pressed.connect(_on_back_pressed)
 	cards.get_parent().add_child(btn_back)
 
+## En co-op se elige clase ANTES de la sala: Volver regresa a la sala sin
+## cortar (para salir de la sesión está "Salir de la sala"). Offline → menú.
 func _on_back_pressed() -> void:
+	if Net.is_online():
+		SceneManager.change_scene("res://scenes/ui/LobbyRoom.tscn")
+	else:
+		SceneManager.change_scene("res://scenes/ui/MainMenu.tscn")
+
+func _on_server_lost() -> void:
 	Net.close_connection()
 	SceneManager.change_scene("res://scenes/ui/MainMenu.tscn")
 
@@ -79,4 +84,9 @@ func _make_card(id: StringName) -> Control:
 
 func _on_class_chosen(id: StringName) -> void:
 	Game.selected_class = id
-	SceneManager.change_scene("res://scenes/levels/Arena.tscn")
+	# Co-op: con la clase elegida se pasa a la sala de espera; la Arena la
+	# lanza el host para todos. Offline: directo a jugar.
+	if Net.is_online():
+		SceneManager.change_scene("res://scenes/ui/LobbyRoom.tscn")
+	else:
+		SceneManager.change_scene("res://scenes/levels/Arena.tscn")

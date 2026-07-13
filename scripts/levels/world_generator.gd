@@ -19,7 +19,13 @@ var _rng := RandomNumberGenerator.new()
 var _placed: Array[Vector3] = []
 
 func _ready() -> void:
-	var seed_used := world_seed if world_seed != 0 else randi()
+	# Prioridad: seed del export (tests/diseño) → seed de la partida (en
+	# co-op la reparte el host: todos generan el MISMO mapa) → aleatoria.
+	var seed_used := world_seed
+	if seed_used == 0:
+		seed_used = Game.world_seed
+	if seed_used == 0:
+		seed_used = randi()
 	_rng.seed = seed_used
 
 	var made := 0

@@ -53,10 +53,15 @@ var _body_mesh: MeshInstance3D = null
 var _robe_material: StandardMaterial3D = null
 
 ## Registra meshes, crea los anclajes de mano y se conecta al equipo.
+## OJO co-op: usa la clase DEL PLAYER, no la local — en una réplica
+## `Game.selected_class` es la clase de quien mira, no la del dueño (bug
+## real: la lista de meshes no matcheaba y el modelo aparecía con TODOS
+## los accesorios puestos).
 func setup(player: Node, model: Node) -> void:
 	_player = player
-	var managed: Array = ACCESSORY_MESHES.get(Game.selected_class, [])
-	var body_name: String = BODY_MESH.get(Game.selected_class, "")
+	var cls: StringName = player.player_class
+	var managed: Array = ACCESSORY_MESHES.get(cls, [])
+	var body_name: String = BODY_MESH.get(cls, "")
 	for mesh in model.find_children("*", "MeshInstance3D", true, false):
 		if managed.has(String(mesh.name)):
 			_meshes[String(mesh.name)] = mesh
@@ -92,7 +97,9 @@ func _make_attachment(skeleton: Skeleton3D, bone: String) -> BoneAttachment3D:
 func _on_item_equipped(_item, _previous) -> void:
 	refresh()
 
-## Sincroniza el visual completo con el equipo actual.
+## Sincroniza el visual completo con el equipo actual. Dibuja desde los IDS
+## visuales del player: los locales en el dueño, los que llegaron por red en
+## una réplica — así el otro jugador se ve tal como está.
 func refresh() -> void:
 	# Apagar todo (integrados), vaciar manos y quitar el tinte de túnica.
 	for mesh in _meshes.values():
@@ -102,13 +109,8 @@ func refresh() -> void:
 	if _body_mesh:
 		_body_mesh.set_surface_override_material(0, null)
 
-	var builtin: Dictionary = BUILTIN_VISUALS.get(Game.selected_class, {})
-	for slot in _player.stats.equipment:
-		var item = _player.stats.equipment[slot]
-		if item == null or item.base == null:
-			continue
-		var id: StringName = item.base.id
-
+	var builtin: Dictionary = BUILTIN_VISUALS.get(_player.player_class, {})
+	for id: StringName in _player.equipped_visual_ids():
 		# Outfit integrado (sombrero/casco, capa).
 		var mesh_name: String = builtin.get(id, "")
 		if mesh_name != "" and _meshes.has(mesh_name):

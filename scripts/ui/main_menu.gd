@@ -20,10 +20,11 @@ func _ready() -> void:
 	btn_loot.pressed.connect(_on_loot_pressed)
 	btn_quit.pressed.connect(_on_quit_pressed)
 
-	# Si venimos de una partida (retry/menú), soltar la sesión de red anterior
-	# y apagar el poder en prueba del Laboratorio (solo aplica desde el lab).
+	# Si venimos de una partida (retry/menú), soltar la sesión de red anterior,
+	# apagar el poder en prueba del Laboratorio y volver a mundo aleatorio.
 	Net.close_connection()
 	AbilityLab.test_ability_id = &""
+	Game.world_seed = 0
 	_build_coop_ui()
 	Net.connection_succeeded.connect(_on_join_succeeded)
 	Net.connection_failed.connect(_on_join_failed)
@@ -34,14 +35,18 @@ func _ready() -> void:
 func _build_coop_ui() -> void:
 	var vbox: VBoxContainer = $VBox
 
-	# Menú principal: un solo botón que abre el submenú de LAN.
+	# Menú principal: un solo botón que abre el submenú de co-op. El layout
+	# crece hacia ABAJO desde debajo del subtítulo (nunca tapa el título) y
+	# el tamaño de fuente iguala a los botones del .tscn.
 	var btn_coop := Button.new()
-	btn_coop.text = tr("Co-op (LAN)")
+	btn_coop.text = tr("Co-op")
+	btn_coop.add_theme_font_size_override(&"font_size", 20)
 	btn_coop.pressed.connect(_on_coop_pressed)
 	vbox.add_child(btn_coop)
 
 	var btn_lab := Button.new()
 	btn_lab.text = tr("Laboratorio de poderes")
+	btn_lab.add_theme_font_size_override(&"font_size", 20)
 	btn_lab.pressed.connect(_on_lab_pressed)
 	vbox.add_child(btn_lab)
 	# El Salir queda siempre último.
@@ -129,8 +134,9 @@ func _on_coop_back_pressed() -> void:
 	btn_play.grab_focus()
 
 func _on_host_pressed() -> void:
+	# Flujo co-op: elegir clase PRIMERO, después la sala de espera.
 	if Net.host_game() == OK:
-		SceneManager.change_scene("res://scenes/ui/LobbyRoom.tscn")
+		SceneManager.change_scene("res://scenes/ui/ClassSelect.tscn")
 	else:
 		_net_status.text = tr("No se pudo abrir el server (¿puerto ocupado?)")
 
@@ -142,7 +148,7 @@ func _on_join_pressed() -> void:
 		_net_status.text = tr("Dirección inválida")
 
 func _on_join_succeeded() -> void:
-	SceneManager.change_scene("res://scenes/ui/LobbyRoom.tscn")
+	SceneManager.change_scene("res://scenes/ui/ClassSelect.tscn")
 
 # --- Steam ------------------------------------------------------------------
 
@@ -151,7 +157,7 @@ func _on_steam_host_pressed() -> void:
 	Net.host_steam_game() # asíncrono → steam_lobby_created / connection_failed
 
 func _on_steam_lobby_ready(_lobby_id: int) -> void:
-	SceneManager.change_scene("res://scenes/ui/LobbyRoom.tscn")
+	SceneManager.change_scene("res://scenes/ui/ClassSelect.tscn")
 
 func _on_steam_lobby_list(lobbies: Array) -> void:
 	for child in _lobby_list.get_children():
