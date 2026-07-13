@@ -80,6 +80,8 @@ func _cast(player) -> Variant:
 			return _cast_line(player)
 		&"storm":
 			return _cast_storm(player)
+		&"volley":
+			return _cast_volley(player)
 		_:
 			return _cast_projectiles(player)
 
@@ -123,6 +125,25 @@ func _line_step(player: Node, tree: SceneTree, dir: Vector3, i: int) -> void:
 	props.merge(extra_props)
 	NetSpawn.projectile(_scene(), _tag_props(props), player.get_parent(), result[0], player, result[1])
 	tree.create_timer(step_delay).timeout.connect(_line_step.bind(player, tree, dir, i + 1))
+
+## Ráfaga (LAB.2): count disparos CONSECUTIVOS hacia el cursor, uno cada
+## step_delay — una ametralladora, re-apuntando entre tiro y tiro.
+func _cast_volley(player) -> bool:
+	_volley_step(player, player.get_tree(), 0)
+	return true
+
+func _volley_step(player: Node, tree: SceneTree, i: int) -> void:
+	if i >= count or not is_instance_valid(player) or not player.is_inside_tree() or player.get("_dead"):
+		return
+	if player.has_method("_face_aim"):
+		player._face_aim()
+	var xform: Transform3D = player.wand.global_transform
+	xform.origin.y = PROJECTILE_HEIGHT
+	var result: Array = player.stats.roll_spell_damage(_damage_stat(), damage_mult)
+	var props := {"transform": xform}
+	props.merge(extra_props)
+	NetSpawn.projectile(_scene(), _tag_props(props), player.get_parent(), result[0], player, result[1])
+	tree.create_timer(step_delay).timeout.connect(_volley_step.bind(player, tree, i + 1))
 
 ## Lluvia sobre el punto frente al personaje (plantillas meteor_storm/arrow_rain).
 func _cast_storm(player) -> bool:

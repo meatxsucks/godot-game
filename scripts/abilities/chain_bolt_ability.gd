@@ -12,6 +12,7 @@ func _init() -> void:
 	cooldown = 2.5
 	mana_cost = 15.0
 	element = &"lightning"
+	detonates = [&"marked"]
 
 func _cast(player) -> Variant:
 	var target = player.get_aim_point()
@@ -37,6 +38,6 @@ func _cast(player) -> Variant:
 	var xform: Transform3D = player.wand.global_transform
 	xform.origin.y = PROJECTILE_HEIGHT
 	NetSpawn.projectile(SCENE,
-		{"transform": xform, "chains_left": 2}, player.get_parent(),
+		_tag_props({"transform": xform, "chains_left": 2}), player.get_parent(),
 		result[0], player, result[1])
 	return true

@@ -13,6 +13,7 @@ func _init() -> void:
 	cooldown = 3.0
 	mana_cost = 15.0
 	element = &"ranged"
+	applies = [&"bleed"]
 
 func _cast(player) -> Variant:
 	# z positivo es hacia atrás relativo al visual (que mira al mouse)

@@ -12,6 +12,7 @@ func _init() -> void:
 	cooldown = 2.0
 	mana_cost = 15.0
 	element = &"melee"
+	detonates = [&"bleed"]
 
 func _cast(player) -> Variant:
 	# Ralentiza al jugador mientras gira

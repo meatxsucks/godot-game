@@ -11,6 +11,8 @@ extends CharacterBody3D
 ## Probabilidad [0..1] de botar además una poción de maná (vida NUNCA dropea
 ## de enemigos: solo sale de cofres).
 @export var mana_drop_chance: float = 0.35
+## Probabilidad de soltar oro POR JUGADOR al morir (E5.1).
+@export var gold_drop_chance: float = 0.35
 ## Color del cuerpo (esfera fallback + burst de muerte).
 @export var body_color: Color = Color(0.2, 0.8, 0.2)
 ## Escala de la variante. Ajusta visual y colisión.
@@ -395,6 +397,14 @@ func die() -> void:
 			if randf() <= drop_chance:
 				_spawn_drop(Loot.generate_random_item(loot_level), Vector3.ZERO,
 					player.get_multiplayer_authority())
+
+	# Oro (E5.1): tirada POR JUGADOR vivo (como el equipo, nadie compite);
+	# la cantidad escala con el nivel del botín.
+	if loot_drop_scene:
+		for player in Players.alive(get_tree()):
+			if randf() <= gold_drop_chance:
+				_spawn_drop(Loot.make_gold(randi_range(1, 3) + loot_level),
+					Vector3(-0.7, 0, -0.2), player.get_multiplayer_authority())
 
 	# Algunos enemigos botan maná (vida nunca: solo en cofres).
 	# Las pociones del mundo son COMPARTIDAS: recurso al que llega primero.

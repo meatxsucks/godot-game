@@ -13,6 +13,7 @@ func _init() -> void:
 	cooldown = 2.0
 	mana_cost = 14.0
 	element = &"melee"
+	detonates = [&"marked"]
 
 func _cast(player) -> Variant:
 	var dir: Vector3 = -player.visual.global_transform.basis.z
@@ -29,7 +30,7 @@ func _spawn_sequence(player: Node, tree: SceneTree, dir: Vector3, i: int) -> voi
 	
 	var result: Array = player.stats.roll_spell_damage(&"melee_damage", 0.4)
 	NetSpawn.projectile(SCENE,
-		{"position": player.global_position + dir * (2.0 + i * 2.5)}, player.get_parent(),
+		_tag_props({"position": player.global_position + dir * (2.0 + i * 2.5)}), player.get_parent(),
 		result[0], player, result[1])
 		
 	var fx = player.get_node_or_null("/root/FX")

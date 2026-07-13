@@ -20,6 +20,7 @@ const EXISTING_POWERS := "Bola de Fuego (proyectil), Descarga Arcana (proyectil)
 @onready var key_edit: LineEdit = %KeyEdit
 @onready var prompt_edit: TextEdit = %PromptEdit
 @onready var btn_generate: Button = %BtnGenerate
+@onready var btn_save_json: Button = %BtnSaveJson
 @onready var status: Label = %Status
 @onready var power_list: VBoxContainer = %PowerList
 @onready var btn_back: Button = %BtnBack
@@ -34,6 +35,7 @@ func _ready() -> void:
 
 	key_edit.text = AbilityLab.api_key()
 	btn_generate.pressed.connect(_on_generate_pressed)
+	btn_save_json.pressed.connect(_on_save_json_pressed)
 	btn_back.pressed.connect(_on_back_pressed)
 	_refresh_list()
 
@@ -61,23 +63,58 @@ func _make_row(spec: Dictionary) -> Control:
 	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row.add_child(title)
 
-	var btn_try := Button.new()
-	btn_try.text = tr("Probar")
-	btn_try.pressed.connect(_on_try_pressed.bind(StringName(spec["id"])))
-	row.add_child(btn_try)
-
-	var btn_delete := Button.new()
-	btn_delete.text = tr("Borrar")
-	btn_delete.pressed.connect(_on_delete_pressed.bind(StringName(spec["id"])))
-	row.add_child(btn_delete)
+	var id := StringName(spec["id"])
+	row.add_child(_row_button(tr("Probar"), tr("Probar en la Arena (slot Q)"), _on_try_pressed.bind(id)))
+	row.add_child(_row_button(tr("Variar"), tr("Pedir a la IA una variante distinta de este poder"), _on_variant_pressed.bind(id)))
+	row.add_child(_row_button(tr("Editar"), tr("Cargar el JSON abajo para retocarlo a mano"), _on_edit_pressed.bind(id)))
+	row.add_child(_row_button(tr("Repo"), tr("Promover: copiarlo a resources/ability_lab/ (viaja en git)"), _on_promote_pressed.bind(id)))
+	row.add_child(_row_button(tr("X"), tr("Borrar"), _on_delete_pressed.bind(id)))
 	return row
+
+func _row_button(label: String, hint: String, action: Callable) -> Button:
+	var btn := Button.new()
+	btn.text = label
+	btn.tooltip_text = hint
+	btn.add_theme_font_size_override(&"font_size", 11)
+	btn.pressed.connect(action)
+	return btn
 
 func _on_try_pressed(id: StringName) -> void:
 	AbilityLab.test_ability_id = id
 	SceneManager.change_scene("res://scenes/levels/Arena.tscn")
 
+## Variante (LAB.2): la IA recibe el spec actual y propone uno DISTINTO.
+func _on_variant_pressed(id: StringName) -> void:
+	var base := AbilityLab.spec_json(id)
+	if base == "":
+		return
+	_send_generation(tr("Crea una VARIANTE de este poder: cambia significativamente su comportamiento, plantilla, tags o números (no un retoque). Usa un id nuevo. Poder base:\n") + base)
+
+## Editar (LAB.2): el JSON aparece abajo para retocarlo y "Guardar JSON".
+func _on_edit_pressed(id: StringName) -> void:
+	prompt_edit.text = AbilityLab.spec_json(id)
+	status.text = tr("Editando %s — retoca el JSON y presiona Guardar JSON.") % id
+
+## Promover (LAB.2): pasa del user:// al repo (resources/ability_lab/).
+func _on_promote_pressed(id: StringName) -> void:
+	if AbilityLab.promote(id):
+		status.text = tr("Promovido al repo: %s (haz commit para compartirlo)") % id
+	else:
+		status.text = tr("No se pudo promover (¿build exportado? res:// es solo lectura).")
+
 func _on_delete_pressed(id: StringName) -> void:
 	AbilityLab.delete_spec(id)
+	_refresh_list()
+
+## Guardar JSON (LAB.2): lo que haya en el campo de texto, validado.
+func _on_save_json_pressed() -> void:
+	var raw: Variant = JSON.parse_string(prompt_edit.text)
+	var spec: Dictionary = AbilityLab.validate(raw) if raw is Dictionary else {}
+	if spec.is_empty():
+		status.text = tr("Ese texto no es un JSON de poder válido.")
+		return
+	AbilityLab.save_spec(spec)
+	status.text = tr("Guardado: %s") % spec["name"]
 	_refresh_list()
 
 func _on_back_pressed() -> void:
@@ -87,15 +124,18 @@ func _on_back_pressed() -> void:
 # --- Generación con IA -------------------------------------------------------
 
 func _on_generate_pressed() -> void:
+	var prompt := prompt_edit.text.strip_edges()
+	if prompt == "":
+		status.text = tr("Describe el poder primero.")
+		return
+	_send_generation(prompt)
+
+func _send_generation(prompt: String) -> void:
 	var key := key_edit.text.strip_edges()
 	if key == "":
 		status.text = tr("Falta la API key (pégala arriba).")
 		return
 	AbilityLab.save_api_key(key)
-	var prompt := prompt_edit.text.strip_edges()
-	if prompt == "":
-		status.text = tr("Describe el poder primero.")
-		return
 
 	var body := JSON.stringify({
 		"model": MODEL,
@@ -139,6 +179,13 @@ func _on_request_completed(result: int, code: int, _headers: PackedStringArray, 
 	if spec.is_empty():
 		status.text = tr("La IA no devolvió un poder válido: %s") % spec_text.substr(0, 80)
 		return
+	# Las generaciones nunca PISAN un poder existente (las variantes suelen
+	# reusar ids): si el id ya existe, se sufija.
+	if AbilityLab.specs.has(StringName(spec["id"])):
+		var n := 2
+		while AbilityLab.specs.has(StringName("%s_v%d" % [spec["id"], n])):
+			n += 1
+		spec["id"] = "%s_v%d" % [spec["id"], n]
 	AbilityLab.save_spec(spec)
 	status.text = tr("Guardado: %s") % spec["name"]
 	prompt_edit.text = ""
@@ -152,7 +199,8 @@ para una arena por oleadas. Debe sentirse DISTINTO a los poderes existentes: %s.
 Campos:
 - behavior: "projectile" (abanico de count proyectiles con spread_deg), "nova" (AoE en el \
 personaje), "line" (count impactos en línea al frente, cada step_delay seg), "storm" (lluvia \
-sobre el punto apuntado).
+sobre el punto apuntado), "volley" (ráfaga: count disparos consecutivos re-apuntando, \
+cada step_delay seg).
 - template: visual que reutiliza. Proyectiles: fireball, arrow, arc_bolt, axe. AoE/línea: \
 nova, whirlwind, war_cry, slash. Storm: meteor_storm, arrow_rain.
 - element decide qué skill entrena: fire, lightning, cold, melee, ranged.
@@ -177,7 +225,7 @@ func _spec_schema() -> Dictionary:
 			"description": {"type": "string"},
 			"color": {"type": "string"},
 			"element": {"type": "string", "enum": ["fire", "lightning", "cold", "melee", "ranged"]},
-			"behavior": {"type": "string", "enum": ["projectile", "nova", "line", "storm"]},
+			"behavior": {"type": "string", "enum": ["projectile", "nova", "line", "storm", "volley"]},
 			"template": {"type": "string", "enum": ["fireball", "arrow", "arc_bolt", "axe",
 				"nova", "whirlwind", "slash", "meteor_storm", "arrow_rain", "war_cry"]},
 			"cooldown": {"type": "number"},

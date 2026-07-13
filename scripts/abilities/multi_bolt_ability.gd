@@ -13,6 +13,7 @@ func _init() -> void:
 	cooldown = 4.0
 	mana_cost = 20.0
 	element = &"fire"
+	applies = [&"burn"]
 
 func _cast(player) -> Variant:
 	var target = player.get_aim_point()
@@ -33,7 +34,7 @@ func _spawn_sequence(player: Node, tree: SceneTree, target: Vector3, right: Vect
 	var spawn_pos = target + offset
 
 	var result: Array = player.stats.roll_spell_damage(&"fire_damage", 0.5)
-	NetSpawn.projectile(SCENE, {"position": spawn_pos}, player.get_parent(),
+	NetSpawn.projectile(SCENE, _tag_props({"position": spawn_pos}), player.get_parent(),
 		result[0], player, result[1])
 	
 	var fx = player.get_node_or_null("/root/FX")

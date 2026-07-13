@@ -49,6 +49,9 @@ const LEVEL_DMG_CAP := 1.5
 func level_damage_scale() -> float:
 	return minf(LEVEL_DMG_CAP, LEVEL_DMG_BASE + LEVEL_DMG_PER_LEVEL * (level - 1))
 
+## Oro (E5.1): el recurso de la economía Tibia (tienda/herrería/banco E5).
+var gold: int = 0
+
 var health: float = 0.0
 var mana: float = 0.0
 

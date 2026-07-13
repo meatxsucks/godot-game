@@ -13,6 +13,7 @@ func _init() -> void:
 	cooldown = 1.0
 	mana_cost = 0.0
 	element = &"ranged"
+	detonates = [&"bleed"]
 	is_super = true
 
 func _can_cast(player) -> bool:
@@ -26,6 +27,6 @@ func _cast(player) -> Variant:
 	# La posición viaja en props: se aplica ANTES de entrar al árbol (los
 	# objetivos se calculan en _ready).
 	NetSpawn.projectile(SCENE,
-		{"position": player.get_front_point()}, player.get_parent(),
+		_tag_props({"position": player.get_front_point()}), player.get_parent(),
 		result[0], player)
 	return true

@@ -96,6 +96,7 @@ signal mana_changed(current: float, maximum: float)
 signal item_equipped(item: LootItem, previous: LootItem)
 signal super_charge_changed(current: float, maximum: float)
 signal inventory_changed
+signal gold_changed(amount: int)
 signal skills_changed
 signal xp_changed(current: float, needed: float, level: int)
 signal leveled_up(new_level: int)
@@ -539,6 +540,12 @@ func on_enemy_killed(xp_reward: float = 10.0) -> void:
 		_emit_resource_signals()
 		stats_changed.emit()
 		leveled_up.emit(stats.level)
+
+## Suma oro al bolsillo (E5.1). Solo lo llama la máquina dueña (el drop
+## de oro es instanciado por jugador, como el equipo).
+func add_gold(amount: int) -> void:
+	stats.gold += amount
+	gold_changed.emit(stats.gold)
 
 ## Cura instantánea (pociones). No supera el máximo.
 func heal(amount: float) -> void:

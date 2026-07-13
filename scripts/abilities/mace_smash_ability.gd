@@ -14,6 +14,7 @@ func _init() -> void:
 	mana_cost = 0.0
 	hold_to_cast = true
 	element = &"melee"
+	applies = [&"marked"]
 
 func _cast(player) -> Variant:
 	var target = player.get_aim_point()

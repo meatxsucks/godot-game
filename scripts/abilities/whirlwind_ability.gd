@@ -14,6 +14,7 @@ func _init() -> void:
 	cooldown = 1.0
 	mana_cost = 0.0
 	element = &"melee"
+	detonates = [&"bleed"]
 	is_super = true
 
 func _can_cast(player) -> bool:

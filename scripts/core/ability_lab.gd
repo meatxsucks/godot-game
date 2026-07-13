@@ -94,7 +94,8 @@ func validate(raw: Dictionary) -> Dictionary:
 	spec["description"] = str(raw.get("description", "")).substr(0, 200)
 	spec["color"] = _valid_color(str(raw.get("color", "#a06bff")))
 	spec["element"] = _pick(raw.get("element"), DataAbility.ELEMENT_STATS.keys(), "fire")
-	spec["behavior"] = _pick(raw.get("behavior"), ["projectile", "nova", "line", "storm"], "projectile")
+	spec["behavior"] = _pick(raw.get("behavior"),
+		["projectile", "nova", "line", "storm", "volley"], "projectile")
 	spec["template"] = _pick(raw.get("template"), DataAbility.TEMPLATES.keys(), "fireball")
 	for key: String in NUM_LIMITS:
 		spec[key] = _clamped(raw.get(key), NUM_LIMITS[key])
@@ -158,6 +159,25 @@ func delete_spec(id: StringName) -> void:
 	if test_ability_id == id:
 		test_ability_id = &""
 	reload() # si era un ejemplo del repo no se borra: reaparece
+
+## JSON legible del spec (para editarlo en la UI del lab).
+func spec_json(id: StringName) -> String:
+	if not specs.has(id):
+		return ""
+	return JSON.stringify(specs[id], "\t")
+
+## Promueve un poder del usuario al repo (resources/ability_lab/): pasa a
+## viajar en git como contenido "oficial" del lab. Solo funciona corriendo
+## desde el editor (res:// no es escribible en un build exportado).
+func promote(id: StringName) -> bool:
+	if not specs.has(id):
+		return false
+	var file := FileAccess.open(EXAMPLES_DIR.path_join("%s.json" % id), FileAccess.WRITE)
+	if file == null:
+		return false
+	file.store_string(JSON.stringify(specs[id], "\t"))
+	file.close()
+	return true
 
 ## Instancia el poder si existe (lo usa Game.make_ability como fallback).
 func make_ability(id: StringName) -> Ability:

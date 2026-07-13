@@ -53,6 +53,14 @@ func _on_body_entered(body: Node3D) -> void:
 	if owner_peer != 0 and owner_peer != multiplayer.get_unique_id():
 		return
 
+	# Oro (E5.1): directo al bolsillo, nunca al inventario.
+	if item.base and item.base.type == &"gold":
+		if body.has_method("add_gold"):
+			body.add_gold(item.item_level)
+		FX.burst(global_position + Vector3(0, 0.5, 0), Color(1.0, 0.85, 0.2), 12, 0.06)
+		_despawn()
+		return
+
 	# Consumibles: se aplican AL TOCAR (llenan vida/maná al instante).
 	if item.is_consumable():
 		if body.has_method("heal"):

@@ -13,6 +13,7 @@ func _init() -> void:
 	mana_cost = 0.0
 	hold_to_cast = true
 	element = &"ranged"
+	applies = [&"bleed"]
 
 func _cast(player) -> Variant:
 	return _spawn_projectile(player, SCENE, &"ranged_damage", 0.55)

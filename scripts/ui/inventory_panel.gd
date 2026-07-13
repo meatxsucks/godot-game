@@ -100,7 +100,8 @@ func refresh() -> void:
 	for i in _inv_slots.size():
 		var item: LootItem = player.inventory[i] if i < player.inventory.size() else null
 		_inv_slots[i].set_item(item)
-	inv_counter.text = tr("Inventario %d/%d") % [player.inventory.size(), player.INVENTORY_SIZE]
+	inv_counter.text = tr("Inventario %d/%d · Oro: %d") % [player.inventory.size(),
+		player.INVENTORY_SIZE, player.stats.gold]
 
 	# Stats efectivos (base de la clase + equipo + niveles) y skills.
 	_level_label.text = tr("Nivel: %d  (XP %d/%d)") % [player.stats.level, roundi(player.stats.xp), roundi(player.stats.xp_needed())]

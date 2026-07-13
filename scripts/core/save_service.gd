@@ -65,7 +65,7 @@ func save_game(stats: PlayerStats, inventory: Array[LootItem]) -> void:
 		},
 		"equipment": _save_equipment(stats.equipment),
 		"inventory": inventory.map(func(item: LootItem) -> Dictionary: return item.to_save_dict()),
-		"gold": 0,   # TODO E5: economía aún no existe.
+		"gold": stats.gold,
 		"world": {}, # TODO E4: progreso de mundo/zonas aún no existe.
 	}
 	var file := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
@@ -85,6 +85,7 @@ func load_game(stats: PlayerStats, inventory: Array[LootItem]) -> bool:
 	Game.selected_class = StringName(data.get("class", "mage"))
 	stats.level = int(data.get("level", 1))
 	stats.xp = float(data.get("xp", 0.0))
+	stats.gold = int(data.get("gold", 0))
 
 	var base_stats_data: Dictionary = data.get("base_stats", {})
 	if not base_stats_data.is_empty():

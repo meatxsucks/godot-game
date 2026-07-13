@@ -94,6 +94,19 @@ func make_potion(kind: StringName) -> LootItem:
 	item.recompute_stats()
 	return item
 
+## Crea un puñado de oro (E5.1). La CANTIDAD viaja en item_level: es el
+## campo que sobrevive la serialización del drop replicado (to_save_dict).
+func make_gold(amount: int) -> LootItem:
+	var item := LootItem.new()
+	item.base = LootDB.potion_bases.get(&"gold_coins", null)
+	if item.base == null:
+		push_warning("[Loot] falta gold_coins.tres en resources/loot/potions/")
+		return null
+	item.item_level = maxi(1, amount)
+	item.display_name = tr("%d de oro") % item.item_level
+	item.recompute_stats()
+	return item
+
 func _roll_rarity() -> int:
 	var total_weight = 0
 	for tier in Rarity.DROP_WEIGHT:
