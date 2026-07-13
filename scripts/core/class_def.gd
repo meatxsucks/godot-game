@@ -25,3 +25,7 @@ extends Resource
 @export var stats: Dictionary = {}
 ## Kit de 3 poderes (Espacio, Q, R) por id — ver Game.make_ability.
 @export var kit: Array[StringName] = []
+## Ataque básico (LMB/RMB) cuando NO hay arma equipada. &"" = golpe desarmado
+## genérico; si no, ese poder — así el Alquimista escupe ácido sin arma en vez
+## de dar puñetazos de mago.
+@export var unarmed_power: StringName = &""

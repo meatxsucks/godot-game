@@ -255,8 +255,10 @@ func _refresh_weapon_skills() -> void:
 	_last_weapon_id = weapon_id
 
 	if weapon == null or weapon.base == null:
-		abilities[0] = UnarmedAbility.new()
-		abilities[1] = UnarmedAbility.new()
+		# Básico desarmado propio de la clase (el Alquimista escupe ácido).
+		var unarmed: StringName = Game.class_def(player_class).unarmed_power
+		abilities[0] = Game.make_ability(unarmed) if unarmed != &"" else UnarmedAbility.new()
+		abilities[1] = Game.make_ability(unarmed) if unarmed != &"" else UnarmedAbility.new()
 	else:
 		abilities[0] = Game.make_ability(weapon.base.lmb_power)
 		abilities[1] = Game.make_ability(weapon.base.rmb_power)

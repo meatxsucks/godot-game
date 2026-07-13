@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://cmkkovp2yx441"]
+
+[ext_resource type="Script" path="res://scripts/magic/acid_puddle.gd" id="1_puddle"]
+
+[node name="AcidPuddle" type="Node3D"]
+script = ExtResource("1_puddle")

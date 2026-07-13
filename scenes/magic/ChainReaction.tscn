@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://vwt1qtp57aea"]
+
+[ext_resource type="Script" path="res://scripts/magic/chain_reaction.gd" id="1_chain"]
+
+[node name="ChainReaction" type="Node3D"]
+script = ExtResource("1_chain")
