@@ -14,18 +14,23 @@ ARPG isométrico *wave-based* hecho en **Godot 4.4** (Forward+). Mezcla el comba
 
 ### Co-op (hasta 4 jugadores) — LAN y Steam 🧪
 
-Multiplayer **host-authoritative**. Desde el menú principal, **Co-op (LAN)**
+Multiplayer **host-authoritative**. Desde el menú principal, **Co-op**
 abre el submenú de red con dos vías:
 
 - **Steam** (si el cliente está corriendo): **Hostear (Steam)** crea un
-  lobby público; **Buscar partidas (Steam)** lista las abiertas y un click
-  te une. Usa el AppID de pruebas 480 (Spacewar) con filtro por juego;
-  probar Steam↔Steam requiere dos cuentas.
+  lobby; en la sala de espera, **Invitar amigos (Steam)** abre el overlay
+  para invitarlos — el que acepta entra directo (incluso con el juego
+  cerrado: Steam se lo abre). También hay **Buscar partidas (Steam)** como
+  respaldo. AppID de pruebas 480 (Spacewar); probar Steam↔Steam requiere
+  dos cuentas.
 - **LAN / IP directa**: un jugador **Hostea**, el resto pone la **IP del
   host** (misma máquina: `127.0.0.1`) → **Unirse**. Para probar solo: en el
   editor, **Debug → Run Multiple Instances → 2**.
 
-Cada uno elige su propia clase al entrar. Los enemigos persiguen al jugador
+Flujo: eliges tu **clase** → **sala de espera** (lista de jugadores con su
+clase; puedes cambiar la tuya) → el host **comienza** cuando están todos y
+la partida carga para todos a la vez, con el **mismo mapa** (la semilla del
+mundo la reparte el host). Los enemigos persiguen al jugador
 vivo **más cercano**, la XP de los kills es para todos, y el **loot es
 instanciado por jugador** (estilo Diablo 3): el equipo se rollea una vez
 por jugador y cada uno ve y recoge SOLO el suyo — las pociones del mundo sí
@@ -78,11 +83,22 @@ sesión.
 - El equipo sube tus stats **en vivo** (visible en el panel con I/Tab).
 
 ### Experiencia
-- Cada kill da **XP** (barra púrpura bajo el maná). Subir de **nivel** aumenta tus stats base (+vida, +maná, +daño) y te **cura un 25%** — el "¡NIVEL X!" en pantalla puede salvarte una oleada.
+- Cada kill da **XP** (barra púrpura bajo el maná). Subir de **nivel** aumenta tus stats base (+vida, +maná, +daño) y **rellena vida y maná al 100%** — el "¡NIVEL X!" en pantalla puede salvarte una oleada.
 
 ### Skills (entrenan con el uso, estilo Tibia)
 - **Magia** (general), **Fuego**, **Rayo**, **Hielo**, **Cuerpo a cuerpo** y **Distancia**: cada casteo da XP al skill del poder usado.
 - Cada nivel = **+3% de daño de ese tipo** (+1% por nivel de Magia). El Mago entrena elementos, el Guerrero cuerpo a cuerpo, el Explorador distancia.
+
+### Combos por tags de estado
+- Los poderes **aplican** estados a los enemigos — **Quemado** (daño por tick), **Congelado** (ralentiza), **Marcado** (el próximo golpe critea) y **Sangrado** (apilable ×5) — y otros poderes los **detonan**: consumen el estado en una explosión de daño extra.
+- Ejemplos: la Bola de Fuego quema y la Tormenta de Meteoros **detona** a todos los quemados; la Descarga marca y el Parpadeo Eléctrico revienta la marca; los cortes hacen sangrar y el Torbellino abre las heridas.
+- **En co-op**: detonar el estado que aplicó OTRO jugador da un **bonus ×1.25** — coordinen los combos.
+
+### Oro
+- Los enemigos sueltan **monedas** al morir (instanciadas por jugador, como el equipo). Se recogen al tocarlas, se ven en el panel de inventario y se guardan con la partida. Es la base de la economía que viene (tienda/herrería).
+
+### Laboratorio de poderes 🧪
+- Desde el menú principal: describe un poder en texto y una IA (API de Anthropic, requiere tu API key — se guarda solo en tu máquina) lo convierte en una **habilidad jugable** que puedes Probar en la Arena (slot Q), **Variar**, **Editar** (JSON) o **Promover** al repo. Los poderes generados también aplican/detonan tags.
 
 ### El mundo
 - El mapa (64×64) se **genera proceduralmente** cada partida: rocas, pilares y árboles repartidos por semilla que sirven de cobertura — y los enemigos los rodean con navegación real.
@@ -123,7 +139,7 @@ scripts/
 ├── abilities/
 │   ├── ability.gd           # Clase base: id, tecla, color, cooldown, coste, elemento,
 │   │                        #   is_super + helpers _spawn_projectile / _spawn_nova
-│   └── *_ability.gd         # 15 poderes: kits de Mago, Guerrero y Explorador
+│   └── *_ability.gd         # 19 poderes (kits + data_ability del Lab); declaran tags
 │                            #   (Game.build_kit() arma el kit según la clase)
 ├── magic/
 │   ├── fireball.gd          # Proyectil GENÉRICO con barrido anti-túnel, perforación
