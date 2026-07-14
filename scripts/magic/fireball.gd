@@ -18,6 +18,8 @@ var is_crit: bool = false
 ## Tags de estado (E3) que este golpe aplica/detona (llegan por props).
 var applies: Array = []
 var detonates: Array = []
+## Skill que entrena al lanzador al golpear a un enemigo (E6.1).
+var hit_element: StringName = &""
 ## Rebotes restantes (legendario "Pira en Cadena"): al impactar salta al
 ## enemigo más cercano con el 60% del daño.
 var chains_left: int = 0
@@ -88,6 +90,8 @@ func _apply_status_tags(body: Node3D) -> void:
 	if not is_multiplayer_authority() or not body.has_method("apply_status"):
 		return
 	var peer: int = source.get_multiplayer_authority() if source else 0
+	if hit_element != &"" and source.has_method("train_skill"):
+		source.train_skill(hit_element)
 	var to_detonate: Array = detonates
 	if source and source.has_method("elixir_primed") and source.elixir_primed():
 		to_detonate = ["burn", "frozen", "marked", "bleed"]

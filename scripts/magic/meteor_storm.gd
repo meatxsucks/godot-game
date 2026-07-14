@@ -19,6 +19,7 @@ var source: Node = null
 ## Tags de estado (E3) que cada impacto aplica/detona (llegan por props).
 var applies: Array = []
 var detonates: Array = []
+var hit_element: StringName = &""
 
 ## Impactos encolados: la consulta física debe correr en _physics_process.
 var _pending_impacts: Array[Vector3] = []
@@ -85,6 +86,8 @@ func _do_impact(target: Vector3) -> void:
 			# Tags (E3): detonar primero, aplicar después — solo con autoridad.
 			if is_multiplayer_authority() and body.has_method("apply_status"):
 				var peer: int = source.get_multiplayer_authority() if source else 0
+				if hit_element != &"" and source.has_method("train_skill"):
+					source.train_skill(hit_element)
 				var to_detonate: Array = detonates
 				if source and source.has_method("elixir_primed") and source.elixir_primed():
 					to_detonate = ["burn", "frozen", "marked", "bleed"]

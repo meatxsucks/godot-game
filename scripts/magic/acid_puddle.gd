@@ -15,6 +15,8 @@ var source: Node = null
 var is_crit: bool = false
 var applies: Array = []
 var detonates: Array = []
+## Skill que entrena al lanzador al derretir enemigos (E6.1).
+var hit_element: StringName = &""
 
 var _tick_timer: float = 0.0
 var _life: float = 0.0
@@ -83,11 +85,14 @@ func _do_tick() -> void:
 		if body.is_in_group("player"):
 			# Cura por tick a la copia local del aliado (vida local).
 			if body.is_multiplayer_authority() and body.has_method("heal"):
-				body.heal(damage * 0.35)
+				body.heal(damage * 0.5)
 		elif is_multiplayer_authority() and body.has_method("apply_status"):
 			# Enemigos: derretir — daño + Sangrado que se apila cada tick.
 			if body.has_method("take_damage"):
 				body.take_damage(damage * 0.4, false)
+			if hit_element != &"" and source and source.has_method("train_skill"):
+				source.train_skill(hit_element, 0.5) # medio punto por tick
+
 			var to_detonate: Array = detonates
 			if source and source.has_method("elixir_primed") and source.elixir_primed():
 				to_detonate = ["burn", "frozen", "marked", "bleed"]

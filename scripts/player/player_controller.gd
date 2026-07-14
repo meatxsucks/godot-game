@@ -98,6 +98,7 @@ signal super_charge_changed(current: float, maximum: float)
 signal inventory_changed
 signal gold_changed(amount: int)
 signal skills_changed
+signal skill_leveled(skill_name: String, level: int)
 signal xp_changed(current: float, needed: float, level: int)
 signal leveled_up(new_level: int)
 signal kit_changed
@@ -484,10 +485,10 @@ func _try_cast(slot: int) -> void:
 		return
 	_emit_resource_signals()
 	_play_attack_animation()
-	# Entrenamiento estilo Tibia: cada casteo da XP a su elemento y a Magia.
+	# Entrenamiento estilo Tibia: castear da un poco de XP (practicar el
+	# gesto); el grueso viene de CONECTAR golpes (train_skill, E6.1).
 	if ability.element != &"":
-		stats.skills.add_xp(ability.element, 2.0)
-		stats.skills.add_xp(&"magic", 1.0)
+		stats.skills.add_xp(ability.element, 0.5)
 		skills_changed.emit()
 	cooldowns[slot] = maxf(0.0, effective_cooldown(ability.cooldown) - ability.consume_cooldown_refund())
 
@@ -509,6 +510,27 @@ func get_cooldown_total(slot: int) -> float:
 	return effective_cooldown(abilities[slot].cooldown)
 
 # --- Super (stamina) --------------------------------------------------------
+
+## Entrena el skill de un elemento al CONECTAR un golpe (E6.1, Tibia): el
+## impacto entrena el elemento usado + un poco de Magia. Los skills son
+## LOCALES del peer dueño: si el host lo acredita sobre una réplica (él
+## resuelve el daño en co-op), se reenvía por RPC al dueño.
+@rpc("any_peer", "reliable")
+func train_skill(element: StringName, amount: float = 1.0) -> void:
+	if element == &"":
+		return
+	if not is_multiplayer_authority():
+		if multiplayer.is_server():
+			train_skill.rpc_id(get_multiplayer_authority(), element, amount)
+		return
+	var up_element := stats.skills.add_xp(element, amount)
+	var up_magic := stats.skills.add_xp(&"magic", amount * 0.5)
+	skills_changed.emit()
+	# Toast del que subió (prioriza el elemento sobre Magia).
+	if up_element:
+		skill_leveled.emit(SkillSet.NAMES.get(element, String(element)), stats.skills.level(element))
+	elif up_magic:
+		skill_leveled.emit(SkillSet.NAMES.get(&"magic", "Magia"), stats.skills.level(&"magic"))
 
 ## Acredita stamina del super (impactos de habilidades, kills). La stamina
 ## es LOCAL del peer dueño: cuando el host la acredita sobre una réplica
@@ -584,8 +606,13 @@ func receive_elixir(heal_pct: float, mana_pct: float, prime_seconds: float) -> v
 func heal(amount: float) -> void:
 	if amount <= 0.0:
 		return
+	var before := stats.health
 	stats.health = minf(stats.get_stat(&"max_health"), stats.health + amount)
 	health_changed.emit(stats.health, stats.get_stat(&"max_health"))
+	# Feedback verde de la cura REAL (0 si estabas full: por eso "no llenaba").
+	var healed := stats.health - before
+	if healed >= 1.0:
+		FX.damage_number(global_position + Vector3(0, 0.3, 0), healed, false, Color(0.4, 1.0, 0.4))
 
 ## Restaura maná instantáneo (pociones). No supera el máximo.
 func restore_mana(amount: float) -> void:

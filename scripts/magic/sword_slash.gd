@@ -13,6 +13,7 @@ var is_crit: bool = false
 ## Tags de estado (E3) que este golpe aplica/detona (llegan por props).
 var applies: Array = []
 var detonates: Array = []
+var hit_element: StringName = &""
 
 var _did_hit := false
 
@@ -71,6 +72,8 @@ func _physics_process(_delta: float) -> void:
 			# Tags (E3): detonar primero, aplicar después — solo con autoridad.
 			if is_multiplayer_authority() and body.has_method("apply_status"):
 				var peer: int = source.get_multiplayer_authority() if source else 0
+				if hit_element != &"" and source.has_method("train_skill"):
+					source.train_skill(hit_element)
 				var to_detonate: Array = detonates
 				if source and source.has_method("elixir_primed") and source.elixir_primed():
 					to_detonate = ["burn", "frozen", "marked", "bleed"]

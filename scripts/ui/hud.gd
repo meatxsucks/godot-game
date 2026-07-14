@@ -106,6 +106,7 @@ func _try_bind_player() -> void:
 	player.super_charge_changed.connect(_on_super_changed)
 	player.xp_changed.connect(_on_xp_changed)
 	player.leveled_up.connect(_on_leveled_up)
+	player.skill_leveled.connect(_on_skill_leveled)
 	player.kit_changed.connect(_on_kit_changed)
 	player.died.connect(_on_player_died)
 	_build_slots()
@@ -377,6 +378,22 @@ func _on_xp_changed(current: float, needed: float, level: int) -> void:
 func _on_leveled_up(new_level: int) -> void:
 	wave_label.text = tr("¡NIVEL %d!") % new_level
 	_level_flash = 1.4
+
+## Toast estilo Tibia al subir un skill: label chico que sube y se desvanece,
+## abajo-izquierda cerca de las barras (no pisa el mensaje de oleada/nivel).
+func _on_skill_leveled(skill_name: String, level: int) -> void:
+	var toast := Label.new()
+	toast.text = tr("%s → %d") % [skill_name, level]
+	toast.add_theme_font_size_override(&"font_size", 16)
+	toast.add_theme_color_override(&"font_color", Color(0.7, 1.0, 0.5))
+	toast.add_theme_color_override(&"font_outline_color", Color.BLACK)
+	toast.add_theme_constant_override(&"outline_size", 4)
+	toast.position = Vector2(24, 150)
+	add_child(toast)
+	var tween := create_tween()
+	tween.tween_property(toast, "position:y", 110.0, 1.1)
+	tween.parallel().tween_property(toast, "modulate:a", 0.0, 1.1).set_delay(0.4)
+	tween.tween_callback(toast.queue_free)
 
 # --- Oleadas -------------------------------------------------------------------
 

@@ -30,4 +30,9 @@ func _cast(player) -> Variant:
 	NetSpawn.projectile(PUDDLE, _tag_props({"position": target}), player.get_parent(),
 		result[0], player, result[1])
 	FX.burst(target + Vector3.UP, color, 16, 0.09)
+	# Autocura al preparar el frasco: el Alquimista se sostiene solo aunque
+	# tire el charco lejos (jugando solo NO tendría cómo curarse si no).
+	# Mínimo 12% de vida máx para que SIEMPRE se sienta (el daño de hechizo
+	# es bajo a nivel 1); escala con el roll en niveles altos.
+	player.heal(maxf(result[0] * 0.8, player.stats.get_stat(&"max_health") * 0.12))
 	return true

@@ -60,13 +60,16 @@ func consume_cooldown_refund() -> float:
 	_cooldown_refund = 0.0
 	return refund
 
-## Suma los tags de la habilidad a las props del spawn (viajan serializados;
-## el proyectil los usa al golpear, solo en el host).
+## Suma los tags y el elemento de la habilidad a las props del spawn (viajan
+## serializados). El proyectil usa los tags al golpear (host) y el elemento
+## para entrenar el skill del lanzador al conectar (E6.1).
 func _tag_props(props: Dictionary) -> Dictionary:
 	if not applies.is_empty():
 		props["applies"] = Array(applies)
 	if not detonates.is_empty():
 		props["detonates"] = Array(detonates)
+	if element != &"":
+		props["hit_element"] = element
 	return props
 
 ## Helper compartido: instancia un proyectil en la varita/mano del personaje
