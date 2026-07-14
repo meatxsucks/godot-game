@@ -28,6 +28,8 @@ func ui_color() -> Color:
 			return Color(0.95, 0.25, 0.25)
 		if base.type == &"potion_mana":
 			return Color(0.25, 0.5, 1.0)
+		if base.type == &"gold":
+			return Color(1.0, 0.82, 0.2) # dorado de moneda
 	return rarity_color()
 
 ## Combina base_stats (escalados por rareza) + afijos en `stats` (planos)

@@ -29,6 +29,7 @@ var player: Node = null
 @onready var equip_grid: GridContainer = %EquipGrid
 @onready var inv_grid: GridContainer = %InvGrid
 @onready var inv_counter: Label = %InvCounter
+@onready var gold_label: Label = %GoldLabel
 @onready var stats_box: VBoxContainer = %StatsBox
 @onready var skills_box: VBoxContainer = %SkillsBox
 @onready var compare_panel: PanelContainer = %ComparePanel
@@ -48,8 +49,22 @@ func setup(p_player: Node) -> void:
 	player.inventory_changed.connect(refresh)
 	player.stats_changed.connect(refresh)
 	player.skills_changed.connect(refresh)
+	if player.has_signal("gold_changed"):
+		player.gold_changed.connect(func(_g): refresh())
+	_style_coin()
 	_build()
 	refresh()
+
+## Dibuja el recuadro de la moneda como un círculo dorado (el nodo Panel es
+## un cuadro gris por defecto).
+func _style_coin() -> void:
+	var coin: Panel = get_node("%GoldLabel").get_parent().get_node("Coin")
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = Color(1.0, 0.82, 0.2)
+	sb.border_color = Color(0.75, 0.55, 0.1)
+	sb.set_border_width_all(2)
+	sb.set_corner_radius_all(8) # 16x16 → círculo
+	coin.add_theme_stylebox_override(&"panel", sb)
 
 func _build() -> void:
 	for slot_name in EQUIP_LAYOUT:
@@ -100,8 +115,10 @@ func refresh() -> void:
 	for i in _inv_slots.size():
 		var item: LootItem = player.inventory[i] if i < player.inventory.size() else null
 		_inv_slots[i].set_item(item)
-	inv_counter.text = tr("Inventario %d/%d · Oro: %d") % [player.inventory.size(),
-		player.INVENTORY_SIZE, player.stats.gold]
+	# El oro tiene su propio recuadro dorado (separado del conteo de objetos):
+	# es un recurso escaso, no un ítem más del inventario.
+	inv_counter.text = tr("Inventario %d/%d") % [player.inventory.size(), player.INVENTORY_SIZE]
+	gold_label.text = tr("%d de oro") % player.stats.gold
 
 	# Stats efectivos (base de la clase + equipo + niveles) y skills.
 	_level_label.text = tr("Nivel: %d  (XP %d/%d)") % [player.stats.level, roundi(player.stats.xp), roundi(player.stats.xp_needed())]

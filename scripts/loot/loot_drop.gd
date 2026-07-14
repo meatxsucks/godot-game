@@ -22,24 +22,65 @@ func _ready() -> void:
 		set_process(false)
 
 	if item:
+		# Forma propia por tipo: MONEDA (disco dorado que gira de canto),
+		# POCIÓN (frasco/orbe), OBJETO (gema de rareza) — de un vistazo sabés
+		# qué es sin recogerlo. El material lo comparten (toon + emissive).
 		var color = item.ui_color()
+		_kind = _drop_kind()
+		visual_mesh.mesh = _mesh_for_kind(_kind)
 		light.light_color = color
-		
-		# Cambiar color del material para coincidir con la rareza
-		var mat = visual_mesh.get_surface_override_material(0)
-		if mat == null:
-			mat = StandardMaterial3D.new()
-			mat.diffuse_mode = StandardMaterial3D.DIFFUSE_TOON
-			visual_mesh.set_surface_override_material(0, mat)
+		light.light_energy = 2.6 if _kind == &"gold" else 2.0
+
+		var mat := StandardMaterial3D.new()
+		mat.diffuse_mode = StandardMaterial3D.DIFFUSE_TOON
 		mat.albedo_color = color
 		mat.emission_enabled = true
 		mat.emission = color
-		mat.emission_energy_multiplier = 0.5
+		mat.emission_energy_multiplier = 0.9 if _kind == &"gold" else 0.5
+		if _kind == &"gold":
+			mat.metallic = 0.8
+			mat.roughness = 0.25
+		visual_mesh.set_surface_override_material(0, mat)
+
+## Categoría visual del drop.
+func _drop_kind() -> StringName:
+	if item.base == null:
+		return &"item"
+	if item.base.type == &"gold":
+		return &"gold"
+	if item.is_consumable():
+		return &"potion"
+	return &"item"
+
+func _mesh_for_kind(kind: StringName) -> Mesh:
+	match kind:
+		&"gold":
+			var coin := CylinderMesh.new()
+			coin.top_radius = 0.26
+			coin.bottom_radius = 0.26
+			coin.height = 0.08
+			return coin
+		&"potion":
+			var orb := SphereMesh.new()
+			orb.radius = 0.22
+			orb.height = 0.44
+			return orb
+		_:
+			var gem := PrismMesh.new()
+			gem.size = Vector3(0.5, 0.5, 0.5)
+			return gem
+
+## Categoría del drop (gold/potion/item), para el spin distinto.
+var _kind: StringName = &"item"
 
 func _process(delta: float) -> void:
 	hover_time += delta * 2.0
 	visual.position.y = sin(hover_time) * 0.2 + 0.5
-	visual.rotate_y(delta * 1.5)
+	# La moneda "gira de canto" (vuelta de moneda); lo demás gira plano.
+	if _kind == &"gold":
+		visual.rotate_z(delta * 4.0)
+	else:
+		visual.rotate_y(delta * 1.5)
 
 func _on_body_entered(body: Node3D) -> void:
 	if not body.is_in_group("player") or item == null:

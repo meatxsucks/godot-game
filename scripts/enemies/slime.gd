@@ -11,8 +11,9 @@ extends CharacterBody3D
 ## Probabilidad [0..1] de botar además una poción de maná (vida NUNCA dropea
 ## de enemigos: solo sale de cofres).
 @export var mana_drop_chance: float = 0.35
-## Probabilidad de soltar oro POR JUGADOR al morir (E5.1).
-@export var gold_drop_chance: float = 0.35
+## Probabilidad de soltar oro POR JUGADOR al morir (E5.1). Bajo a propósito:
+## el oro es escaso y valioso (economía Tibia — objetos caros).
+@export var gold_drop_chance: float = 0.16
 ## Color del cuerpo (esfera fallback + burst de muerte).
 @export var body_color: Color = Color(0.2, 0.8, 0.2)
 ## Escala de la variante. Ajusta visual y colisión.
