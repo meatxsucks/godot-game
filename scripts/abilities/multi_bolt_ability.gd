@@ -13,7 +13,9 @@ func _init() -> void:
 	cooldown = 4.0
 	mana_cost = 20.0
 	element = &"fire"
-	applies = [&"burn"]
+	# Autocombo del bastón: el LMB (Bola de Fuego) aplica Quemado y este RMB
+	# lo DETONA en área. El bastón se combea solo (E7.2).
+	detonates = [&"burn"]
 
 func _cast(player) -> Variant:
 	var target = player.get_aim_point()

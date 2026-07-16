@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="ItemBase" load_steps=2 format=3]
+
+[ext_resource type="Script" uid="uid://tdqxbqoednfp" path="res://scripts/loot/item_base.gd" id="1_res"]
+
+[resource]
+script = ExtResource("1_res")
+id = &"scepter_frost"
+name = "Cetro de escarcha"
+type = &"wand"
+slot = &"weapon"
+two_handed = false
+base_stats = {
+&"spell_damage": 8.0,
+&"cold_damage": 4.0,
+&"max_mana": 15.0
+}
+lmb_power = &"frost_shard"
+rmb_power = &"blizzard"

@@ -91,6 +91,8 @@ func make_ability(id: StringName) -> Ability:
 		&"shared_elixir": return SharedElixirAbility.new()
 		&"frost_nova": return FrostNovaAbility.new()
 		&"meteor_storm": return MeteorStormAbility.new()
+		&"frost_shard": return FrostShardAbility.new()
+		&"blizzard": return BlizzardAbility.new()
 		_:
 			# Poderes del Laboratorio (data-driven, prefijo lab_).
 			var lab := AbilityLab.make_ability(id)

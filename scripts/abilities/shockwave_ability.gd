@@ -13,7 +13,11 @@ func _init() -> void:
 	cooldown = 2.0
 	mana_cost = 14.0
 	element = &"melee"
-	detonates = [&"marked"]
+	# El Demoledor (E7.2): el temblor DETONA cualquier tag activo — sea de este
+	# mazo (Marcado del Salto Sísmico) o el que aplicó otro jugador de la party
+	# (Quemado del mago, Sangrado del arquero, Congelado del cetro). Es el
+	# detonador universal del co-op.
+	detonates = [&"burn", &"frozen", &"marked", &"bleed"]
 
 func _cast(player) -> Variant:
 	var dir: Vector3 = -player.visual.global_transform.basis.z

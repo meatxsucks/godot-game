@@ -12,6 +12,7 @@ extends Node
 ## reconoce). "hand": r = arma, l = offhand.
 const PROPS := {
 	&"wand_bone": {"scene": "res://assets/kaykit/props/wand.gltf", "hand": "r"},
+	&"scepter_frost": {"scene": "res://assets/kaykit/props/wand.gltf", "hand": "r"},
 	&"staff_oak": {"scene": "res://assets/kaykit/props/staff.gltf", "hand": "r"},
 	&"sword_iron": {"scene": "res://assets/kaykit/props/sword_1handed.gltf", "hand": "r"},
 	&"mace_heavy": {"scene": "res://assets/kaykit/props/axe_2handed.gltf", "hand": "r"},

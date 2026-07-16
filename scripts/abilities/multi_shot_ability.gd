@@ -13,7 +13,10 @@ func _init() -> void:
 	cooldown = 3.0
 	mana_cost = 15.0
 	element = &"ranged"
-	applies = [&"bleed"]
+	# El arco es el APLICADOR a distancia (E7.2): el LMB (Flecha) aplica
+	# Sangrado y este RMB aplica Marcado — así prepara combos para que el melee
+	# o el mago detonen. No detona nada él mismo: es puro setup de party.
+	applies = [&"marked"]
 
 func _cast(player) -> Variant:
 	# z positivo es hacia atrás relativo al visual (que mira al mouse)
