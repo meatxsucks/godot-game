@@ -82,6 +82,7 @@ func _spill_for(owner_peer: int) -> void:
 		Loot.generate_random_item(loot_level, &"armor"),
 		Loot.generate_random_item(loot_level, &"helmet"),
 		Loot.generate_random_item(loot_level, &"cape"),
+		Loot.generate_random_item(loot_level, &"gloves"),
 		Loot.generate_random_item(loot_level, offhand_type),
 	]
 	for weapon_type in WEAPON_TYPES:

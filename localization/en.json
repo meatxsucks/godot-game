@@ -78,6 +78,7 @@
   "TOR": "CHT",
   "ESC": "SHD",
   "CAPA": "CAPE",
+  "GUA": "GLV",
   "VID": "HP",
   "MAN": "MP",
 
@@ -152,6 +153,7 @@
   "Túnica de lino": "Linen Robe",
   "Sombrero de tela": "Cloth Hat",
   "Capa de lana": "Wool Cape",
+  "Guantes de cuero": "Leather Gloves",
   "Poción de vida": "Health Potion",
   "Poción de maná": "Mana Potion",
 

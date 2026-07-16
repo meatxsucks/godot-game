@@ -28,7 +28,8 @@ var base_stats := {
 	&"res_lightning": 0.0,
 }
 
-## slot (&"head", &"armor", &"weapon", &"offhand", &"ring", &"boots") -> LootItem
+## slot (&"head", &"armor", &"weapon", &"offhand", &"cape", &"hands",
+## &"ring", &"boots") -> LootItem
 var equipment := {}
 
 ## Skills estilo Tibia: suben usando cada tipo de daño y potencian ese daño.

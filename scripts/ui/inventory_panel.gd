@@ -2,11 +2,11 @@
 ## Click en un ítem del inventario = equipar; click en un slot de equipo = quitar.
 extends PanelContainer
 
-## Cruz de equipo: sombrero arriba, arma|túnica|escudo al medio, capa abajo.
+## Cruz de equipo: sombrero arriba, arma|túnica|escudo al medio, guantes|capa abajo.
 const EQUIP_LAYOUT: Array[StringName] = [
 	&"", &"head", &"",
 	&"weapon", &"armor", &"offhand",
-	&"", &"cape", &"",
+	&"hands", &"cape", &"",
 ]
 
 ## Etiqueta de cada slot de equipo cuando está vacío.
@@ -15,6 +15,7 @@ const SLOT_LABELS := {
 	&"weapon": "ARM",
 	&"armor": "TOR",
 	&"offhand": "ESC",
+	&"hands": "GUA",
 	&"cape": "CAPA",
 }
 

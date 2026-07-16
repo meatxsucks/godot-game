@@ -6,9 +6,10 @@ extends Resource
 ## Nombre visible del tipo, p.ej. "Bastón", "Orbe", "Anillo".
 @export var name: String = ""
 ## Tipo lógico: &"staff", &"orb", &"wand", &"ring", &"armor", &"helmet",
-## &"shield", &"boots".
+## &"shield", &"boots", &"cape", &"gloves".
 @export var type: StringName
-## Slot de equipo: &"head", &"armor", &"weapon", &"offhand", &"ring", &"boots".
+## Slot de equipo: &"head", &"armor", &"weapon", &"offhand", &"cape",
+## &"hands", &"ring", &"boots".
 @export var slot: StringName
 ## Arma a dos manos: al equiparla desplaza el offhand (y viceversa).
 @export var two_handed: bool = false
