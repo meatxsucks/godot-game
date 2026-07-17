@@ -114,9 +114,18 @@ func _clamp_resources() -> void:
 
 # --- Experiencia ------------------------------------------------------------
 
+## Bonos por nivel (los usa _apply_level_up y el HUD para mostrarlos).
+const LEVEL_UP_HP := 10.0
+const LEVEL_UP_MANA := 5.0
+const LEVEL_UP_DMG := 1.0
+
 ## XP necesaria para pasar del nivel actual al siguiente.
+## Curva CRECIENTE (E10.7, 2026-07-17, pedido del dueño: progresión "poco a
+## poco" y difícil): cada nivel cuesta bastante más que el anterior — antes
+## era lineal (40+nv*30) y a la oleada 5 ya ibas por nivel 5.
+## nv1→85 · nv2→141 · nv3→222 · nv5→446 · nv10→1313.
 func xp_needed() -> float:
-	return 40.0 + level * 30.0
+	return 60.0 + pow(level, 1.7) * 25.0
 
 ## Suma XP. Devuelve cuántos niveles subió (0 = ninguno).
 func add_xp(amount: float) -> int:
@@ -133,11 +142,11 @@ func add_xp(amount: float) -> int:
 ## vida y maná al 100% (GDD §7, E6.3): en un juego sin regeneración pasiva,
 ## subir de nivel es el respiro.
 func _apply_level_up() -> void:
-	base_stats[&"max_health"] = float(base_stats[&"max_health"]) + 10.0
-	base_stats[&"max_mana"] = float(base_stats[&"max_mana"]) + 5.0
-	base_stats[&"spell_damage"] = float(base_stats[&"spell_damage"]) + 1.0
-	base_stats[&"melee_damage"] = float(base_stats[&"melee_damage"]) + 1.0
-	base_stats[&"ranged_damage"] = float(base_stats[&"ranged_damage"]) + 1.0
+	base_stats[&"max_health"] = float(base_stats[&"max_health"]) + LEVEL_UP_HP
+	base_stats[&"max_mana"] = float(base_stats[&"max_mana"]) + LEVEL_UP_MANA
+	base_stats[&"spell_damage"] = float(base_stats[&"spell_damage"]) + LEVEL_UP_DMG
+	base_stats[&"melee_damage"] = float(base_stats[&"melee_damage"]) + LEVEL_UP_DMG
+	base_stats[&"ranged_damage"] = float(base_stats[&"ranged_damage"]) + LEVEL_UP_DMG
 	recompute()
 	health = get_stat(&"max_health")
 	mana = get_stat(&"max_mana")

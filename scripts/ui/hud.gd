@@ -42,6 +42,13 @@ var _slots: Array[AbilitySlot] = []
 ## Mientras corre, el label de oleada muestra "¡NIVEL X!" sin ser pisado.
 var _level_flash: float = 0.0
 
+## Toast "+N XP" acumulativo junto a la barra de XP (E10.7): los kills en
+## ráfaga suman al mismo label en vez de spamear uno por kill.
+var _xp_toast: Label = null
+var _xp_toast_value: float = 0.0
+var _xp_toast_timer: float = 0.0
+const XP_TOAST_TIME := 1.3
+
 ## Nombres legibles de las acciones remapeables (ver SaveService.REMAPPABLE_ACTIONS).
 const ACTION_LABELS := {
 	&"move_up": "Mover arriba",
@@ -105,6 +112,7 @@ func _try_bind_player() -> void:
 	player.mana_changed.connect(_on_mana_changed)
 	player.super_charge_changed.connect(_on_super_changed)
 	player.xp_changed.connect(_on_xp_changed)
+	player.xp_gained.connect(_on_xp_gained)
 	player.leveled_up.connect(_on_leveled_up)
 	player.skill_leveled.connect(_on_skill_leveled)
 	player.kit_changed.connect(_on_kit_changed)
@@ -329,6 +337,7 @@ func _build_slots() -> void:
 		_slots.append(slot)
 
 func _process(delta: float) -> void:
+	_update_xp_toast(delta)
 	if _level_flash > 0.0:
 		_level_flash -= delta
 	# Durante la oleada, mostrar cuántos enemigos quedan (vivos + por venir).
@@ -378,6 +387,50 @@ func _on_xp_changed(current: float, needed: float, level: int) -> void:
 func _on_leveled_up(new_level: int) -> void:
 	wave_label.text = tr("¡NIVEL %d!") % new_level
 	_level_flash = 1.4
+	# Que la evolución SE VEA (E10.7): toast con lo que ganaste al subir.
+	var gains := tr("+%d vida · +%d maná · +%d daño") % [
+		roundi(PlayerStats.LEVEL_UP_HP), roundi(PlayerStats.LEVEL_UP_MANA),
+		roundi(PlayerStats.LEVEL_UP_DMG)]
+	var toast := Label.new()
+	toast.text = gains
+	toast.add_theme_font_size_override(&"font_size", 14)
+	toast.add_theme_color_override(&"font_color", Color(1.0, 0.9, 0.3))
+	toast.add_theme_color_override(&"font_outline_color", Color.BLACK)
+	toast.add_theme_constant_override(&"outline_size", 4)
+	toast.position = Vector2(24, 130)
+	add_child(toast)
+	var tween := create_tween()
+	tween.tween_property(toast, "position:y", 88.0, 1.6)
+	tween.parallel().tween_property(toast, "modulate:a", 0.0, 1.6).set_delay(0.6)
+	tween.tween_callback(toast.queue_free)
+
+## "+N XP" junto a la barra de XP: acumula mientras está visible y se apaga
+## solo (E10.7 — que se vea el XP entrar poco a poco).
+func _on_xp_gained(amount: float) -> void:
+	_xp_toast_value += amount
+	_xp_toast_timer = XP_TOAST_TIME
+	if _xp_toast == null:
+		_xp_toast = Label.new()
+		_xp_toast.add_theme_font_size_override(&"font_size", 12)
+		_xp_toast.add_theme_color_override(&"font_color", Color(0.55, 0.85, 1.0))
+		_xp_toast.add_theme_color_override(&"font_outline_color", Color.BLACK)
+		_xp_toast.add_theme_constant_override(&"outline_size", 3)
+		add_child(_xp_toast)
+	_xp_toast.modulate.a = 1.0
+	_xp_toast.text = "+%d XP" % roundi(_xp_toast_value)
+	_xp_toast.global_position = xp_bar.global_position \
+			+ Vector2(xp_bar.size.x - _xp_toast.size.x - 4.0, -16.0)
+
+func _update_xp_toast(delta: float) -> void:
+	if _xp_toast == null:
+		return
+	_xp_toast_timer -= delta
+	if _xp_toast_timer <= 0.4:
+		_xp_toast.modulate.a = maxf(0.0, _xp_toast_timer / 0.4)
+	if _xp_toast_timer <= 0.0:
+		_xp_toast.queue_free()
+		_xp_toast = null
+		_xp_toast_value = 0.0
 
 ## Toast estilo Tibia al subir un skill: label chico que sube y se desvanece,
 ## abajo-izquierda cerca de las barras (no pisa el mensaje de oleada/nivel).

@@ -177,8 +177,11 @@ func _spawn_one() -> void:
 	var variant := _pick_variant()
 	if variant == null:
 		return
-	var hp_mult := 1.0 + 0.15 * (wave - 1)
-	var dmg_mult := 1.0 + 0.10 * (wave - 1)
+	# Escalado por oleada endurecido (E10.7, 2026-07-17): antes 0.15/0.10 —
+	# el juego debe exigir; el poder del jugador ahora también viene gateado
+	# por nivel (curva XP más lenta) y por level_req de armas (E10.1).
+	var hp_mult := 1.0 + 0.20 * (wave - 1)
+	var dmg_mult := 1.0 + 0.13 * (wave - 1)
 
 	# La oleada emerge de los portales (con jitter); anillo como fallback.
 	var pos: Vector3
@@ -203,7 +206,9 @@ func _spawn_one() -> void:
 		"attack_interval": maxf(0.45, 1.0 / atk_speed),
 		"body_color": variant.color,
 		"loot_level": _loot_level(),
-		"xp_reward": variant.xp * (1.0 + 0.1 * (wave - 1)),
+		# XP por oleada crece MENOS que antes (0.05, era 0.1): con la curva
+		# creciente de xp_needed, subir de nivel es "poco a poco" (E10.7).
+		"xp_reward": variant.xp * (1.0 + 0.05 * (wave - 1)),
 		"model_path": variant.model,
 		"anims": variant.anims,
 		"is_ranged": variant.ranged,

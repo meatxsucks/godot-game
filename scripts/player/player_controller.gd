@@ -100,6 +100,8 @@ signal gold_changed(amount: int)
 signal skills_changed
 signal skill_leveled(skill_name: String, level: int)
 signal xp_changed(current: float, needed: float, level: int)
+## XP recién ganada (E10.7): el HUD la muestra como "+N XP" acumulativo.
+signal xp_gained(amount: float)
 signal leveled_up(new_level: int)
 signal kit_changed
 signal died
@@ -578,6 +580,7 @@ func on_enemy_killed(xp_reward: float = 10.0) -> void:
 		apply_speed_modifier(1.0 + speed_on_kill / 100.0, 2.0)
 
 	var level_ups := stats.add_xp(xp_reward)
+	xp_gained.emit(xp_reward)
 	xp_changed.emit(stats.xp, stats.xp_needed(), stats.level)
 	if level_ups > 0:
 		FX.burst(global_position + Vector3.UP, Color(1.0, 0.9, 0.3), 22, 0.1)
