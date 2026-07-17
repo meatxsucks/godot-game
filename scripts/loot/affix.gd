@@ -29,6 +29,12 @@ enum Mode { FLAT, PERCENT }
 @export var item_types: Array[StringName] = []
 ## Etiquetas temáticas (&"fire", &"defensive"...). Útil para filtrar pools.
 @export var tags: Array[StringName] = []
+## Comportamiento pasivo (E6.2): id que la capa de gameplay engancha, p.ej.
+## &"heal_on_kill" o &"bleed_extra_stack". Vacío = afijo de stat normal. Si
+## está seteado, el valor rolado NO va a un stat: es la magnitud del efecto
+## (vida curada al matar, stacks extra de Sangrado, % de velocidad...), y el
+## ítem lo acumula en `LootItem.behaviors` en vez de en `stats`.
+@export var behavior: StringName = &""
 
 ## Rango efectivo [min, max] para un nivel de item dado.
 func value_range(item_level: int) -> Vector2:

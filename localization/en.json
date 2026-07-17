@@ -175,6 +175,12 @@
   "de la Tormenta": "of the Storm",
   "del Coloso": "of the Colossus",
   "del Viento": "of the Wind",
+  "Vampírico": "Vampiric",
+  "Frenético": "Frenzied",
+  "Desgarrador": "Rending",
+  "vida al matar": "life on kill",
+  "% vel. al matar (2s)": "% move spd on kill (2s)",
+  "stack de Sangrado por golpe": "Bleed stack per hit",
 
   "Pira en Cadena": "Chain Pyre",
   "Tus Bolas de Fuego rebotan a 2 enemigos cercanos al impactar, con -40% de daño por rebote.": "Your Fireballs bounce to 2 nearby enemies on impact, with -40% damage per bounce.",

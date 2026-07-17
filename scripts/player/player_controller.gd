@@ -568,6 +568,15 @@ func on_enemy_killed(xp_reward: float = 10.0) -> void:
 	add_super_charge(12.0)
 	restore_mana(stats.get_stat(&"mana_regen"))
 
+	# Pasivos de comportamiento al matar (E6.2). Solo corren en la máquina
+	# dueña (on_enemy_killed ya está gateado a la autoridad arriba).
+	var hp_on_kill := stats.behavior(&"heal_on_kill")
+	if hp_on_kill > 0.0:
+		heal(hp_on_kill)
+	var speed_on_kill := stats.behavior(&"speed_on_kill")
+	if speed_on_kill > 0.0:
+		apply_speed_modifier(1.0 + speed_on_kill / 100.0, 2.0)
+
 	var level_ups := stats.add_xp(xp_reward)
 	xp_changed.emit(stats.xp, stats.xp_needed(), stats.level)
 	if level_ups > 0:

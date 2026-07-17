@@ -37,11 +37,17 @@ var detonates: Array[StringName] = []
 ## "Cascada Crítica"). El player lo consume al armar el timer del slot.
 var _cooldown_refund: float = 0.0
 
+## Player que está casteando (se fija en execute). Lo usa _tag_props para
+## leer los pasivos de comportamiento del equipo (E6.2) al armar el spawn —
+## así viajan en las props, computados owner-side (co-op safe).
+var _caster = null
+
 ## Intenta castear. Consume maná solo si el casteo ocurrió.
 ## Devuelve false si no se pudo lanzar (sin maná, sin carga, sin dirección...).
 func execute(player) -> bool:
 	if not _can_cast(player):
 		return false
+	_caster = player
 	var cast_result = _cast(player)
 	if cast_result is bool and not cast_result:
 		return false
@@ -64,8 +70,16 @@ func consume_cooldown_refund() -> float:
 ## serializados). El proyectil usa los tags al golpear (host) y el elemento
 ## para entrenar el skill del lanzador al conectar (E6.1).
 func _tag_props(props: Dictionary) -> Dictionary:
-	if not applies.is_empty():
-		props["applies"] = Array(applies)
+	var out_applies := Array(applies)
+	# Pasivo "Desgarrador" (E6.2): los golpes que aplican Sangrado aplican
+	# stacks extra. Duplicar la entrada en `applies` reusa el bucle existente
+	# del proyectil (apply_status apila) — sin tocar las escenas de magia.
+	if _caster != null and applies.has(&"bleed"):
+		var extra := int(round(_caster.stats.behavior(&"bleed_extra_stack")))
+		for i in extra:
+			out_applies.append(&"bleed")
+	if not out_applies.is_empty():
+		props["applies"] = out_applies
 	if not detonates.is_empty():
 		props["detonates"] = Array(detonates)
 	if element != &"":

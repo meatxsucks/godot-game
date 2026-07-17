@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="Affix" load_steps=2 format=3]
+
+[ext_resource type="Script" uid="uid://524mr6efsfku" path="res://scripts/loot/affix.gd" id="1_res"]
+
+[resource]
+script = ExtResource("1_res")
+id = &"bleed_extra_stack"
+name_word = "Desgarrador"
+kind = 0
+stat = &""
+stat_label = "stack de Sangrado por golpe"
+mode = 0
+min_value = 1.0
+max_value = 1.0
+per_level = 0.0
+weight = 35
+min_tier = 2
+item_types = Array[StringName]([&"gloves", &"sword", &"bow"])
+tags = Array[StringName]([&"offense"])
+behavior = &"bleed_extra_stack"

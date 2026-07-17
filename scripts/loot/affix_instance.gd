@@ -15,6 +15,13 @@ func stat() -> StringName:
 func is_percent() -> bool:
 	return source.mode == Affix.Mode.PERCENT
 
+## Afijo de comportamiento pasivo (E6.2) en vez de modificador de stat.
+func is_behavior() -> bool:
+	return source.behavior != &""
+
+func behavior() -> StringName:
+	return source.behavior
+
 ## Texto legible: "+12 Daño mágico" o "+8% Daño crítico".
 func describe() -> String:
 	var sign_str := "+" if value >= 0.0 else ""

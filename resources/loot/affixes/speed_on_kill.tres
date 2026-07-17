@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="Affix" load_steps=2 format=3]
+
+[ext_resource type="Script" uid="uid://524mr6efsfku" path="res://scripts/loot/affix.gd" id="1_res"]
+
+[resource]
+script = ExtResource("1_res")
+id = &"speed_on_kill"
+name_word = "Frenético"
+kind = 0
+stat = &""
+stat_label = "% vel. al matar (2s)"
+mode = 0
+min_value = 15.0
+max_value = 30.0
+per_level = 0.0
+weight = 40
+min_tier = 1
+item_types = Array[StringName]([&"cape", &"gloves"])
+tags = Array[StringName]([&"utility"])
+behavior = &"speed_on_kill"

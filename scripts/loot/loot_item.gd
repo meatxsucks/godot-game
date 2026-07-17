@@ -12,6 +12,9 @@ var legendary: LegendaryPower = null
 var stats: Dictionary = {}
 ## Modificadores porcentuales acumulados (stat -> % total).
 var percent_mods: Dictionary = {}
+## Comportamientos pasivos (E6.2): behavior_id -> magnitud acumulada. Los lee
+## PlayerStats para exponerlos al gameplay (ver PlayerStats.behavior).
+var behaviors: Dictionary = {}
 
 func rarity_color() -> Color:
 	return Rarity.color(rarity)
@@ -40,7 +43,12 @@ func recompute_stats() -> void:
 	for k in base.base_stats:
 		stats[k] = float(base.base_stats[k]) * mult
 	percent_mods = {}
+	behaviors = {}
 	for inst in affixes:
+		if inst.is_behavior():
+			var b := inst.behavior()
+			behaviors[b] = float(behaviors.get(b, 0.0)) + inst.value
+			continue
 		var key := inst.stat()
 		if inst.is_percent():
 			percent_mods[key] = float(percent_mods.get(key, 0.0)) + inst.value

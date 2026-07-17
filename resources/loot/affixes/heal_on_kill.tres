@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="Affix" load_steps=2 format=3]
+
+[ext_resource type="Script" uid="uid://524mr6efsfku" path="res://scripts/loot/affix.gd" id="1_res"]
+
+[resource]
+script = ExtResource("1_res")
+id = &"heal_on_kill"
+name_word = "Vampírico"
+kind = 0
+stat = &""
+stat_label = "vida al matar"
+mode = 0
+min_value = 3.0
+max_value = 6.0
+per_level = 0.3
+weight = 40
+min_tier = 2
+item_types = Array[StringName]([&"armor", &"cape", &"helmet"])
+tags = Array[StringName]([&"defensive"])
+behavior = &"heal_on_kill"

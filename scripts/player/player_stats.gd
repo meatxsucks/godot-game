@@ -58,6 +58,9 @@ var mana: float = 0.0
 
 ## Cache de stats efectivos (plano * (1 + %/100)). Se recalcula al equipar.
 var _cache := {}
+## Cache de pasivos de comportamiento (E6.2): behavior_id -> magnitud sumada
+## del equipo. Se recalcula en recompute(); lo consulta el gameplay.
+var _behaviors := {}
 
 func _init(cls: StringName = &"") -> void:
 	# Overrides de la clase del dueño (rol): el Guerrero arranca tanque, etc.
@@ -143,6 +146,7 @@ func _apply_level_up() -> void:
 func recompute() -> void:
 	var flat: Dictionary = base_stats.duplicate()
 	var pct := {}
+	_behaviors = {}
 	for slot in equipment:
 		var item: LootItem = equipment[slot]
 		if item == null:
@@ -151,6 +155,8 @@ func recompute() -> void:
 			flat[k] = float(flat.get(k, 0.0)) + float(item.stats[k])
 		for k in item.percent_mods:          # modificadores PERCENT
 			pct[k] = float(pct.get(k, 0.0)) + float(item.percent_mods[k])
+		for b in item.behaviors:             # pasivos de comportamiento (E6.2)
+			_behaviors[b] = float(_behaviors.get(b, 0.0)) + float(item.behaviors[b])
 	_cache = {}
 	for k in flat:
 		var p := float(pct.get(k, 0.0))
@@ -162,6 +168,11 @@ func recompute() -> void:
 
 func get_stat(name: StringName) -> float:
 	return float(_cache.get(name, 0.0))
+
+## Magnitud sumada de un pasivo de comportamiento del equipo (E6.2). 0 = el
+## jugador no tiene ningún ítem con ese pasivo. Ver Affix.behavior.
+func behavior(id: StringName) -> float:
+	return float(_behaviors.get(id, 0.0))
 
 ## Daño de un golpe de hechizo con tirada de crítico. Devuelve [daño, es_critico].
 ## `element` es el stat elemental del loot que suma al daño base (fuego para
