@@ -2,6 +2,22 @@
 class_name LootItem
 extends RefCounted
 
+## Requisito de nivel BLANDO (E10.1, decidido 2026-07-17): equipar un ítem por
+## encima de tu nivel se permite, pero sus stats rinden con penalización por
+## nivel faltante. Fuente única de la fórmula (PlayerStats y la ficha la usan).
+const LEVEL_PENALTY_PER_LEVEL := 0.15
+const LEVEL_PENALTY_FLOOR := 0.25
+## Cuánto escalan los base_stats por tier del ítem (E10.1/E10.2).
+const TIER_STAT_MULT := 0.35
+
+## Multiplicador de rendimiento del ítem para un nivel de jugador dado.
+## 1.0 = sin penalización; baja 15% por nivel faltante con piso de 25%.
+static func level_req_scale(level_req: int, player_level: int) -> float:
+	var missing := level_req - player_level
+	if missing <= 0:
+		return 1.0
+	return maxf(LEVEL_PENALTY_FLOOR, 1.0 - LEVEL_PENALTY_PER_LEVEL * missing)
+
 var base: ItemBase
 var rarity: int = Rarity.Tier.COMMON
 var item_level: int = 1
@@ -39,7 +55,9 @@ func ui_color() -> Color:
 ## y `percent_mods` (%).
 func recompute_stats() -> void:
 	stats = {}
-	var mult := Rarity.stat_mult(rarity)
+	# Rareza y tier multiplican los stats base (el tier es la familia del
+	# arma por nivel, E10.1/E10.2; los afijos NO escalan por tier).
+	var mult := Rarity.stat_mult(rarity) * (1.0 + TIER_STAT_MULT * (base.tier - 1))
 	for k in base.base_stats:
 		stats[k] = float(base.base_stats[k]) * mult
 	percent_mods = {}
@@ -62,12 +80,21 @@ func effective(stat: StringName) -> float:
 	return flat * (1.0 + pct / 100.0)
 
 ## Representación con BBCode coloreado para RichTextLabel.
-func to_bbcode() -> String:
+## `viewer_level` (E10.1): nivel del jugador que mira — si no llega al
+## requisito del ítem, la línea sale en rojo con la penalización actual.
+## 0 = sin contexto (muestra el requisito en gris).
+func to_bbcode(viewer_level: int = 0) -> String:
 	var hex := rarity_color().to_html(false)
 	# display_name queda en el idioma en que se generó el ítem (ver nota en
 	# loot_generator.gd); el resto de la ficha se traduce en vivo.
 	var info := tr("nv %d · %s") % [item_level, Rarity.display_name(rarity)]
 	var s := "[color=#%s][b]%s[/b][/color]  [i](%s)[/i]\n" % [hex, display_name, info]
+	if base and base.level_req > 1:
+		if viewer_level > 0 and viewer_level < base.level_req:
+			var penalty := roundi((1.0 - level_req_scale(base.level_req, viewer_level)) * 100.0)
+			s += "    [color=#ff5555]%s[/color]\n" % (tr("Requiere nivel %d (−%d%% de stats)") % [base.level_req, penalty])
+		else:
+			s += "    [color=#9f9f9f]%s[/color]\n" % (tr("Requiere nivel %d") % base.level_req)
 	for k in stats:
 		s += "    [color=#cfcfcf]%s: %s[/color]\n" % [StatLabels.label(k), _fmt(stats[k])]
 	for inst in affixes:

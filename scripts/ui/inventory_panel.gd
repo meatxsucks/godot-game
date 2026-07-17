@@ -159,14 +159,14 @@ func _on_slot_hover(slot: ItemSlotUI) -> void:
 	if slot.item == null:
 		_hide_compare()
 		return
-	compare_left.text = slot.item.to_bbcode()
+	compare_left.text = slot.item.to_bbcode(player.stats.level)
 
 	var equipped: LootItem = null
 	if slot.slot_kind == &"inventory" and not slot.item.is_consumable() and slot.item.base:
 		equipped = player.stats.equipment.get(slot.item.base.slot, null)
 	compare_right_box.visible = equipped != null
 	if equipped:
-		compare_right.text = equipped.to_bbcode()
+		compare_right.text = equipped.to_bbcode(player.stats.level)
 
 	compare_panel.visible = true
 	compare_panel.reset_size()

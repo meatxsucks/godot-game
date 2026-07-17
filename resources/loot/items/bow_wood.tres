@@ -9,6 +9,7 @@ name = "Arco de madera"
 type = &"bow"
 slot = &"weapon"
 two_handed = true
+level_req = 3
 base_stats = {
 &"ranged_damage": 9.0,
 &"move_speed": 5.0

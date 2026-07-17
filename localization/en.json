@@ -154,6 +154,8 @@
   "Sombrero de tela": "Cloth Hat",
   "Capa de lana": "Wool Cape",
   "Guantes de cuero": "Leather Gloves",
+  "Requiere nivel %d": "Requires level %d",
+  "Requiere nivel %d (−%d%% de stats)": "Requires level %d (−%d%% stats)",
   "Poción de vida": "Health Potion",
   "Poción de maná": "Mana Potion",
 

@@ -151,10 +151,14 @@ func recompute() -> void:
 		var item: LootItem = equipment[slot]
 		if item == null:
 			continue
+		# Requisito de nivel BLANDO (E10.1): un ítem por encima de tu nivel
+		# rinde penalizado. Se recalcula al subir de nivel (recompute corre
+		# en _apply_level_up), así la penalización se afloja sola.
+		var req_scale := LootItem.level_req_scale(item.base.level_req, level)
 		for k in item.stats:                 # planos (base del item + afijos FLAT)
-			flat[k] = float(flat.get(k, 0.0)) + float(item.stats[k])
+			flat[k] = float(flat.get(k, 0.0)) + float(item.stats[k]) * req_scale
 		for k in item.percent_mods:          # modificadores PERCENT
-			pct[k] = float(pct.get(k, 0.0)) + float(item.percent_mods[k])
+			pct[k] = float(pct.get(k, 0.0)) + float(item.percent_mods[k]) * req_scale
 		for b in item.behaviors:             # pasivos de comportamiento (E6.2)
 			_behaviors[b] = float(_behaviors.get(b, 0.0)) + float(item.behaviors[b])
 	_cache = {}

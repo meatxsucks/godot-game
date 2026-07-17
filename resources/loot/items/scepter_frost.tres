@@ -9,6 +9,7 @@ name = "Cetro de escarcha"
 type = &"wand"
 slot = &"weapon"
 two_handed = false
+level_req = 5
 base_stats = {
 &"spell_damage": 8.0,
 &"cold_damage": 4.0,

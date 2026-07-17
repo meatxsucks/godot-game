@@ -13,6 +13,13 @@ extends Resource
 @export var slot: StringName
 ## Arma a dos manos: al equiparla desplaza el offhand (y viceversa).
 @export var two_handed: bool = false
+## Tier del ítem (E10.1): escala los base_stats (familias de armas por nivel,
+## E10.2). 1 = tier inicial.
+@export var tier: int = 1
+## Nivel de personaje recomendado (E10.1). Requisito BLANDO (decisión
+## 2026-07-17): se puede equipar por debajo, pero los stats del ítem rinden
+## con penalización por nivel faltante (ver LootItem.level_req_scale).
+@export var level_req: int = 1
 ## Stats base implícitos del item (stat -> valor).
 @export var base_stats: Dictionary = {}
 ## Poder asociado al click izquierdo (LMB) si el ítem es un arma.

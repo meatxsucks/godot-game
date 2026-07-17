@@ -9,6 +9,7 @@ name = "Mazo pesado"
 type = &"mace"
 slot = &"weapon"
 two_handed = true
+level_req = 4
 base_stats = {
 &"melee_damage": 14.0
 }
