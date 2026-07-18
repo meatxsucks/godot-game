@@ -31,98 +31,102 @@ grow_vertical = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
 script = ExtResource("1_inv")
 
-[node name="HBox" type="HBoxContainer" parent="."]
+[node name="Tabs" type="TabContainer" parent="."]
+layout_mode = 2
+theme_override_font_sizes/font_size = 11
+
+[node name="HBox" type="HBoxContainer" parent="Tabs"]
 layout_mode = 2
 theme_override_constants/separation = 12
 
-[node name="LeftCol" type="VBoxContainer" parent="HBox"]
+[node name="LeftCol" type="VBoxContainer" parent="Tabs/HBox"]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 5
 
-[node name="EquipTitle" type="Label" parent="HBox/LeftCol"]
+[node name="EquipTitle" type="Label" parent="Tabs/HBox/LeftCol"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 11
 text = "Equipo"
 horizontal_alignment = 1
 
-[node name="EquipCenter" type="CenterContainer" parent="HBox/LeftCol"]
+[node name="EquipCenter" type="CenterContainer" parent="Tabs/HBox/LeftCol"]
 layout_mode = 2
 
-[node name="EquipGrid" type="GridContainer" parent="HBox/LeftCol/EquipCenter"]
+[node name="EquipGrid" type="GridContainer" parent="Tabs/HBox/LeftCol/EquipCenter"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_constants/h_separation = 4
 theme_override_constants/v_separation = 4
 columns = 3
 
-[node name="HSep" type="HSeparator" parent="HBox/LeftCol"]
+[node name="HSep" type="HSeparator" parent="Tabs/HBox/LeftCol"]
 layout_mode = 2
 
-[node name="StatsTitle" type="Label" parent="HBox/LeftCol"]
+[node name="StatsTitle" type="Label" parent="Tabs/HBox/LeftCol"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 11
 text = "Stats"
 horizontal_alignment = 1
 
-[node name="StatsBox" type="VBoxContainer" parent="HBox/LeftCol"]
+[node name="StatsBox" type="VBoxContainer" parent="Tabs/HBox/LeftCol"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_constants/separation = 1
 
-[node name="SkillsTitle" type="Label" parent="HBox/LeftCol"]
+[node name="SkillsTitle" type="Label" parent="Tabs/HBox/LeftCol"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 11
 text = "Skills"
 horizontal_alignment = 1
 
-[node name="SkillsBox" type="VBoxContainer" parent="HBox/LeftCol"]
+[node name="SkillsBox" type="VBoxContainer" parent="Tabs/HBox/LeftCol"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_constants/separation = 1
 
-[node name="RightCol" type="VBoxContainer" parent="HBox"]
+[node name="RightCol" type="VBoxContainer" parent="Tabs/HBox"]
 layout_mode = 2
 theme_override_constants/separation = 5
 
-[node name="InvCounter" type="Label" parent="HBox/RightCol"]
+[node name="InvCounter" type="Label" parent="Tabs/HBox/RightCol"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_font_sizes/font_size = 11
 text = "Inventario 0/20"
 horizontal_alignment = 1
 
-[node name="GoldBox" type="PanelContainer" parent="HBox/RightCol"]
+[node name="GoldBox" type="PanelContainer" parent="Tabs/HBox/RightCol"]
 layout_mode = 2
 
-[node name="GoldRow" type="HBoxContainer" parent="HBox/RightCol/GoldBox"]
+[node name="GoldRow" type="HBoxContainer" parent="Tabs/HBox/RightCol/GoldBox"]
 layout_mode = 2
 theme_override_constants/separation = 8
 alignment = 1
 
-[node name="Coin" type="Panel" parent="HBox/RightCol/GoldBox/GoldRow"]
+[node name="Coin" type="Panel" parent="Tabs/HBox/RightCol/GoldBox/GoldRow"]
 custom_minimum_size = Vector2(16, 16)
 layout_mode = 2
 size_flags_vertical = 4
 
-[node name="GoldLabel" type="Label" parent="HBox/RightCol/GoldBox/GoldRow"]
+[node name="GoldLabel" type="Label" parent="Tabs/HBox/RightCol/GoldBox/GoldRow"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.82, 0.2, 1)
 theme_override_font_sizes/font_size = 15
 text = "0"
 
-[node name="InvCenter" type="CenterContainer" parent="HBox/RightCol"]
+[node name="InvCenter" type="CenterContainer" parent="Tabs/HBox/RightCol"]
 layout_mode = 2
 
-[node name="InvGrid" type="GridContainer" parent="HBox/RightCol/InvCenter"]
+[node name="InvGrid" type="GridContainer" parent="Tabs/HBox/RightCol/InvCenter"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_constants/h_separation = 4
 theme_override_constants/v_separation = 4
 columns = 5
 
-[node name="Hint" type="Label" parent="HBox/RightCol"]
+[node name="Hint" type="Label" parent="Tabs/HBox/RightCol"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 9
 text = "Click o arrastra: equipar / usar / quitar

@@ -26,8 +26,9 @@ func _cast(player) -> Variant:
 	if to_target.length() > MAX_RANGE:
 		target = player.global_position + to_target.normalized() * MAX_RANGE
 	# El daño rolleado escala el charco (ticks y cura salen de acá).
-	# Base LEVE a propósito (E10.4, era 1.0): el árbol de talentos lo potencia.
-	var result: Array = player.stats.roll_spell_damage(&"magic", 0.7 * damage_scale)
+	# Base MUY leve a propósito (E10.4, era 1.0; 2º nerf 2026-07-17: la Q
+	# seguía reventando): el árbol de talentos lo potencia.
+	var result: Array = player.stats.roll_spell_damage(&"magic", 0.4 * damage_scale)
 	NetSpawn.projectile(PUDDLE, _tag_props({"position": target}), player.get_parent(),
 		result[0], player, result[1])
 	FX.burst(target + Vector3.UP, color, 16, 0.09)

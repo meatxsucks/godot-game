@@ -108,38 +108,60 @@ func _build() -> void:
 		_skill_labels[skill] = _make_line(skills_box)
 	_build_talents()
 
-## Columna del árbol de talentos (E10.5): nodos del kit de la clase, con
-## compra por punto y respec pagado en oro (creciente). El árbol solo toca
-## poderes de CLASE — las armas suben por su tier (decisión 2026-07-17).
+## Pestaña "Talentos" (E10.5, v2: TAB propio al lado de Equipo — la versión
+## columna quedaba recortada fuera del panel y no se veía). Nodos del kit de
+## la clase, compra por punto y respec pagado en oro (creciente). El árbol
+## solo toca poderes de CLASE — las armas suben por su tier (2026-07-17).
 func _build_talents() -> void:
-	var col := VBoxContainer.new()
-	col.add_theme_constant_override(&"separation", 3)
-	skills_box.get_parent().get_parent().add_child(col)
+	var tabs: TabContainer = $Tabs
+	tabs.set_tab_title(0, tr("Equipo"))
 
-	var title := Label.new()
-	title.text = tr("Talentos")
-	title.add_theme_font_size_override(&"font_size", 12)
-	col.add_child(title)
-	_talent_points_label = _make_line(col)
+	var scroll := ScrollContainer.new()
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	tabs.add_child(scroll)
+	tabs.set_tab_title(1, tr("Talentos"))
+
+	var col := VBoxContainer.new()
+	col.add_theme_constant_override(&"separation", 6)
+	col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scroll.add_child(col)
+
+	_talent_points_label = Label.new()
+	_talent_points_label.add_theme_font_size_override(&"font_size", 12)
+	_talent_points_label.add_theme_color_override(&"font_color", Color(0.6, 1.0, 0.8))
+	col.add_child(_talent_points_label)
 
 	var kit: Array = Game.class_def(player.player_class).kit
 	for ability_id in kit:
-		for up: AbilityUpgrade in Game.upgrades_for_ability(ability_id):
+		var ups := Game.upgrades_for_ability(ability_id)
+		if ups.is_empty():
+			continue
+		# Encabezado por habilidad (con su color, para reconocerla).
+		var ability := Game.make_ability(ability_id)
+		var header := Label.new()
+		header.text = "— %s —" % ability.display_name
+		header.add_theme_font_size_override(&"font_size", 11)
+		header.add_theme_color_override(&"font_color", ability.color)
+		header.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		col.add_child(header)
+		for up: AbilityUpgrade in ups:
 			var row := HBoxContainer.new()
+			row.add_theme_constant_override(&"separation", 6)
 			col.add_child(row)
 			var label := Label.new()
-			label.add_theme_font_size_override(&"font_size", 9)
+			label.add_theme_font_size_override(&"font_size", 10)
 			label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 			row.add_child(label)
 			var btn := Button.new()
 			btn.text = "+"
-			btn.custom_minimum_size = Vector2(22, 16)
+			btn.custom_minimum_size = Vector2(28, 22)
 			btn.pressed.connect(_on_talent_pressed.bind(up.id))
 			row.add_child(btn)
 			_talent_rows[up.id] = {"label": label, "btn": btn}
 
 	_respec_btn = Button.new()
-	_respec_btn.add_theme_font_size_override(&"font_size", 9)
+	_respec_btn.add_theme_font_size_override(&"font_size", 10)
 	_respec_btn.pressed.connect(_on_respec_pressed)
 	col.add_child(_respec_btn)
 

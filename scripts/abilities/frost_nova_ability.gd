@@ -16,5 +16,6 @@ func _init() -> void:
 	applies = [&"frozen"]
 
 func _cast(player) -> Variant:
-	# Base LEVE a propósito (E10.4): el árbol de talentos lo potencia.
-	return _spawn_nova(player, SCENE, &"cold_damage", 0.65)
+	# Base MUY leve a propósito (E10.4; 2º nerf 2026-07-17: la Q seguía
+	# reventando — feedback del dueño): el árbol de talentos lo potencia.
+	return _spawn_nova(player, SCENE, &"cold_damage", 0.35)

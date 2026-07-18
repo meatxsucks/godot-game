@@ -20,6 +20,12 @@ func _init() -> void:
 	custom_minimum_size = Vector2(40, 40)
 	focus_mode = Control.FOCUS_NONE
 	add_theme_font_size_override(&"font_size", 9)
+	# Íconos pixel-art (ItemIcons): nítidos al escalar y centrados.
+	texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	icon_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	vertical_icon_alignment = VERTICAL_ALIGNMENT_CENTER
+	expand_icon = true
+	add_theme_constant_override(&"icon_max_width", 28)
 
 func set_item(new_item: LootItem) -> void:
 	item = new_item
@@ -32,10 +38,14 @@ func set_item(new_item: LootItem) -> void:
 	var tint: Color
 	if item == null:
 		text = placeholder
+		icon = null
 		tint = Color(0.42, 0.42, 0.5)
 		style.border_color = Color(0.28, 0.28, 0.34)
 	else:
-		text = _abbrev_for(item)
+		# Gráfica del ítem (feedback 2026-07-17): ícono por tipo; si no hay
+		# ícono para el tipo, cae a la abreviatura de texto de siempre.
+		icon = ItemIcons.texture_for(item.base)
+		text = "" if icon else _abbrev_for(item)
 		tint = item.ui_color()
 		style.border_color = tint
 
