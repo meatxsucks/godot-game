@@ -26,4 +26,5 @@ func _cast(player) -> Variant:
 	FX.shake(0.6)
 	FX.burst(player.global_position + Vector3.UP * 0.4, Color(1.0, 0.85, 0.3), 36, 0.16)
 	# Un solo impacto colosal (2.5x), no una serie de giros repetidos.
-	return _spawn_nova(player, SCENE, &"melee_damage", 2.5)
+	# Base LEVE a propósito (E10.4, era 2.5): el árbol de talentos lo potencia.
+	return _spawn_nova(player, SCENE, &"melee_damage", 1.6)

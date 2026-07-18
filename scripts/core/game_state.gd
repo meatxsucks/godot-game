@@ -6,9 +6,14 @@
 extends Node
 
 const CLASSES_DIR := "res://resources/classes/"
+const TALENTS_DIR := "res://resources/talents/"
 
 ## id → ClassDef, cargadas al arrancar.
 var classes: Dictionary = {}
+
+## id → AbilityUpgrade (nodos del árbol de talentos E10.4), cargados al
+## arrancar del directorio data-driven (patrón E0.7).
+var upgrades: Dictionary = {}
 
 ## Clase elegida en ClassSelect. Default Mago (permite correr la Arena directo).
 var selected_class: StringName = &"mage"
@@ -34,6 +39,36 @@ func _ready() -> void:
 				push_error("[Game] ClassDef inválida: %s" % file_name)
 		file_name = dir.get_next()
 	dir.list_dir_end()
+	_load_upgrades()
+
+func _load_upgrades() -> void:
+	var dir := DirAccess.open(TALENTS_DIR)
+	if dir == null:
+		return # sin nodos de talento no es fatal (el árbol queda vacío)
+	dir.list_dir_begin()
+	var file_name := dir.get_next()
+	while file_name != "":
+		if not dir.current_is_dir() and file_name.ends_with(".tres"):
+			var up: AbilityUpgrade = load(TALENTS_DIR + file_name)
+			if up and up.id != &"":
+				upgrades[up.id] = up
+			else:
+				push_error("[Game] AbilityUpgrade inválido: %s" % file_name)
+		file_name = dir.get_next()
+	dir.list_dir_end()
+
+func upgrade(id: StringName) -> AbilityUpgrade:
+	return upgrades.get(id)
+
+## Nodos del árbol que aplican a una habilidad concreta (para la UI).
+func upgrades_for_ability(ability_id: StringName) -> Array[AbilityUpgrade]:
+	var result: Array[AbilityUpgrade] = []
+	for up: AbilityUpgrade in upgrades.values():
+		if up.ability_id == ability_id:
+			result.append(up)
+	result.sort_custom(func(a: AbilityUpgrade, b: AbilityUpgrade) -> bool:
+		return a.requires_spent < b.requires_spent)
+	return result
 
 ## IDs de clase en el orden de la pantalla de selección (menu_order).
 func class_ids() -> Array[StringName]:

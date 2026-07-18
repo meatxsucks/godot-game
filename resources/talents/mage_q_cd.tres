@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="AbilityUpgrade" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/core/ability_upgrade.gd" id="1_up"]
+
+[resource]
+script = ExtResource("1_up")
+id = &"mage_q_cd"
+ability_id = &"frost_nova"
+name = "Escarcha Ágil"
+max_ranks = 2
+cost = 1
+requires_spent = 1
+damage_per_rank = 0.0
+cooldown_per_rank = 0.12
+mana_per_rank = 0.0

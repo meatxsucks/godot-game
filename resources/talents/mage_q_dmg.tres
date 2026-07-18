@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="AbilityUpgrade" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/core/ability_upgrade.gd" id="1_up"]
+
+[resource]
+script = ExtResource("1_up")
+id = &"mage_q_dmg"
+ability_id = &"frost_nova"
+name = "Nova Profunda"
+max_ranks = 3
+cost = 1
+requires_spent = 0
+damage_per_rank = 0.15
+cooldown_per_rank = 0.0
+mana_per_rank = 0.0

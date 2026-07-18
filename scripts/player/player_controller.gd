@@ -117,6 +117,9 @@ func _ready() -> void:
 	stats = PlayerStats.new(player_class)
 	abilities = [UnarmedAbility.new(), UnarmedAbility.new()]
 	abilities.append_array(Game.build_class_kit(player_class))
+	# Árbol de talentos (E10.4): los nodos comprados potencian el kit de clase.
+	for i in range(2, abilities.size()):
+		stats.apply_talents(abilities[i])
 	# Laboratorio de Poderes: si hay un poder en prueba, ocupa el slot Q.
 	AbilityLab.apply_test_loadout(abilities)
 	cooldowns.resize(abilities.size())
@@ -593,6 +596,33 @@ func on_enemy_killed(xp_reward: float = 10.0) -> void:
 func add_gold(amount: int) -> void:
 	stats.gold += amount
 	gold_changed.emit(stats.gold)
+
+# --- Árbol de talentos (E10.4/E10.6) -----------------------------------------
+
+## Re-arma SOLO los slots de clase (2+) re-aplicando talentos. Los slots de
+## arma (0/1) no pasan por el árbol (suben por tier del arma, E10.2).
+func rebuild_class_kit() -> void:
+	var kit := Game.build_class_kit(player_class)
+	for i in kit.size():
+		stats.apply_talents(kit[i])
+		abilities[2 + i] = kit[i]
+	AbilityLab.apply_test_loadout(abilities)
+	kit_changed.emit()
+
+## Compra un rango de un nodo del árbol (lo llama el panel de talentos).
+func buy_talent(up_id: StringName) -> void:
+	if not stats.buy_talent(up_id):
+		return
+	rebuild_class_kit()
+	stats_changed.emit()
+
+## Resetea el árbol pagando oro (costo creciente, E10.6).
+func respec_talents() -> void:
+	if not stats.respec_talents():
+		return
+	rebuild_class_kit()
+	gold_changed.emit(stats.gold)
+	stats_changed.emit()
 
 # --- Elixir Compartido (Alquimista, E7.1) -----------------------------------
 

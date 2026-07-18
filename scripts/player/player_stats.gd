@@ -40,18 +40,85 @@ var level: int = 1
 var xp: float = 0.0
 
 ## Escala global del daño de los poderes por nivel (feedback 2026-07-11:
-## pegaban muy fuerte de entrada). Arrancan al 60% del daño y suben 5% por
-## nivel (100% en nivel 9), con tope de 1.5x en nivel 19. Un solo knob para
-## balancear la curva completa.
-const LEVEL_DMG_BASE := 0.6
-const LEVEL_DMG_PER_LEVEL := 0.05
-const LEVEL_DMG_CAP := 1.5
-
+## pegaban muy fuerte de entrada). Knobs en resources/balance.tres.
 func level_damage_scale() -> float:
-	return minf(LEVEL_DMG_CAP, LEVEL_DMG_BASE + LEVEL_DMG_PER_LEVEL * (level - 1))
+	var b := BalanceDef.bal()
+	return minf(b.level_dmg_cap, b.level_dmg_base + b.level_dmg_per_level * (level - 1))
 
 ## Oro (E5.1): el recurso de la economía Tibia (tienda/herrería/banco E5).
 var gold: int = 0
+
+# --- Árbol de talentos (E10.3/E10.4/E10.6) ----------------------------------
+
+## Nodos comprados: upgrade_id -> rangos. Se aplican al construir el kit de
+## clase (apply_talents). Guardado en SaveService.
+var talents: Dictionary = {}
+## Cuántas veces se reseteó el árbol (el costo del respec crece, E10.6).
+var respec_count: int = 0
+
+## Puntos ganados: 1 cada N niveles (decisión 2026-07-17: 3 — escasos,
+## pesan). N en resources/balance.tres.
+func talent_points_total() -> int:
+	return int(level / float(BalanceDef.bal().levels_per_talent_point))
+
+func talent_points_spent() -> int:
+	var spent := 0
+	for up_id in talents:
+		var up: AbilityUpgrade = Game.upgrade(up_id)
+		if up:
+			spent += int(talents[up_id]) * up.cost
+	return spent
+
+func talent_points_available() -> int:
+	return talent_points_total() - talent_points_spent()
+
+## Compra un rango del nodo. Valida puntos, rangos y el gating por inversión
+## (requires_spent). Devuelve true si compró.
+func buy_talent(up_id: StringName) -> bool:
+	var up: AbilityUpgrade = Game.upgrade(up_id)
+	if up == null:
+		return false
+	var ranks := int(talents.get(up_id, 0))
+	if ranks >= up.max_ranks:
+		return false
+	if talent_points_available() < up.cost:
+		return false
+	if talent_points_spent() < up.requires_spent:
+		return false
+	talents[up_id] = ranks + 1
+	return true
+
+## Costo del PRÓXIMO respec: CRECIENTE (decisión 2026-07-17). Base y factor
+## en resources/balance.tres.
+func respec_cost() -> int:
+	var b := BalanceDef.bal()
+	return b.respec_base_gold * int(pow(b.respec_growth, respec_count))
+
+## Resetea el árbol pagando oro. Devuelve true si pudo pagar.
+func respec_talents() -> bool:
+	if talents.is_empty():
+		return false
+	if gold < respec_cost():
+		return false
+	gold -= respec_cost()
+	respec_count += 1
+	talents.clear()
+	return true
+
+## Aplica los nodos comprados a una habilidad recién construida (la llama el
+## player al armar el kit de clase). Modifica daño/cooldown/maná del Ability.
+func apply_talents(ability: Ability) -> void:
+	for up_id in talents:
+		var up: AbilityUpgrade = Game.upgrade(up_id)
+		if up == null or up.ability_id != ability.id:
+			continue
+		var ranks := int(talents[up_id])
+		if up.damage_per_rank > 0.0:
+			ability.damage_scale *= 1.0 + up.damage_per_rank * ranks
+		if up.cooldown_per_rank > 0.0:
+			ability.cooldown *= maxf(0.3, 1.0 - up.cooldown_per_rank * ranks)
+		if up.mana_per_rank > 0.0:
+			ability.mana_cost *= maxf(0.0, 1.0 - up.mana_per_rank * ranks)
 
 var health: float = 0.0
 var mana: float = 0.0
@@ -114,18 +181,15 @@ func _clamp_resources() -> void:
 
 # --- Experiencia ------------------------------------------------------------
 
-## Bonos por nivel (los usa _apply_level_up y el HUD para mostrarlos).
-const LEVEL_UP_HP := 10.0
-const LEVEL_UP_MANA := 5.0
-const LEVEL_UP_DMG := 1.0
-
 ## XP necesaria para pasar del nivel actual al siguiente.
 ## Curva CRECIENTE (E10.7, 2026-07-17, pedido del dueño: progresión "poco a
 ## poco" y difícil): cada nivel cuesta bastante más que el anterior — antes
 ## era lineal (40+nv*30) y a la oleada 5 ya ibas por nivel 5.
-## nv1→85 · nv2→141 · nv3→222 · nv5→446 · nv10→1313.
+## Con los defaults: nv1→85 · nv2→141 · nv3→222 · nv5→446 · nv10→1313.
+## Knobs en resources/balance.tres.
 func xp_needed() -> float:
-	return 60.0 + pow(level, 1.7) * 25.0
+	var b := BalanceDef.bal()
+	return b.xp_base + pow(level, b.xp_power) * b.xp_scale
 
 ## Suma XP. Devuelve cuántos niveles subió (0 = ninguno).
 func add_xp(amount: float) -> int:
@@ -142,11 +206,12 @@ func add_xp(amount: float) -> int:
 ## vida y maná al 100% (GDD §7, E6.3): en un juego sin regeneración pasiva,
 ## subir de nivel es el respiro.
 func _apply_level_up() -> void:
-	base_stats[&"max_health"] = float(base_stats[&"max_health"]) + LEVEL_UP_HP
-	base_stats[&"max_mana"] = float(base_stats[&"max_mana"]) + LEVEL_UP_MANA
-	base_stats[&"spell_damage"] = float(base_stats[&"spell_damage"]) + LEVEL_UP_DMG
-	base_stats[&"melee_damage"] = float(base_stats[&"melee_damage"]) + LEVEL_UP_DMG
-	base_stats[&"ranged_damage"] = float(base_stats[&"ranged_damage"]) + LEVEL_UP_DMG
+	var b := BalanceDef.bal()
+	base_stats[&"max_health"] = float(base_stats[&"max_health"]) + b.level_up_hp
+	base_stats[&"max_mana"] = float(base_stats[&"max_mana"]) + b.level_up_mana
+	base_stats[&"spell_damage"] = float(base_stats[&"spell_damage"]) + b.level_up_dmg
+	base_stats[&"melee_damage"] = float(base_stats[&"melee_damage"]) + b.level_up_dmg
+	base_stats[&"ranged_damage"] = float(base_stats[&"ranged_damage"]) + b.level_up_dmg
 	recompute()
 	health = get_stat(&"max_health")
 	mana = get_stat(&"max_mana")

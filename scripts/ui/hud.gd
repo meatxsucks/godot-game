@@ -388,9 +388,9 @@ func _on_leveled_up(new_level: int) -> void:
 	wave_label.text = tr("¡NIVEL %d!") % new_level
 	_level_flash = 1.4
 	# Que la evolución SE VEA (E10.7): toast con lo que ganaste al subir.
+	var bal := BalanceDef.bal()
 	var gains := tr("+%d vida · +%d maná · +%d daño") % [
-		roundi(PlayerStats.LEVEL_UP_HP), roundi(PlayerStats.LEVEL_UP_MANA),
-		roundi(PlayerStats.LEVEL_UP_DMG)]
+		roundi(bal.level_up_hp), roundi(bal.level_up_mana), roundi(bal.level_up_dmg)]
 	var toast := Label.new()
 	toast.text = gains
 	toast.add_theme_font_size_override(&"font_size", 14)
@@ -403,6 +403,21 @@ func _on_leveled_up(new_level: int) -> void:
 	tween.tween_property(toast, "position:y", 88.0, 1.6)
 	tween.parallel().tween_property(toast, "modulate:a", 0.0, 1.6).set_delay(0.6)
 	tween.tween_callback(toast.queue_free)
+
+	# Punto de talento cada N niveles (E10.3, N en balance.tres): avisar.
+	if new_level % bal.levels_per_talent_point == 0:
+		var pt := Label.new()
+		pt.text = tr("¡+1 punto de talento! (Inventario)")
+		pt.add_theme_font_size_override(&"font_size", 14)
+		pt.add_theme_color_override(&"font_color", Color(0.6, 1.0, 0.8))
+		pt.add_theme_color_override(&"font_outline_color", Color.BLACK)
+		pt.add_theme_constant_override(&"outline_size", 4)
+		pt.position = Vector2(24, 150)
+		add_child(pt)
+		var pt_tween := create_tween()
+		pt_tween.tween_property(pt, "position:y", 108.0, 2.0)
+		pt_tween.parallel().tween_property(pt, "modulate:a", 0.0, 2.0).set_delay(0.8)
+		pt_tween.tween_callback(pt.queue_free)
 
 ## "+N XP" junto a la barra de XP: acumula mientras está visible y se apaga
 ## solo (E10.7 — que se vea el XP entrar poco a poco).

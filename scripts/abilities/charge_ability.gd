@@ -13,5 +13,6 @@ func _init() -> void:
 	element = &"melee"
 
 func _cast(player) -> Variant:
-	var result: Array = player.stats.roll_spell_damage(&"melee_damage", 1.0)
+	# Base LEVE a propósito (E10.4, era 1.0): el árbol de talentos lo potencia.
+	var result: Array = player.stats.roll_spell_damage(&"melee_damage", 0.7 * damage_scale)
 	return player.start_dash(result[0])

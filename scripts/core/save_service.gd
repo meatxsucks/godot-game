@@ -66,6 +66,8 @@ func save_game(stats: PlayerStats, inventory: Array[LootItem]) -> void:
 		"equipment": _save_equipment(stats.equipment),
 		"inventory": inventory.map(func(item: LootItem) -> Dictionary: return item.to_save_dict()),
 		"gold": stats.gold,
+		"talents": _str_keys(stats.talents),
+		"respec_count": stats.respec_count,
 		"world": {}, # TODO E4: progreso de mundo/zonas aún no existe.
 	}
 	var file := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
@@ -86,6 +88,13 @@ func load_game(stats: PlayerStats, inventory: Array[LootItem]) -> bool:
 	stats.level = int(data.get("level", 1))
 	stats.xp = float(data.get("xp", 0.0))
 	stats.gold = int(data.get("gold", 0))
+
+	# Árbol de talentos (E10.4): nodos comprados + contador de respec.
+	stats.talents.clear()
+	var talents_data: Dictionary = data.get("talents", {})
+	for up_id in talents_data:
+		stats.talents[StringName(up_id)] = int(talents_data[up_id])
+	stats.respec_count = int(data.get("respec_count", 0))
 
 	var base_stats_data: Dictionary = data.get("base_stats", {})
 	if not base_stats_data.is_empty():

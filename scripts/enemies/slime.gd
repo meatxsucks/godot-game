@@ -13,7 +13,9 @@ extends CharacterBody3D
 @export var mana_drop_chance: float = 0.35
 ## Probabilidad de soltar oro POR JUGADOR al morir (E5.1). Bajo a propósito:
 ## el oro es escaso y valioso (economía Tibia — objetos caros).
-@export var gold_drop_chance: float = 0.16
+## Más oro (E10.7, pedido del dueño 2026-07-17): el oro es el recurso de la
+## build (respec del árbol, tiendas E5) — que circule; lo ESCASO es el equipo.
+@export var gold_drop_chance: float = 0.32
 ## Color del cuerpo (esfera fallback + burst de muerte).
 @export var body_color: Color = Color(0.2, 0.8, 0.2)
 ## Escala de la variante. Ajusta visual y colisión.
@@ -402,9 +404,11 @@ func die() -> void:
 	# Oro (E5.1): tirada POR JUGADOR vivo (como el equipo, nadie compite);
 	# la cantidad escala con el nivel del botín.
 	if loot_drop_scene:
+		var bal := BalanceDef.bal()
 		for player in Players.alive(get_tree()):
 			if randf() <= gold_drop_chance:
-				_spawn_drop(Loot.make_gold(randi_range(1, 3) + loot_level),
+				_spawn_drop(Loot.make_gold(
+					randi_range(bal.gold_amount_min, bal.gold_amount_max) + loot_level),
 					Vector3(-0.7, 0, -0.2), player.get_multiplayer_authority())
 
 	# Algunos enemigos botan maná (vida nunca: solo en cofres).

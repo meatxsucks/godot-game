@@ -3,6 +3,16 @@
 extends Node
 
 func _ready() -> void:
+	# Respaldar el save y los keybinds REALES del jugador: este smoke los
+	# pisa y los borra al probar — sin backup, correr los tests destruía el
+	# progreso de la partida (gotcha real, 2026-07-17).
+	var save_backup := ""
+	if SaveService.has_save():
+		save_backup = FileAccess.get_file_as_string(SaveService.SAVE_PATH)
+	var keybinds_backup: PackedByteArray = []
+	if SaveService.has_keybinds():
+		keybinds_backup = FileAccess.get_file_as_bytes(SaveService.KEYBINDS_PATH)
+
 	Game.selected_class = &"warrior"
 	var stats := PlayerStats.new()
 	stats.add_xp(500.0)
@@ -77,6 +87,17 @@ func _ready() -> void:
 	assert(not SaveService.has_keybinds(), "reset_keybinds limpia el archivo")
 	assert(not InputMap.action_get_events(&"ability_dash").any(func(ev): return ev is InputEventKey and ev.physical_keycode == KEY_F),
 		"reset_keybinds vuelve al bind original")
+
+	# Restaurar lo respaldado (el smoke no debe tocar la partida del jugador).
+	if save_backup != "":
+		var sf := FileAccess.open(SaveService.SAVE_PATH, FileAccess.WRITE)
+		sf.store_string(save_backup)
+		sf.close()
+	if not keybinds_backup.is_empty():
+		var kf := FileAccess.open(SaveService.KEYBINDS_PATH, FileAccess.WRITE)
+		kf.store_buffer(keybinds_backup)
+		kf.close()
+		SaveService.load_keybinds()
 
 	print("SAVE SMOKE OK")
 	get_tree().quit(0)

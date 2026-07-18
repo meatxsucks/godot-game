@@ -77,16 +77,18 @@ func _spill_content() -> void:
 		_spill_for(player.get_multiplayer_authority())
 
 func _spill_for(owner_peer: int) -> void:
-	var offhand_type: StringName = [&"shield", &"orb"].pick_random()
-	var items: Array[LootItem] = [
-		Loot.generate_random_item(loot_level, &"armor"),
-		Loot.generate_random_item(loot_level, &"helmet"),
-		Loot.generate_random_item(loot_level, &"cape"),
-		Loot.generate_random_item(loot_level, &"gloves"),
-		Loot.generate_random_item(loot_level, offhand_type),
-	]
-	for weapon_type in WEAPON_TYPES:
-		items.append(Loot.generate_random_item(loot_level, weapon_type))
+	# Botín AUSTERO (E10.7, feedback del dueño 2026-07-17: "la dificultad es
+	# obtener cosas" — antes el cofre tiraba ~11 ítems por jugador, un regalo).
+	# Cantidades en resources/balance.tres (default: 1 arma + 2 piezas).
+	var bal := BalanceDef.bal()
+	var gear_types: Array[StringName] = [&"armor", &"helmet", &"cape", &"gloves",
+		[&"shield", &"orb"].pick_random()]
+	gear_types.shuffle()
+	var items: Array[LootItem] = []
+	for i in bal.chest_weapon_count:
+		items.append(Loot.generate_random_item(loot_level, WEAPON_TYPES.pick_random()))
+	for i in mini(bal.chest_gear_count, gear_types.size()):
+		items.append(Loot.generate_random_item(loot_level, gear_types[i]))
 	for i in health_potions:
 		items.append(Loot.make_potion(&"potion_health"))
 

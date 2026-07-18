@@ -23,7 +23,8 @@ func _cast(player) -> Variant:
 	if not player.consume_super_charge():
 		return false
 	FX.shake(0.4)
-	var result: Array = player.stats.roll_spell_damage(&"ranged_damage", 1.2)
+	# Base LEVE a propósito (E10.4, era 1.2): el árbol de talentos lo potencia.
+	var result: Array = player.stats.roll_spell_damage(&"ranged_damage", 0.8 * damage_scale)
 	# La posición viaja en props: se aplica ANTES de entrar al árbol (los
 	# objetivos se calculan en _ready).
 	NetSpawn.projectile(SCENE,

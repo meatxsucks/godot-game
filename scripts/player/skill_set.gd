@@ -22,9 +22,14 @@ func _init() -> void:
 		levels[skill] = 1
 		xp[skill] = 0.0
 
-## XP necesaria para pasar del nivel dado al siguiente (rápida al inicio).
+## XP necesaria para pasar del nivel dado al siguiente. Curva LENTA y
+## creciente (E10.7, feedback del dueño 2026-07-17: con la lineal 10+nv*8
+## subía un skill POR OLEADA — muy Tibia falso). Con los defaults: nv1→55 ·
+## nv2→100 · nv3→164 · nv5→343 · nv10→1037: entrenar un elemento toma
+## partidas. Knobs en resources/balance.tres.
 func xp_needed(level_now: int) -> float:
-	return 10.0 + level_now * 8.0
+	var b := BalanceDef.bal()
+	return b.skill_xp_base + pow(level_now, b.skill_xp_power) * b.skill_xp_scale
 
 ## Suma XP. Devuelve true si el skill subió al menos un nivel.
 func add_xp(skill: StringName, amount: float) -> bool:

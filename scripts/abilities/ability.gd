@@ -27,6 +27,11 @@ var element: StringName = &""
 ## El HUD lo usa para mostrar el círculo de carga en cualquier kit.
 var is_super: bool = false
 
+## Multiplicador de daño del ÁRBOL de talentos (E10.4): los poderes de clase
+## arrancan leves y el jugador los potencia comprando nodos. 1.0 = sin nodos.
+## Lo setea PlayerStats.apply_talents al construir el kit.
+var damage_scale: float = 1.0
+
 ## Tags de estado (E3, GDD §4) que esta habilidad APLICA al golpear y los
 ## que DETONA (consume por daño extra). Los combos salen de combinar esto
 ## entre armas y clases — nunca se hardcodea un combo.
@@ -93,7 +98,7 @@ func _tag_props(props: Dictionary) -> Dictionary:
 func _spawn_projectile(player, scene: PackedScene, stat: StringName, multiplier: float) -> bool:
 	var xform: Transform3D = player.wand.global_transform
 	xform.origin.y = PROJECTILE_HEIGHT
-	var result: Array = player.stats.roll_spell_damage(stat, multiplier)
+	var result: Array = player.stats.roll_spell_damage(stat, multiplier * damage_scale)
 	NetSpawn.projectile(scene, _tag_props({"transform": xform}), player.get_parent(),
 		result[0], player, result[1])
 	return true
@@ -102,7 +107,7 @@ func _spawn_projectile(player, scene: PackedScene, stat: StringName, multiplier:
 ## gritos, torbellinos — todos usan frost_nova.gd con otra escena).
 ## La posición va ANTES de add_child (el _ready arma el tween en su sitio).
 func _spawn_nova(player, scene: PackedScene, stat: StringName, multiplier: float) -> bool:
-	var result: Array = player.stats.roll_spell_damage(stat, multiplier)
+	var result: Array = player.stats.roll_spell_damage(stat, multiplier * damage_scale)
 	NetSpawn.projectile(scene, _tag_props({"position": player.global_position}),
 		player.get_parent(), result[0], player, result[1])
 	return true

@@ -25,7 +25,8 @@ func _cast(player) -> Variant:
 	if not player.consume_super_charge():
 		return false
 	FX.shake(0.4)
-	var result: Array = player.stats.roll_spell_damage(&"fire_damage", 1.5)
+	# Base LEVE a propósito (E10.4, era 1.5): el árbol de talentos lo potencia.
+	var result: Array = player.stats.roll_spell_damage(&"fire_damage", 1.0 * damage_scale)
 	# La posición viaja en props y se aplica ANTES de entrar al árbol: la
 	# tormenta calcula sus objetivos en _ready (asignarla después la hacía
 	# caer alrededor del origen).

@@ -16,4 +16,5 @@ func _init() -> void:
 	detonates = [&"marked"]
 
 func _cast(player) -> Variant:
-	return _spawn_projectile(player, SCENE, &"ranged_damage", 1.2)
+	# Base LEVE a propósito (E10.4, era 1.2): el árbol de talentos lo potencia.
+	return _spawn_projectile(player, SCENE, &"ranged_damage", 0.8)
