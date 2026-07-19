@@ -1,0 +1,23 @@
+{
+	"applies": ["marked"],
+	"behavior": "line",
+	"color": "#b08a55",
+	"cooldown": 6.0,
+	"count": 5,
+	"damage_mult": 0.5,
+	"description": "Rocas que emergen del suelo de a poco, en línea hacia adelante: cada erupción aplasta (Marcado) y sus escombros ralentizan. Pedido del dueño, generado por Claude Code (2026-07-18).",
+	"detonates": [],
+	"element": "melee",
+	"id": "lab_marea_de_piedra",
+	"mana_cost": 20.0,
+	"name": "Marea de Piedra",
+	"props": {
+		"max_radius": 2.0,
+		"expand_time": 0.3,
+		"slow_factor": 0.6,
+		"slow_time": 1.0
+	},
+	"spread_deg": 0.0,
+	"step_delay": 0.35,
+	"template": "nova"
+}
