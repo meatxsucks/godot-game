@@ -13,9 +13,10 @@ func _init() -> void:
 	color = Color(0.45, 0.8, 1.0)
 	cooldown = 0.9
 	mana_cost = 0.0
+	power = 0.5
 	hold_to_cast = true
 	element = &"cold"
 	applies = [&"frozen"]
 
 func _cast(player) -> Variant:
-	return _spawn_projectile(player, SCENE, &"cold_damage", 0.5)
+	return _spawn_projectile(player, SCENE, &"cold_damage", power)

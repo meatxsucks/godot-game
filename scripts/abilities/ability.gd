@@ -27,6 +27,12 @@ var element: StringName = &""
 ## El HUD lo usa para mostrar el círculo de carga en cualquier kit.
 var is_super: bool = false
 
+## Multiplicador de daño BASE del poder (data-driven): cada habilidad pone su
+## default en _init y el `.tres` de `resources/abilities/` lo pisa — el
+## balance se ajusta en el Inspector, no en código (Game.make_ability aplica
+## el tuning). Los _cast usan `power` en vez de números en bruto.
+var power: float = 1.0
+
 ## Multiplicador de daño del ÁRBOL de talentos (E10.4): los poderes de clase
 ## arrancan leves y el jugador los potencia comprando nodos. 1.0 = sin nodos.
 ## Lo setea PlayerStats.apply_talents al construir el kit.

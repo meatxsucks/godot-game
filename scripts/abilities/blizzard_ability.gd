@@ -13,8 +13,9 @@ func _init() -> void:
 	color = Color(0.6, 0.9, 1.0)
 	cooldown = 3.5
 	mana_cost = 16.0
+	power = 0.6
 	element = &"cold"
 	detonates = [&"frozen"]
 
 func _cast(player) -> Variant:
-	return _spawn_nova(player, SCENE, &"cold_damage", 0.6)
+	return _spawn_nova(player, SCENE, &"cold_damage", power)

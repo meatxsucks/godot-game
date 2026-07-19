@@ -12,6 +12,7 @@ func _init() -> void:
 	color = Color(1.0, 0.45, 0.1)
 	cooldown = 4.0
 	mana_cost = 20.0
+	power = 0.5
 	element = &"fire"
 	# Autocombo del bastón: el LMB (Bola de Fuego) aplica Quemado y este RMB
 	# lo DETONA en área. El bastón se combea solo (E7.2).
@@ -35,7 +36,7 @@ func _spawn_sequence(player: Node, tree: SceneTree, target: Vector3, right: Vect
 	var offset = right * (i - 1) * 1.5 # -1.5, 0, 1.5
 	var spawn_pos = target + offset
 
-	var result: Array = player.stats.roll_spell_damage(&"fire_damage", 0.5)
+	var result: Array = player.stats.roll_spell_damage(&"fire_damage", power)
 	NetSpawn.projectile(SCENE, _tag_props({"position": spawn_pos}), player.get_parent(),
 		result[0], player, result[1])
 	

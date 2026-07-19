@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="AbilityTuning" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/core/ability_tuning.gd" id="1_tun"]
+
+[resource]
+script = ExtResource("1_tun")
+id = &"arrow_rain"
+damage_mult = 0.8
+cooldown = 1.0
+mana_cost = 0.0

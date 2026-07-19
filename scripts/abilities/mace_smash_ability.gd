@@ -12,6 +12,7 @@ func _init() -> void:
 	color = Color(0.7, 0.6, 0.5)
 	cooldown = 1.1
 	mana_cost = 0.0
+	power = 0.5
 	hold_to_cast = true
 	element = &"melee"
 	applies = [&"marked"]
@@ -30,6 +31,6 @@ func _cast(player) -> Variant:
 		if not player.is_inside_tree() or player._dead:
 			return
 		FX.shake(0.4)
-		_spawn_nova(player, SCENE, &"melee_damage", 0.5)
+		_spawn_nova(player, SCENE, &"melee_damage", power)
 	)
 	return true

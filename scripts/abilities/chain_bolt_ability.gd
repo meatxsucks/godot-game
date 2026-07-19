@@ -11,6 +11,7 @@ func _init() -> void:
 	color = Color(0.3, 0.7, 1.0)
 	cooldown = 2.5
 	mana_cost = 15.0
+	power = 0.65
 	element = &"lightning"
 	detonates = [&"marked"]
 
@@ -34,7 +35,7 @@ func _cast(player) -> Variant:
 		fx.burst(player.global_position + Vector3(0, 1, 0), Color(0.3, 0.7, 1.0), 12, 0.05)
 	
 	# Suelta rayo en cadena
-	var result: Array = player.stats.roll_spell_damage(&"lightning_damage", 0.65)
+	var result: Array = player.stats.roll_spell_damage(&"lightning_damage", power)
 	var xform: Transform3D = player.wand.global_transform
 	xform.origin.y = PROJECTILE_HEIGHT
 	NetSpawn.projectile(SCENE,

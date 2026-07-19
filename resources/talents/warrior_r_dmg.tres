@@ -5,7 +5,7 @@
 [resource]
 script = ExtResource("1_up")
 id = &"warrior_r_dmg"
-ability_id = &"whirlwind"
+ability_id = &"titan_slam"
 name = "Vendaval de Acero"
 max_ranks = 3
 cost = 1

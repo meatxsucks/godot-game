@@ -7,6 +7,7 @@ extends Node
 
 const CLASSES_DIR := "res://resources/classes/"
 const TALENTS_DIR := "res://resources/talents/"
+const TUNINGS_DIR := "res://resources/abilities/"
 
 ## id → ClassDef, cargadas al arrancar.
 var classes: Dictionary = {}
@@ -14,6 +15,10 @@ var classes: Dictionary = {}
 ## id → AbilityUpgrade (nodos del árbol de talentos E10.4), cargados al
 ## arrancar del directorio data-driven (patrón E0.7).
 var upgrades: Dictionary = {}
+
+## id → AbilityTuning (balance por poder: daño/cooldown/maná en `.tres`,
+## pedido del dueño 2026-07-17 — se ajustan en el Inspector, no en código).
+var tunings: Dictionary = {}
 
 ## Clase elegida en ClassSelect. Default Mago (permite correr la Arena directo).
 var selected_class: StringName = &"mage"
@@ -40,6 +45,23 @@ func _ready() -> void:
 		file_name = dir.get_next()
 	dir.list_dir_end()
 	_load_upgrades()
+	_load_tunings()
+
+func _load_tunings() -> void:
+	var dir := DirAccess.open(TUNINGS_DIR)
+	if dir == null:
+		return # sin tunings los poderes usan sus defaults de código
+	dir.list_dir_begin()
+	var file_name := dir.get_next()
+	while file_name != "":
+		if not dir.current_is_dir() and file_name.ends_with(".tres"):
+			var tuning: AbilityTuning = load(TUNINGS_DIR + file_name)
+			if tuning and tuning.id != &"":
+				tunings[tuning.id] = tuning
+			else:
+				push_error("[Game] AbilityTuning inválido: %s" % file_name)
+		file_name = dir.get_next()
+	dir.list_dir_end()
 
 func _load_upgrades() -> void:
 	var dir := DirAccess.open(TALENTS_DIR)
@@ -101,9 +123,22 @@ func build_class_kit(cls: StringName = &"") -> Array[Ability]:
 		kit.append(make_ability(ability_id))
 	return kit
 
-## Instancia una habilidad por su ID. Al crear una habilidad nueva hay que
-## registrarla acá (es el único punto de código que toca el contenido).
+## Instancia una habilidad por su ID y le aplica su tuning data-driven
+## (daño/cooldown/maná desde resources/abilities/*.tres — el balance se
+## ajusta ahí, no en código). Al crear una habilidad nueva hay que
+## registrarla en _new_ability (único punto de código que toca contenido).
 func make_ability(id: StringName) -> Ability:
+	var ability := _new_ability(id)
+	# El tuning matchea por el id RUNTIME (puede diferir del id de registro:
+	# ej. "whirlwind" instancia el poder con id "titan_slam").
+	var tuning: AbilityTuning = tunings.get(ability.id)
+	if tuning:
+		ability.power = tuning.damage_mult
+		ability.cooldown = tuning.cooldown
+		ability.mana_cost = tuning.mana_cost
+	return ability
+
+func _new_ability(id: StringName) -> Ability:
 	match id:
 		&"fireball": return FireballAbility.new()
 		&"arc_bolt": return ArcBoltAbility.new()

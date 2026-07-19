@@ -14,6 +14,7 @@ func _init() -> void:
 	color = Color(0.3, 0.9, 0.4)
 	cooldown = 8.0
 	mana_cost = 20.0
+	power = 0.45
 	element = &"melee"
 
 func _cast(player) -> Variant:
@@ -24,4 +25,4 @@ func _cast(player) -> Variant:
 	FX.burst(player.global_position + Vector3.UP, Color(0.3, 1.0, 0.4), 16, 0.09)
 	# Base MUY leve a propósito (E10.4, era 1.2; 2º nerf 2026-07-17: la Q
 	# seguía reventando): el árbol de talentos lo potencia.
-	return _spawn_nova(player, SCENE, &"melee_damage", 0.45)
+	return _spawn_nova(player, SCENE, &"melee_damage", power)

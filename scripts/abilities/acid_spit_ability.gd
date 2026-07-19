@@ -14,9 +14,10 @@ func _init() -> void:
 	color = Color(0.55, 0.9, 0.25)
 	cooldown = 0.35
 	mana_cost = 0.0
+	power = 0.4
 	hold_to_cast = true
 	element = &"magic"
 	applies = [&"bleed"]
 
 func _cast(player) -> Variant:
-	return _spawn_projectile(player, SCENE, &"magic", 0.4)
+	return _spawn_projectile(player, SCENE, &"magic", power)

@@ -15,6 +15,7 @@ func _init() -> void:
 	color = Color(0.55, 0.9, 0.25)
 	cooldown = 6.0
 	mana_cost = 20.0
+	power = 0.4
 	element = &"magic"
 	applies = [&"bleed"]
 
@@ -28,7 +29,7 @@ func _cast(player) -> Variant:
 	# El daño rolleado escala el charco (ticks y cura salen de acá).
 	# Base MUY leve a propósito (E10.4, era 1.0; 2º nerf 2026-07-17: la Q
 	# seguía reventando): el árbol de talentos lo potencia.
-	var result: Array = player.stats.roll_spell_damage(&"magic", 0.4 * damage_scale)
+	var result: Array = player.stats.roll_spell_damage(&"magic", power * damage_scale)
 	NetSpawn.projectile(PUDDLE, _tag_props({"position": target}), player.get_parent(),
 		result[0], player, result[1])
 	FX.burst(target + Vector3.UP, color, 16, 0.09)

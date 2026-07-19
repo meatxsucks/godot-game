@@ -11,9 +11,10 @@ func _init() -> void:
 	color = Color(0.4, 0.8, 1.0)
 	cooldown = 0.3
 	mana_cost = 0.0
+	power = 0.28
 	hold_to_cast = true
 	element = &"lightning"
 	applies = [&"marked"]
 
 func _cast(player) -> Variant:
-	return _spawn_projectile(player, SCENE, &"lightning_damage", 0.28)
+	return _spawn_projectile(player, SCENE, &"lightning_damage", power)

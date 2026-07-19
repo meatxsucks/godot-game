@@ -10,9 +10,10 @@ func _init() -> void:
 	color = Color(1.0, 0.6, 0.3)
 	cooldown = 1.5
 	mana_cost = 0.0
+	power = 0.7
 	element = &"melee"
 
 func _cast(player) -> Variant:
 	# Base LEVE a propósito (E10.4, era 1.0): el árbol de talentos lo potencia.
-	var result: Array = player.stats.roll_spell_damage(&"melee_damage", 0.7 * damage_scale)
+	var result: Array = player.stats.roll_spell_damage(&"melee_damage", power * damage_scale)
 	return player.start_dash(result[0])

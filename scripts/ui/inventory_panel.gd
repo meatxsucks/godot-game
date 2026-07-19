@@ -132,12 +132,14 @@ func _build_talents() -> void:
 	col.add_child(_talent_points_label)
 
 	var kit: Array = Game.class_def(player.player_class).kit
-	for ability_id in kit:
-		var ups := Game.upgrades_for_ability(ability_id)
+	for kit_id in kit:
+		# El id del kit puede diferir del id RUNTIME del poder (ej. el kit
+		# dice "whirlwind" pero el poder es "titan_slam") — los nodos del
+		# árbol matchean contra el runtime, así que se resuelve primero.
+		var ability := Game.make_ability(kit_id)
+		var ups := Game.upgrades_for_ability(ability.id)
 		if ups.is_empty():
 			continue
-		# Encabezado por habilidad (con su color, para reconocerla).
-		var ability := Game.make_ability(ability_id)
 		var header := Label.new()
 		header.text = "— %s —" % ability.display_name
 		header.add_theme_font_size_override(&"font_size", 11)

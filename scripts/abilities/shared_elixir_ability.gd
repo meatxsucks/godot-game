@@ -19,6 +19,7 @@ func _init() -> void:
 	color = Color(0.55, 0.9, 0.25)
 	cooldown = 1.0
 	mana_cost = 0.0
+	power = 1.0
 	element = &"magic"
 	is_super = true
 
@@ -31,7 +32,7 @@ func _cast(player) -> Variant:
 	FX.shake(0.4)
 	# La cadena se centra en el alquimista y explota a los enemigos al alcance.
 	# Base LEVE a propósito (E10.4, era 1.4): el árbol de talentos lo potencia.
-	var result: Array = player.stats.roll_spell_damage(&"magic", 1.0 * damage_scale)
+	var result: Array = player.stats.roll_spell_damage(&"magic", power * damage_scale)
 	NetSpawn.projectile(CHAIN, {"position": player.global_position},
 		player.get_parent(), result[0], player, result[1])
 	# Heal + prime de party (corre en todas las copias de cada aliado: la

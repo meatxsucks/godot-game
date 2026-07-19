@@ -12,6 +12,7 @@ func _init() -> void:
 	color = Color(0.8, 0.9, 1.0)
 	cooldown = 3.0
 	mana_cost = 15.0
+	power = 0.6
 	element = &"ranged"
 	# El arco es el APLICADOR a distancia (E7.2): el LMB (Flecha) aplica
 	# Sangrado y este RMB aplica Marcado — así prepara combos para que el melee
@@ -28,4 +29,4 @@ func _cast(player) -> Variant:
 	
 	# Deja una trampa que explota
 	FX.burst(player.global_position + Vector3.UP, Color(0.8, 0.9, 1.0), 12, 0.05)
-	return _spawn_nova(player, SCENE, &"ranged_damage", 0.6)
+	return _spawn_nova(player, SCENE, &"ranged_damage", power)

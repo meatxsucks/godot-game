@@ -12,12 +12,13 @@ func _init() -> void:
 	color = Color(0.95, 0.95, 0.88)
 	cooldown = 0.5
 	mana_cost = 0.0
+	power = 0.55
 	hold_to_cast = true
 	element = &"melee"
 	applies = [&"bleed"]
 
 func _cast(player) -> Variant:
-	var result: Array = player.stats.roll_spell_damage(&"melee_damage", 0.55)
+	var result: Array = player.stats.roll_spell_damage(&"melee_damage", power)
 	# Orientado como el Visual del player
 	var xform := Transform3D(player.visual.global_transform.basis, player.global_position)
 	NetSpawn.projectile(SCENE, _tag_props({"transform": xform}), player.get_parent(),

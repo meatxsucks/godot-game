@@ -12,6 +12,7 @@ func _init() -> void:
 	color = Color(0.8, 0.4, 0.2)
 	cooldown = 2.0
 	mana_cost = 14.0
+	power = 0.4
 	element = &"melee"
 	# El Demoledor (E7.2): el temblor DETONA cualquier tag activo — sea de este
 	# mazo (Marcado del Salto Sísmico) o el que aplicó otro jugador de la party
@@ -32,7 +33,7 @@ func _spawn_sequence(player: Node, tree: SceneTree, dir: Vector3, i: int) -> voi
 	if i >= 3 or not is_instance_valid(player) or not player.is_inside_tree() or player.get("_dead"):
 		return
 	
-	var result: Array = player.stats.roll_spell_damage(&"melee_damage", 0.4)
+	var result: Array = player.stats.roll_spell_damage(&"melee_damage", power)
 	NetSpawn.projectile(SCENE,
 		_tag_props({"position": player.global_position + dir * (2.0 + i * 2.5)}), player.get_parent(),
 		result[0], player, result[1])

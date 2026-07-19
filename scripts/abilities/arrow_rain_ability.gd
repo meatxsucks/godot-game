@@ -12,6 +12,7 @@ func _init() -> void:
 	color = Color(0.45, 0.9, 0.4)
 	cooldown = 1.0
 	mana_cost = 0.0
+	power = 0.8
 	element = &"ranged"
 	detonates = [&"bleed"]
 	is_super = true
@@ -24,7 +25,7 @@ func _cast(player) -> Variant:
 		return false
 	FX.shake(0.4)
 	# Base LEVE a propósito (E10.4, era 1.2): el árbol de talentos lo potencia.
-	var result: Array = player.stats.roll_spell_damage(&"ranged_damage", 0.8 * damage_scale)
+	var result: Array = player.stats.roll_spell_damage(&"ranged_damage", power * damage_scale)
 	# La posición viaja en props: se aplica ANTES de entrar al árbol (los
 	# objetivos se calculan en _ready).
 	NetSpawn.projectile(SCENE,

@@ -12,10 +12,11 @@ func _init() -> void:
 	color = Color(0.5, 1.0, 0.6)
 	cooldown = 4.0
 	mana_cost = 15.0
+	power = 0.5
 	element = &"ranged"
 	detonates = [&"marked"]
 
 func _cast(player) -> Variant:
 	# Base MUY leve a propósito (E10.4, era 1.2; 2º nerf 2026-07-17: la Q
 	# seguía reventando): el árbol de talentos lo potencia.
-	return _spawn_projectile(player, SCENE, &"ranged_damage", 0.5)
+	return _spawn_projectile(player, SCENE, &"ranged_damage", power)
