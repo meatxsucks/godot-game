@@ -55,6 +55,7 @@ func save_game(stats: PlayerStats, inventory: Array[LootItem]) -> void:
 		"xp": stats.xp,
 		"health": stats.health,
 		"mana": stats.mana,
+		"corruption": stats.corruption, # E2.1
 		# `base_stats` no es función pura de `level`: acumula los bonos de cada
 		# level-up (`_apply_level_up` en player_stats.gd) más los overrides de
 		# clase. Se guarda tal cual para no duplicar esa fórmula acá.
@@ -120,6 +121,7 @@ func load_game(stats: PlayerStats, inventory: Array[LootItem]) -> bool:
 	stats.recompute()
 	stats.health = minf(float(data.get("health", stats.get_stat(&"max_health"))), stats.get_stat(&"max_health"))
 	stats.mana = minf(float(data.get("mana", stats.get_stat(&"max_mana"))), stats.get_stat(&"max_mana"))
+	stats.corruption = clampf(float(data.get("corruption", 0.0)), 0.0, PlayerStats.CORRUPTION_MAX)
 	return true
 
 func _read_save() -> Dictionary:

@@ -55,6 +55,19 @@ var gold: int = 0
 var health: float = 0.0
 var mana: float = 0.0
 
+## Corrupción (E2.1, mecánica central del GDD §5): 0..CORRUPTION_MAX. Sube con
+## el tiempo en zona infectada y por golpes recibidos; se limpia en zona segura.
+## Por ahora es solo el medidor — mutación de enemigos (E2.2), riesgo/beneficio
+## (E2.3) y contagio (E2.4) son tareas aparte que todavía leen/escriben este valor.
+const CORRUPTION_MAX := 100.0
+var corruption: float = 0.0
+
+func add_corruption(amount: float) -> void:
+	corruption = clampf(corruption + amount, 0.0, CORRUPTION_MAX)
+
+func clear_corruption(amount: float = CORRUPTION_MAX) -> void:
+	corruption = clampf(corruption - amount, 0.0, CORRUPTION_MAX)
+
 ## Cache de stats efectivos (plano * (1 + %/100)). Se recalcula al equipar.
 var _cache := {}
 

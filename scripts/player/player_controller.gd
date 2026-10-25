@@ -12,6 +12,12 @@ const DASH_TIME := 0.15
 ## Carga máxima de stamina del super.
 const SUPER_MAX := 100.0
 
+## Corrupción (E2.1): sube por segundo fuera de zona segura, se limpia mucho
+## más rápido adentro, y un golpe suma una fracción de su daño.
+const CORRUPTION_RISE_PER_SEC := 1.5
+const CORRUPTION_CLEANSE_PER_SEC := 12.0
+const CORRUPTION_PER_DAMAGE := 0.3
+
 ## Acción de input de cada slot de la barra (mismo orden que `abilities`).
 const ABILITY_ACTIONS: Array[StringName] = [
 	&"attack_primary",
@@ -52,6 +58,9 @@ var super_charge: float = 0.0
 ## Cooldown del legendario "Corazón de Escarcha" (nova al recibir un golpe).
 const FROST_GUARD_SCENE := preload("res://scenes/magic/FrostNova.tscn")
 var _frost_guard_timer: float = 0.0
+
+## Zona segura de la escena (si hay): adentro, la corrupción se limpia.
+var _safe_zone: SafeZone
 
 var _dash_timer: float = 0.0
 var _dash_dir := Vector3.ZERO
@@ -103,6 +112,7 @@ signal xp_changed(current: float, needed: float, level: int)
 signal leveled_up(new_level: int)
 signal kit_changed
 signal died
+signal corruption_changed(current: float, maximum: float)
 
 @onready var visual: Node3D = $Visual
 @onready var wand: MeshInstance3D = $Visual/Wand
@@ -126,6 +136,7 @@ func _ready() -> void:
 	_body_color = _body_material.albedo_color
 	body_mesh.set_surface_override_material(0, _body_material)
 
+	_safe_zone = get_tree().get_first_node_in_group("safe_zone")
 	_setup_model()
 	# El ataque básico y secundario dependen del arma equipada (arranca desarmado).
 	stats_changed.connect(_refresh_weapon_skills)
@@ -198,6 +209,7 @@ func _physics_process(delta: float) -> void:
 	_update_facing(delta)
 	_update_abilities(delta)
 	_update_animation(delta)
+	_update_corruption(delta)
 	
 	if _speed_modifier_timer > 0.0:
 		_speed_modifier_timer -= delta
@@ -647,6 +659,8 @@ func take_damage(amount: float, _is_crit: bool = false) -> void:
 
 	stats.health = maxf(0.0, stats.health - amount)
 	health_changed.emit(stats.health, stats.get_stat(&"max_health"))
+	stats.add_corruption(amount * CORRUPTION_PER_DAMAGE)
+	corruption_changed.emit(stats.corruption, PlayerStats.CORRUPTION_MAX)
 
 	# Feedback: número rojo + sacudida si el golpe fue fuerte.
 	FX.damage_number(global_position, amount, false, Color(1.0, 0.25, 0.25))
@@ -767,6 +781,21 @@ func equip(item: LootItem) -> LootItem:
 func _emit_resource_signals() -> void:
 	health_changed.emit(stats.health, stats.get_stat(&"max_health"))
 	mana_changed.emit(stats.mana, stats.get_stat(&"max_mana"))
+	corruption_changed.emit(stats.corruption, PlayerStats.CORRUPTION_MAX)
+
+## Corrupción (E2.1): sube con el tiempo fuera de zona segura, se limpia
+## adentro. "Nodos de infección" (GDD §5) quedan para cuando exista el mundo
+## de E4; hoy toda la Arena fuera de la zona segura cuenta como infectada.
+func _update_corruption(delta: float) -> void:
+	if _dead:
+		return
+	var before := stats.corruption
+	if _safe_zone and _safe_zone.contains(global_position):
+		stats.clear_corruption(CORRUPTION_CLEANSE_PER_SEC * delta)
+	else:
+		stats.add_corruption(CORRUPTION_RISE_PER_SEC * delta)
+	if stats.corruption != before:
+		corruption_changed.emit(stats.corruption, PlayerStats.CORRUPTION_MAX)
 
 # --- Paper-doll en red (el equipo real es LOCAL; el visual se difunde) --------
 
