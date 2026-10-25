@@ -83,6 +83,10 @@ func _ready() -> void:
 	add_child(_health_bar)
 	_health_bar.position.y = (2.2 if _model_anim else 1.25) * size_scale
 
+## Delgadez de los modelos KayKit: angostan en X/Z, mismo alto. Look más
+## "flaco" tipo Diablo en vez del volumen por defecto del asset pack.
+const MODEL_SLIM_SCALE := Vector3(0.82, 1.0, 0.82)
+
 ## Modelo KayKit animado (esqueletos). Fallback total a la esfera tintada.
 func _setup_model() -> void:
 	if model_path == "" or not ResourceLoader.exists(model_path):
@@ -93,6 +97,7 @@ func _setup_model() -> void:
 	var model: Node3D = scene.instantiate()
 	$Visual.add_child(model)
 	model.rotation.y = PI # KayKit mira +Z; look_at apunta -Z
+	model.scale = MODEL_SLIM_SCALE
 	_model_anim = model.find_child("AnimationPlayer", true, false)
 	$Visual/Mesh.visible = false
 	if _model_anim and anims.has("spawn"):

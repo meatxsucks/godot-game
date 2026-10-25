@@ -2,8 +2,13 @@ extends Node3D
 
 @export var target_path: NodePath
 @export var smooth_speed: float = 8.0
-# Desplazamiento base de la cámara isométrica clásica.
-@export var offset: Vector3 = Vector3(12, 12, 12)
+# Ángulo más cenital (más "de arriba") que la isométrica clásica (12,12,12 ≈
+# 35°) — más cerca de cómo encuadra Diablo (~58°), sin quedar top-down puro.
+@export var offset: Vector3 = Vector3(7, 16, 7)
+# Cuánto se adelanta la cámara en la dirección en que te movés (lookahead),
+# clampeado para que un dash no la haga saltar de golpe.
+@export var lookahead: float = 0.35
+const MAX_LOOKAHEAD := 2.5
 # Pose de inspección (inventario abierto): más baja y cerca, casi de frente
 # al personaje para apreciar el equipo puesto.
 @export var inspect_offset: Vector3 = Vector3(4.5, 3.0, 6.0)
@@ -50,8 +55,13 @@ func _process(delta: float) -> void:
 		global_position = target.global_position
 	var cam: Camera3D = $Camera3D
 
-	# Seguir al jugador (con shake).
+	# Seguir al jugador (con shake + lookahead en la dirección del movimiento).
 	var goal := target.global_position
+	if target is CharacterBody3D:
+		var vel: Vector3 = (target as CharacterBody3D).velocity
+		vel.y = 0.0
+		if vel.length() > 0.1:
+			goal += vel.normalized() * minf(vel.length() * lookahead, MAX_LOOKAHEAD)
 	if _shake > 0.005:
 		_shake = lerpf(_shake, 0.0, 8.0 * delta)
 		goal += Vector3(

@@ -18,6 +18,10 @@ const CORRUPTION_RISE_PER_SEC := 1.5
 const CORRUPTION_CLEANSE_PER_SEC := 12.0
 const CORRUPTION_PER_DAMAGE := 0.3
 
+## Delgadez de los modelos KayKit: angostan en X/Z, mismo alto. Look más
+## "flaco" tipo Diablo en vez del volumen por defecto del asset pack.
+const MODEL_SLIM_SCALE := Vector3(0.82, 1.0, 0.82)
+
 ## Acción de input de cada slot de la barra (mismo orden que `abilities`).
 const ABILITY_ACTIONS: Array[StringName] = [
 	&"attack_primary",
@@ -170,6 +174,7 @@ func _setup_model() -> void:
 	var model: Node3D = scene.instantiate()
 	visual.add_child(model)
 	model.rotation.y = PI # KayKit mira +Z; nuestro Visual apunta -Z al cursor
+	model.scale = MODEL_SLIM_SCALE
 	_model_anim = model.find_child("AnimationPlayer", true, false)
 	_anims = def.anims
 
